@@ -1068,8 +1068,8 @@ function Retro:key(k)
  end
  -- Navegacao classica dos aparelhos Java: 4/6 (anterior/proximo),
  -- 2/8 para percorrer e 5 para selecionar. Mouse e toque continuam.
- if self.screen=='detail' and (k=='left' or k=='right' or k=='up' or k=='down' or k=='4' or k=='6' or k=='2' or k=='8' or k=='kp4' or k=='kp6') then
-  self:browseFish((k=='left' or k=='up' or k=='4' or k=='2' or k=='kp4') and -1 or 1)
+ if self.screen=='detail' and (k=='left' or k=='right' or k=='up' or k=='down' or k=='4' or k=='6' or k=='2' or k=='8' or k=='kp4' or k=='kp6' or k=='kp2' or k=='kp8') then
+  self:browseFish((k=='left' or k=='up' or k=='4' or k=='2' or k=='kp4' or k=='kp2') and -1 or 1)
   return
  end
  if self.screen=='tank' and (k=='f' or k=='space' or k=='5' or k=='kp5' or k=='return' or k=='kpenter') then
