@@ -41,8 +41,19 @@ function M.magicFor(body, tail)
  end
  return nil,nil
 end
+-- Ordens textuais 51..71 (corpos) e 72..92 (barbatanas) da tabela
+-- inglesa do JAR 1.0.1. O indice Lua corresponde ao indice Java+1.
+M.bodyNames={'SHARK','CATFISH','ARROWFISH','SNOUT','FATFISH',
+ 'SNOOPER','GOLDSHARK','FIRE-ARROW','FRUITFISH','FLASHFISH','GOLDBULB',
+ 'COMET','STICKFISH','GROUPER','LEAFFISH','CARP','BETA','PIGMY',
+ 'BANANAFISH','QUICKSILVER','SPOTANUS'}
+M.finNames={'SILKY','TIGER','HORNET','FANNED','PINK','SNUBBED',
+ 'WASP','CANARY','ORANGE','ORIENTAL','GOLDEN','CRIMSON','SPINED',
+ 'STUBBY','SPECKLED','RAZORBACK','GREENFIN','GREAT-SAIL',
+ 'FLAGGED','FINLESS','TWIN-FIN'}
 function M.nameFor(body,tail)
- return string.format('Forma %02d / Barbatana %02d',body-1,tail-1)
+ return (M.finNames[tail] or ('FIN '..tostring(tail)))..' '..
+        (M.bodyNames[body] or ('FISH '..tostring(body)))
 end
 function M.basePrice(body,tail)
  return Jar.basePrice(body,tail)

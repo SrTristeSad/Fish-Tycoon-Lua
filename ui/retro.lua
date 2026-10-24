@@ -28,7 +28,7 @@ local function roomName(r) return ({main='TANK 1',second='TANK 2',sale='SALE TAN
 function Retro.new(game,hasSave)
  return setmetatable({g=game,hasSave=not not hasSave,screen='title',room='main',selected=nil,
   popup=nil,popupFrom=nil,buttons={},fishHits={},images={},assets=Assets.new(),
-  speed=1,soundEnabled=true,shopPage=1,toast='',toastTime=0,time=0,
+  speed=1,soundEnabled=true,shopPage=1,toast='',toastTime=0,time=0,browseIndex=1,
   scale=1,ox=0,oy=0,onSave=nil,onNewGame=nil,onSound=nil},Retro)
 end
 function Retro:init()
@@ -38,10 +38,36 @@ function Retro:init()
  end
  self.font=love.graphics.newFont(9)
  self.font:setFilter('nearest','nearest')
+ -- Partes do atlas PNG original; alternativas simples sao exibidas
+ -- quando o proprietario ainda nao importou assets.png de seu JAR.
+ self.quads={}
+ local atlas=self.images.assets
+ if atlas and love.graphics.newQuad then
+  local iw,ih=atlas:getDimensions()
+  local coords={slot={20,153,18,25},fish={88,219,16,23},
+   food={115,181,21,36},cart={31,218,23,24},
+   hourglass={125,94,11,14},money={111,157,20,23},
+   breed={113,113,23,18},medicine={113,181,21,36},
+   arrow={94,123,24,12},heart={104,132,28,25}}
+  for name,c in pairs(coords) do
+   if c[1]+c[3]<=iw and c[2]+c[4]<=ih then
+    self.quads[name]={q=love.graphics.newQuad(c[1],c[2],c[3],c[4],iw,ih),w=c[3],h=c[4]}
+   end
+  end
+ end
+ -- Miniaturas nativas dos tres tanques na barra de ferramentas.
+ self.tankIcons={}
+ for i,name in ipairs({'tank1','tank2','tank3'}) do
+  local image=self.assets.images[name]
+  if image and love.graphics.newQuad then
+   local iw,ih=image:getDimensions()
+   self.tankIcons[i]={image=image,quad=love.graphics.newQuad(45,35,70,75,iw,ih)}
+  end
+ end
 end
 function Retro:setGame(game,hasSave)
  self.g=game;self.hasSave=not not hasSave
- self.selected=nil;self.room='main';self.screen='tank';self.popup=nil
+ self.selected=nil;self.browseIndex=1;self.room='main';self.screen='tank';self.popup=nil
 end
 function Retro:isPlaying() return self.hasSave and self.screen~='title' and self.screen~='confirm' and self.screen~='settings' end
 function Retro:notify(message) self.toast=tostring(message or '');self.toastTime=3.3 end
@@ -85,33 +111,91 @@ function Retro:tray()
   self.selected=nil;self.screen='tank'
  end)
 end
+-- Desenha os icones do atlas comercial, sem modificar nenhum sprite PNG.
+function Retro:atlasIcon(name,x,y,w,h)
+ local atlas=self.images.assets
+ local entry=self.quads and self.quads[name]
+ if not atlas or not entry then return false end
+ rgb(255,255,255)
+ love.graphics.draw(atlas,entry.q,x,y,0,w/entry.w,h/entry.h)
+ return true
+end
 function Retro:toolbar()
- fill(0,0,240,25,42,24,72)
- fill(0,0,240,2,120,79,162)
- fill(0,22,240,3,16,8,37)
- -- Tres miniaturas de tanque na mesma posicao da barra J2ME.
- for i,room in ipairs(rooms) do
-  local x=(i-1)*20+1
-  fill(x,3,18,19,83,51,119)
-  stroke(x,3,18,19,146,95,182)
-  if self.room==room then stroke(x+2,5,14,15,234,215,80) end
-  fontText(tostring(i),x+3,7,12,'center',{210,255,161})
+ fill(0,0,240,25,41,22,69)
+ fill(0,0,240,2,124,82,163)
+ fill(0,23,240,2,17,9,37)
+ local menu={
+  {tip='1',kind='tank',room='main'},
+  {tip='2',kind='tank',room='second'},
+  {tip='3',kind='tank',room='sale'},
+  {tip='F',kind='fish',icon='fish'},
+  {tip='E',kind='feed',icon='food'},
+  {tip='M',kind='medicine',icon='medicine'},
+  {tip='B',kind='breed',icon='breed'},
+  {tip='?',kind='species',icon='heart'},
+  {tip='S',kind='shop',icon='cart'},
+  {tip='R',kind='research',icon='hourglass'},
+  {tip='$',kind='cash',icon='money'},
+ }
+ for i,item in ipairs(menu) do
+  local x=(i-1)*19
+  if not self:atlasIcon('slot',x,1,19,22) then
+   fill(x,2,18,20,76,44,102);stroke(x,2,18,20,153,99,188)
+  end
+  local active=(item.room and item.room==self.room) or
+   (item.kind=='fish' and self.screen=='detail')
+  if active then stroke(x+1,3,17,18,239,222,70) end
+  if item.kind=='tank' then
+   local idx=i
+   local preview=self.tankIcons[idx]
+   if preview then
+    rgb(255,255,255)
+    love.graphics.draw(preview.image,preview.quad,x+3,5,0,13/70,13/75)
+   else fontText(item.tip,x+2,7,15,'center',{224,252,180}) end
+   fontText(item.tip,x+11,13,7,'right',{255,249,153})
+  elseif not self:atlasIcon(item.icon,x+3,4,13,15) then
+   fontText(item.tip,x+2,7,15,'center',{230,223,185})
+  end
   self:hit(x,2,19,21,function()
-   if room=='second' and not self.g.s.unlocked.second then self:notify('TANK 2: BUY AT STORE')
-   else self.room=room;self.screen='tank';self.selected=nil end
+   if item.kind=='tank' then
+    if item.room=='second' and not self.g.s.unlocked.second then
+     self:notify('TANK 2: BUY AT STORE')
+    else self.room=item.room;self.screen='tank';self.selected=nil;self.browseIndex=1 end
+   elseif item.kind=='fish' then self:beginBrowse()
+   elseif item.kind=='feed' then
+    local ok,msg
+    if self.selected then ok,msg=self.g:feed(self.selected)
+    else ok,msg=self.g:feedTank(self.room) end
+    self:notify(msg or (ok and 'FISH FED' or 'NO FOOD'))
+   elseif item.kind=='medicine' then
+    if self.selected then self.screen='treat' else self:notify('SELECT A FISH FIRST') end
+   elseif item.kind=='breed' then
+    if self.room=='isolation' then
+     local ok,msg=self.g:breed();self:notify(msg or (ok and 'BREEDING' or 'NEED TWO ADULTS'))
+    else self:notify('BREED IN ISOLATION') end
+   elseif item.kind=='species' then
+    if self.selected then self.screen='detail' else self:notify('SELECT A FISH FIRST') end
+   elseif item.kind=='shop' or item.kind=='cash' then self.screen='shop';self.shopPage=1
+   elseif item.kind=='research' then self.screen='research' end
   end)
  end
- local slots={{63,'F'},{82,'S'},{101,'R'},{120,'?'},{181,'$'}}
- for _,p in ipairs(slots) do
-  local x=p[1]
-  fill(x,2,18,20,71,42,100);stroke(x,2,18,20,143,94,181)
-  fontText(p[2],x+1,7,16,'center',{238,224,170})
- end
- self:hit(63,2,18,21,function() self.screen='tank';self.room='main';self.selected=nil end)
- self:hit(82,2,18,21,function() self.screen='shop';self.shopPage=1 end)
- self:hit(101,2,18,21,function() self.screen='research' end)
- self:hit(120,2,18,21,function() self.screen='collection' end)
- self:hit(181,2,34,21,function() self.screen='shop';self.shopPage=1 end)
+ rgb(223,235,193)
+ fontText('$'..math.floor(self.g.s.cash),211,8,29,'right',{240,223,162})
+end
+function Retro:beginBrowse()
+ local tank=self.g.s.tanks[self.room]
+ if not tank or #tank==0 then return self:notify('NO FISH IN TANK') end
+ self.browseIndex=math.max(1,math.min(self.browseIndex,#tank))
+ self.selected=tank[self.browseIndex].id
+ self.screen='detail'
+end
+function Retro:browseFish(direction)
+ local tank=self.g.s.tanks[self.room]
+ if not tank or #tank==0 then self.selected=nil;self.screen='tank';return false end
+ for i,f in ipairs(tank) do if f.id==self.selected then self.browseIndex=i;break end end
+ self.browseIndex=(self.browseIndex-1+(direction or 0))%#tank+1
+ self.selected=tank[self.browseIndex].id
+ return true
 end
 function Retro:fishDraw()
  self.fishHits={}
@@ -132,9 +216,14 @@ function Retro:fishDraw()
   end
   local scale=f.age<20 and .85 or .78
   if self.selected==f.id and self.screen=='detail' then
-   stroke(sx-27,sy-16,54,35,244,217,32)
+   -- Marcador de navegacao visto na captura original do J2ME.
+   stroke(sx-28,sy-15,56,32,242,208,28)
   end
   self.assets:drawFish(f,sx,sy,scale,face)
+  if self.room=='sale' and f.age>=20 and self.screen=='tank' then
+   fill(sx-19,sy+12,38,10,63,34,19,.91)
+   fontText('For Sale!',sx-19,sy+12,38,'center',{239,217,148})
+  end
   self.fishHits[#self.fishHits+1]={id=f.id,x=sx,y=sy}
  end
 end
@@ -144,8 +233,12 @@ function Retro:statsBar(f)
  fontText('HEALTH',17,17,42)
  fill(60,7,16,3,22,7,43);fill(60,7,math.max(0,16*(f.fed or 0)/100),3,160,220,102)
  fill(60,20,16,3,22,7,43);fill(60,20,math.max(0,16*(f.health or 0)/100),3,210,140,122)
- fontText(('FORM %02d'):format(f.body-1),91,4,74)
- fontText(('FIN %02d'):format(f.tail-1),91,18,74)
+ -- Nomes recuperados da tabela inglesa do JAR, indices 51..92.
+ local fullname=Catalog.nameFor(f.body,f.tail)
+ local finName=Catalog.finNames[f.tail] or 'FIN'
+ local bodyName=Catalog.bodyNames[f.body] or 'FISH'
+ fontText(finName,90,4,69,'center',{243,246,222})
+ fontText(bodyName,90,18,69,'center',{243,246,222})
  fontText('AGE:'..math.floor(f.age),165,6,58)
 end
 function Retro:drawTank()
@@ -154,8 +247,8 @@ function Retro:drawTank()
   local f=self.selected and self.g:find(self.selected)
   if f then self:statsBar(f) else self.screen='tank';self:toolbar() end
  else self:toolbar() end
+ self:tray() -- o peixe isolado deve ser desenhado SOBRE o recipiente
  self:fishDraw()
- self:tray()
  if self.screen=='detail' and self.selected then
   self:buttonHint({label='SELECT',fn=function()self.screen='actions' end},
    {label='BACK',fn=function()self.screen='tank';self.selected=nil end})
@@ -174,8 +267,7 @@ function Retro:drawTank()
   else
    left={label='FISH',fn=function()
     local tank=self.g.s.tanks[self.room]
-    if tank[1] then self.selected=tank[1].id;self.screen='detail'
-    else self:notify('NO FISH IN TANK') end
+    self:beginBrowse()
    end}
   end
   self:buttonHint(left,{label='MENU',fn=function()self.screen='pause' end})
@@ -389,7 +481,13 @@ function Retro:press(px,py)
     closest,best=hit,distance
    end
   end
-  if closest then self.selected=closest.id;self.screen='detail';return true end
+  if closest then
+   self.selected=closest.id;self.screen='detail'
+   for i,f in ipairs(self.g.s.tanks[self.room]) do
+    if f.id==closest.id then self.browseIndex=i;break end
+   end
+   return true
+  end
  end
  for i=#self.buttons,1,-1 do
   local b=self.buttons[i]
@@ -400,7 +498,15 @@ function Retro:press(px,py)
  return false
 end
 function Retro:key(k)
- if k=='escape' or k=='back' then
+ -- Navegacao classica dos aparelhos Java: 4/6 (anterior/proximo),
+ -- 2/8 para percorrer e 5 para selecionar. Mouse e toque continuam.
+ if self.screen=='detail' and (k=='left' or k=='right' or k=='up' or k=='down' or k=='4' or k=='6' or k=='2' or k=='8' or k=='kp4' or k=='kp6') then
+  self:browseFish((k=='left' or k=='up' or k=='4' or k=='2' or k=='kp4') and -1 or 1)
+  return
+ end
+ if (k=='f' or k=='space') and self.screen=='tank' then self:beginBrowse();return end
+ if (k=='5' or k=='kp5') and self.screen=='detail' then self.screen='actions';return end
+ if k=='escape'  or k=='back' then
   local back={title='title',confirm='title',tank='pause',detail='tank',pause='tank',
    settings=self.from or 'title',actions='detail',move='actions',treat='actions',
    shop='pause',research='pause',collection='pause',about='title'}
