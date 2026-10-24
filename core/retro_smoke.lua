@@ -14,7 +14,7 @@ function Smoke.new(view)
   {'05-menu-pausa',function(v)
    v:key('escape');v:key('escape');v:key('escape');assert(v.screen=='pause') end},
   {'06-suprimentos',function(v) v:press(v.ox+114*v.scale,v.oy+119*v.scale);assert(v.screen=='shop') end},
-  {'07-configuracoes',function(v) v:key('escape');v:press(v.ox+114*v.scale,v.oy+215*v.scale);assert(v.screen=='settings') end}
+  {'07-configuracoes',function(v) v:key('escape');v:draw();v:press(v.ox+114*v.scale,v.oy+215*v.scale);assert(v.screen=='settings') end}
  }
  return setmetatable({v=view,steps=actions,n=1,ready=false,pending=false,done=false},Smoke)
 end
@@ -26,7 +26,8 @@ function Smoke:afterDraw()
   self.done=true;print('FISH_RETRO_SMOKE_OK 7');love.event.quit(0);return
  end
  if not self.ready then
-  stage[2](self.v)
+  local ok,err=pcall(stage[2],self.v)
+  if not ok then print('FISH_RETRO_SMOKE_FAIL: '..tostring(err));self.done=true;love.event.quit(1);return end
   self.ready=true
   return
  end
