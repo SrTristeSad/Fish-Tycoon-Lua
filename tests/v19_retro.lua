@@ -97,6 +97,25 @@ check('falha de arquivamento nao substitui save nem inicia partida',function()
  assert(files[Storage.filename]==earlier)
  love.filesystem.write=writer
 end)
+check('tanque de vendas abre e fecha clientes pelo rodape',function()
+ retro.screen='tank';retro.room='sale'
+ local open=retro.g.s.sale_open
+ assert(press(30,308))
+ assert(retro.g.s.sale_open~=open)
+ assert(press(30,308))
+ assert(retro.g.s.sale_open==open)
+end)
+check('isolamento permite iniciar cruzamento sem esconder acao',function()
+ retro.screen='tank';retro.room='isolation';retro:draw()
+ assert(#retro.buttons>0)
+ local old=retro.g.breed
+ local called=0
+ retro.g.breed=function()called=called+1;return false,'NEED TWO ADULTS' end
+ assert(press(30,308))
+ assert(called==1)
+ assert(retro.toast=='NEED TWO ADULTS')
+ retro.g.breed=old
+end)
 check('letterbox nao clica fora da tela',function()
  width,height=1280,640
  retro:draw()

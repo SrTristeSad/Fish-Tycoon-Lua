@@ -39,13 +39,21 @@ function love.load()
  view.onSave=save
  view.onNewGame=function()
   local nextGame=Game.new()
+  nextGame.s.sound_enabled=music and music.enabled~=false
   local ok,msg=Storage.startNewGame(nextGame)
   if not ok then return false,msg end
   game=nextGame;autosave=0
   return true,nil,nextGame
  end
  music=Audio.new();music:init()
- view.onSound=function()return music:toggle() end
+ if game.s.sound_enabled==false then music:toggle() end
+ view.soundEnabled=music.enabled
+ view.onSound=function()
+  local enabled=music:toggle()
+  game.s.sound_enabled=enabled
+  if view.hasSave then save() end
+  return enabled
+ end
  if passed>=60 then view.offlineReport=report end
  if err and loaded then view:notify(err)
  elseif err and err~='Sem salvamento anterior' then view:notify(err) end

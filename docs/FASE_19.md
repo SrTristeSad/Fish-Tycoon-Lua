@@ -15,3 +15,7 @@ As imagens fornecidas mostram o Fish Tycoon J2ME em **240×320**, com arte azul 
 ## Ainda não concluído
 
 Recorte e fonte 100% fiéis do atlas, funcionamento de todas as telas do original (não disponibilizadas), equipamentos exatamente como no Java, sprites e posições de todos os menus. As configurações de velocidade e pesquisa continuam adaptações documentadas. Não há emulador Android validado.
+
+## Correções de acesso às mecânicas
+
+O tanque de isolamento expõe `BREED` na tecla inferior esquerda e o tanque de vendas expõe `OPEN/CLOSE`, mantendo `FISH/MENU` no tanque principal. As configurações de música são preservadas no save sem alterar seu número de versão.

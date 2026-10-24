@@ -160,11 +160,25 @@ function Retro:drawTank()
   self:buttonHint({label='SELECT',fn=function()self.screen='actions' end},
    {label='BACK',fn=function()self.screen='tank';self.selected=nil end})
  else
-  self:buttonHint({label='FISH',fn=function()
-   local tank=self.g.s.tanks[self.room]
-   if tank[1] then self.selected=tank[1].id;self.screen='detail'
-   else self:notify('NO FISH IN TANK') end end},
-   {label='MENU',fn=function()self.screen='pause' end})
+  local left
+  if self.room=='isolation' then
+   left={label='BREED',fn=function()
+    local ok,msg=self.g:breed()
+    self:notify(msg or (ok and 'BREEDING STARTED' or 'SELECT 2 ADULT FISH'))
+   end}
+  elseif self.room=='sale' then
+   left={label=self.g.s.sale_open and 'CLOSE' or 'OPEN',fn=function()
+    self.g.s.sale_open=not self.g.s.sale_open
+    self:notify(self.g.s.sale_open and 'SALES OPEN' or 'SALES CLOSED')
+   end}
+  else
+   left={label='FISH',fn=function()
+    local tank=self.g.s.tanks[self.room]
+    if tank[1] then self.selected=tank[1].id;self.screen='detail'
+    else self:notify('NO FISH IN TANK') end
+   end}
+  end
+  self:buttonHint(left,{label='MENU',fn=function()self.screen='pause' end})
  end
 end
 function Retro:title()
