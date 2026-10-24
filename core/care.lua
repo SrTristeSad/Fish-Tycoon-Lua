@@ -1,0 +1,103 @@
+-- Fish Tycoon J2ME 1.0.1: logica reconstruida a partir de n.c(m),
+-- n.a(m,boolean) e n.a(m,int), com adaptacoes declaradas abaixo.
+-- O Java usa indices de 0 a 20. Os peixes Lua usam indices 1 a 21.
+local C = require('core.config')
+local Care = {}
+local function clamp(v) return math.max(0,math.min(100,math.floor(v))) end
+
+-- n.a(m,boolean), opcao b.g(17): a reserva alimentar cai sempre no
+-- nivel 1, se rand(100)<=60 no 2, e se rand(100)<=30 no 3.
+function Care.foodDrainChance(level)
+ if (level or 0)>=3 then return 20 end -- 4o nivel: extrapolacao Lua, nao JAR
+ if (level or 0)>=2 then return 31 end
+ if (level or 0)>=1 then return 61 end
+ return 100
+end
+
+-- n.c(m), opcao b.g(26): parte da resistencia biologica e dependente
+-- do corpo e da barbatana. Retorna a variacao *original* de condicao
+-- por atualizacao, sem equipamentos, fome ou doencas.
+function Care.environmentDelta(body,tail,level)
+ assert(type(body)=='number' and type(tail)=='number' and body>=1 and body<=21 and tail>=1 and tail<=21)
+ local b,t=body-1,tail-1
+ level=math.max(1,math.min(3,math.floor(level or 1)))
+ if b%2==1 or t%2==1 then return ({-19,-6,0})[level] end
+ if (b-2)%4==0 or (t-2)%4==0 then return ({-1,1,3})[level] end
+ if b%4==0 or t%4==0 then return ({1,3,5})[level] end
+ return 0
+end
+
+-- n.a(m,int) se baseia na forma e na pesquisa de nutricao para
+-- definir risco inicial (por 10000). Outros modificadores do JAR
+-- ainda nao foram integralmente mapeados.
+function Care.originalDiseaseThreshold(body,foodLevel)
+ local b=body-1
+ local level=math.max(1,math.min(3,math.floor((foodLevel or 0)+1)))
+ if b%4==0 then return ({10,5,1})[level] end
+ if (b-2)%4==0 then return ({20,10,3})[level] end
+ if b%2==1 then return ({30,20,5})[level] end
+ return 2
+end
+
+-- Densidade, equipamentos, medicamentos e efeitos magicos sao
+-- adaptacoes jogaveis, e NAO formulas autenticadas do MIDlet.
+function Care.step(game,f,room)
+ local s=game.s
+ local foodLevel=s.research.food or 0
+ local environmentLevel=s.research.environment or 0
+ local drain=Care.foodDrainChance(foodLevel)
+ if game:int(0,99)<drain then f.fed=clamp((f.fed or 100)-1) end
+ -- b.d(13): planta de nutricao aumenta reserva +5, com 21% de
+ -- chance, quando o peixe esta quase sem alimento (g[7]<=2).
+ if s.gear.plant and f.fed<=2 and game:int(0,99)<=20 then
+  f.fed=clamp(f.fed+5)
+ end
+ local delta=Care.environmentDelta(f.body,f.tail,environmentLevel+1)
+ if environmentLevel>=3 then delta=delta+2 end -- bonus extra Lua, nao JAR
+ -- b.d(9/10): sistemas de temperatura e aeracao podem dar +1
+ -- por ciclo cada, se j.c(100)<=40 (41%).
+ if s.gear.heater and game:int(0,99)<=40 then delta=delta+1 end
+ if s.gear.aerator and game:int(0,99)<=40 then delta=delta+1 end
+ if game:hasMagic('vitality',room) then delta=delta+1 end
+ if f.fed<=2 then delta=delta-4
+ elseif f.fed<20 then delta=delta-2 end
+ if f.disease then delta=delta-C.SICK_DAMAGE end
+ f.health=clamp((f.health or 100)+delta)
+ -- Um aquario lotado eleva o risco. A base numerica vem do JAR;
+ -- o fator por lotacao e a atenuacao dos equipamentos sao hipoteses.
+ local fishCount=#s.tanks[room]
+ local overcrowded=fishCount>=math.ceil(C.CAPACITY[room]*.75)
+ local risk=Care.originalDiseaseThreshold(f.body,foodLevel)
+ if overcrowded then risk=risk*3 end -- adaptacao Lua, lotacao
+ if f.age>600 then risk=risk+15 end -- n.a(m,int): idade avancada
+ -- b.d(15): planta de cura reduz o limiar pela metade.
+ if s.gear.curing_plant then risk=math.floor(risk/2) end
+ -- b.d(11): caracol de limpeza tem 50% de chance de reduzir o
+ -- limiar pela metade em cada avaliacao.
+ if s.gear.snail and game:int(0,99)<=49 then risk=math.floor(risk/2) end
+ if f.fed<=2 then risk=risk*2 end -- adaptacao Lua, fome extrema
+ if not f.disease and game:random()*10000<risk then
+  f.disease=game:int(0,1)==0 and 'ick' or 'fungus'
+  s.stats.infections=(s.stats.infections or 0)+1
+  game:message('Sinais de '..(f.disease=='ick' and 'Ick' or 'fungos')..' em um peixe!')
+ end
+ if f.disease and game:hasMagic('cure',room) and game:random()<.2 then
+  f.disease=false
+  s.stats.healed=s.stats.healed+1
+ end
+ return delta
+end
+
+function Care.tankReport(game,room)
+ local tank=game.s.tanks[room]
+ if not tank then return nil end
+ local count,health,food,sick,urgent=0,0,0,0,0
+ for _,f in ipairs(tank) do
+  count=count+1;health=health+f.health;food=food+f.fed
+  if f.disease then sick=sick+1 end
+  if f.health<=35 or f.fed<=15 or f.disease then urgent=urgent+1 end
+ end
+ return {count=count,health=count>0 and math.floor(health/count+.5) or 0,
+   food=count>0 and math.floor(food/count+.5) or 0,sick=sick,urgent=urgent}
+end
+return Care

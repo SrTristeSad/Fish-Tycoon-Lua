@@ -1,0 +1,18 @@
+# Dados do jogador e saídas locais
+*.sav
+*.save
+*.bak
+*.tmp
+*.log
+*.love
+*.apk
+/build/
+/dist/
+/.vscode/
+/.idea/
+.DS_Store
+Thumbs.db
+__pycache__/
+*.pyc
+# JAR original: nao versionar distribuicao do jogo comercial
+*.jar
