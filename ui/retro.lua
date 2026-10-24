@@ -300,38 +300,51 @@ function Retro:fishDraw()
   self:menuButton('GO TO STORE',75,156,90,22,function()self:openUtility('shop') end)
   return
  end
- for i,f in ipairs(tank) do
+ local selectedIndex=nil
+ local selectedFish=nil
+ if self.screen=='detail' and self.selected then
+  for i,f in ipairs(tank) do
+   if f.id==self.selected then selectedIndex=i;selectedFish=f;break end
+  end
+ end
+ local function renderFish(i,f,selected)
   local x,y,face=Swim.position(f,i,self.room,self.time)
   local sx,sy
   if self.room=='isolation' then
-   sx=83+((i-1)%2)*64;sy=281 -- isolamento de 2 peixes
+   sx=83+((i-1)%2)*64;sy=281
   else
    sx=17+(x-70)/281*206
    sy=48+(y-233)/220*154
   end
-  -- O JAR desenha adultos perto dos 50px originais quando selecionados.
-  -- A grade do port ainda organiza o nado, mas a margem deve considerar
-  -- metade do corpo real; a seleção nao pode esconder peixes nas bordas.
-  local scale=f.age<20 and .85 or (self.screen=='detail' and 1 or .85)
+  -- A captura J2ME da tela de selecao coloca o exemplar destacado
+  -- na primeira fileira, logo abaixo do painel FED / HEALTH:
+  -- retangulo x=63..119, y=34..71 em uma tela de 240x320.
+  -- O restante dos peixes continua nadando; nenhuma posicao ou
+  -- atributo do motor e modificado.
+  if selected and self.room~='isolation' then
+   sx,sy=91,53
+  end
+  local scale=f.age<20 and .85 or (selected and 1 or .85)
   if self.room~='isolation' then
    local half=(f.age>=20 and 25 or (f.age>=6 and 18 or 11))*scale
    sx=math.max(half+2,math.min(W-half-2,sx))
    sy=math.max(35+half*.65,math.min(270-half*.65,sy))
   end
-  if self.selected==f.id and self.screen=='detail' then
-   -- Marcador de navegacao visto na captura original do J2ME.
-   stroke(sx-28,sy-15,56,32,242,208,28)
+  if selected then
+   stroke(sx-28,sy-19,56,37,242,208,28)
   end
   self.assets:drawFish(f,sx,sy,scale,face)
-  -- As placas 'For Sale!' ja estao impressas no tank3.png, fixas
-  -- no cascalho (esquerda/direita). Nao duplicar etiquetas flutuantes
-  -- que seguem cada peixe: a referencia do J2ME nao faz isso.
-  -- O alvo acompanha a dimensao do sprite desenhado, nao uma caixa
-  -- adulta fixa para todos os filhotes. Minimo de 10x8 para toque.
+  -- As placas For Sale! ja estao pintadas em tank3.png, no cascalho.
   local spriteHalf=(f.age>=20 and 25 or (f.age>=6 and 18 or 11))*scale
   self.fishHits[#self.fishHits+1]={id=f.id,x=sx,y=sy,
     rx=math.max(10,spriteHalf),ry=math.max(8,(f.age>=20 and 16 or 11)*scale)}
  end
+ -- Desenhar o selecionado POR ULTIMO garante que outros peixes nao
+ -- cubram o corpo e o contorno amarelo da tela de detalhes.
+ for i,f in ipairs(tank) do
+  if i~=selectedIndex then renderFish(i,f,false) end
+ end
+ if selectedFish then renderFish(selectedIndex,selectedFish,true) end
 end
 function Retro:statsBar(f)
  fill(13,1,214,34,62,33,96);stroke(13,1,214,34,176,118,198)
