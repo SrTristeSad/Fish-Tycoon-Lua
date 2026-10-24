@@ -1075,7 +1075,9 @@ function Retro:key(k)
  if self.screen=='tank' and (k=='f' or k=='space' or k=='5' or k=='kp5' or k=='return' or k=='kpenter') then
   self:beginBrowse();return
  end
- if (k=='5' or k=='kp5') and self.screen=='detail' then self.screen='actions';return end
+ if self.screen=='detail' and (k=='5' or k=='kp5' or k=='return' or k=='kpenter' or k=='space') then
+  self.screen='actions';return
+ end
  if (k=='escape' or k=='back') and (self.screen=='shop' or self.screen=='research') then
   self:leaveUtility();return
  end
