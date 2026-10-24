@@ -26,8 +26,9 @@ local function fontText(s,x,y,width,align,tint)
  end
 end
 local function centered(s,y,tint) fontText(s,10,y,220,'center',tint) end
--- Recorte do interior da selecao em pixels reais de janela LÖVE.
--- Preserva tambem um eventual scissor externo.
+-- A moldura J2ME ocupa x=63..119 / y=34..71. Convertemos seu
+-- interior para pixels de janela ao usar Scissor (API do LÖVE); assim
+-- o peixe de barbatana alta nao pinta sobre a borda ou o HUD.
 local function logicalScissor(view,x,y,w,h,fn)
  local gfx=love.graphics
  if not (gfx.getScissor and gfx.setScissor) then return fn() end
@@ -54,13 +55,13 @@ local function roomName(r) return ({main='TANK 1',second='TANK 2',sale='SALE TAN
 function Retro.new(game,hasSave)
  return setmetatable({g=game,hasSave=not not hasSave,screen='title',room='main',selected=nil,
   popup=nil,popupFrom=nil,buttons={},fishHits={},softkeys={},images={},assets=Assets.new(),
-  speed=1,soundEnabled=true,shopPage=1,selectedShopIndex=1,toast='',toastTime=0,time=0,browseIndex=1,
+  speed=1,soundEnabled=true,shopPage=1,selectedShopIndex=1,trophyIndex=1,toast='',toastTime=0,time=0,browseIndex=1,
   confirmFrom='title',utilityReturn=nil,
   scale=1,ox=0,oy=0,focus=nil,focusScreen=nil,onSave=nil,onNewGame=nil,onSound=nil},Retro)
 end
 function Retro:init()
  self.assets:init()
- for _,name in ipairs({'splash','assets','gameMenuTank','menutank','store'}) do
+ for _,name in ipairs({'splash','assets','gameMenuTank','menutank','store','trhopy_ball'}) do
   self.images[name]=load(name)
  end
  self.font=love.graphics.newFont(9)
@@ -355,7 +356,7 @@ function Retro:fishDraw()
    -- a moldura e tratada como um overlay, sem teletransportar ninguem.
   end
   if selected then
-   -- Barbatanas de 39px nao devem cobrir a borda ou o HUD.
+   -- A borda amarela nao pode ser coberta pela barbatana do peixe.
    stroke(sx-28,sy-19,56,37,242,208,28)
    logicalScissor(self,sx-27,sy-18,54,35,function()
     self.assets:drawFish(f,sx,sy,scale,face)
@@ -378,7 +379,9 @@ function Retro:fishDraw()
    local sky=self.assets.images.tanktop
    local gfx=love.graphics
    if sky and gfx.getScissor and gfx.setScissor then
-    -- Restaurar a agua exatamente dentro da mesma moldura.
+    -- Remover o que foi desenhado anteriormente sob a area da selecao.
+    -- A area restaurada usa o MESMO recorte do peixe selecionado;
+    -- assim nao sobra uma faixa fantasma de 1px nas extremidades.
     logicalScissor(self,64,35,54,35,function()
      rgb(255,255,255)
      gfx.draw(sky,0,24)
@@ -818,13 +821,45 @@ function Retro:help()
  end
  self:buttonHint(nil,{label='BACK',fn=function()self.screen='pause' end})
 end
+-- O JAR possui /trhopy_ball.png (88x88). A tela antiga da versao Lua
+-- era somente uma lista; aqui os sete trofeus recebem a arte original.
+-- A grade 4+3 e a interacao de selecao sao adaptacoes de navegacao: nao
+-- afirmamos que suas coordenadas sejam as do menu original do MIDlet.
 function Retro:collection()
- self:panelTitle('MAGIC FISH')
- centered(self.g:countMagic()..' / 7 DISCOVERED',71,{241,219,144})
- for i,v in ipairs(Catalog.magic) do
+ self:panelTitle('TROPHY')
+ centered(self.g:countMagic()..' / 7 DISCOVERED',69,{241,219,144})
+ local ball=self.images.trhopy_ball
+ self.trophyIndex=math.max(1,math.min(7,self.trophyIndex or 1))
+ for i,magic in ipairs(Catalog.magic) do
+  -- Quatro esferas na primeira fileira e tres centralizadas na segunda.
+  local col=(i-1)%4
+  local row=math.floor((i-1)/4)
+  local x=(row==0 and 13 or 39)+col*53
+  local y=90+row*76
   local found=self.g.s.magic[tostring(i)]
-  fontText((found and v.name or '????  -  FISH '..i),20,95+(i-1)*25,200,'left',found and {233,229,158} or {172,147,186})
+  if self.trophyIndex==i then stroke(x-2,y-2,48,48,245,207,45) end
+  if ball then
+   rgb(found and 255 or 148,found and 255 or 148,found and 255 or 168)
+   love.graphics.draw(ball,x,y,0,44/88,44/88)
+  else
+   fill(x,y,44,44,found and 29 or 25,found and 103 or 57,found and 190 or 100)
+   stroke(x,y,44,44,found and 98 or 64,found and 187 or 111,found and 252 or 155)
+  end
+  if found then
+   -- Somente o sprite original ja implementado; nao inventar um novo peixe.
+   self.assets:drawFish({body=magic.body,tail=magic.tail,age=21},x+22,y+22,.59,1)
+  else
+   fontText('?',x+14,y+17,16,'center',{238,232,184})
+  end
+  fontText(tostring(i),x+16,y+48,12,'center',{235,221,170})
+  self:hit(x,y,44,44,function()self.trophyIndex=i end)
  end
+ local active=Catalog.magic[self.trophyIndex]
+ local acquired=self.g.s.magic[tostring(self.trophyIndex)]
+ fill(15,246,210,32,34,19,64,.93);stroke(15,246,210,32,122,91,155)
+ local name=acquired and Catalog.nameFor(active.body,active.tail) or 'UNDISCOVERED FISH'
+ fontText(name,20,252,200,'center',acquired and {236,233,155} or {194,183,200})
+ fontText('MAGIC FISH '..self.trophyIndex..' / 7',20,266,200,'center',{221,211,183})
  self:buttonHint(nil,{label='BACK',fn=function()self.screen='pause' end})
 end
 -- Navegacao de celulares Java: destaque amarelo no botao ativo.

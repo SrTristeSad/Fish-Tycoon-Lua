@@ -1,20 +1,38 @@
-# Fish Tycoon Lua — v36: menu J2ME (240 × 320)
+# Fish Tycoon Lua — v37: menu J2ME (240 × 320)
 
 Desde a v19, **a interface padrão é `ui/retro.lua`**, desenhada em 240 × 320 e ampliada sem perder proporção. A tela anterior (`ui/view.lua`) foi preservada para regressão, mas não é mais o menu principal. O motor Lua, sprites e estrutura de saves permanecem.
 
-## Novo na v36 — recorte fiel da moldura de selecao
+## Novo na v37 — arte do TROPHY recuperada do JAR
 
-- A moldura amarela do J2ME mede **56×37 pixels**, com interior de **54×35**. Algumas barbatanas originais têm 39px e antes cobriam a borda ou entravam no HUD. O sprite destacado agora respeita o recorte interno sem perder sua escala nativa.
-- O fundo da selecao e restaurado no mesmo recorte; os outros peixes nao sao movidos nem mudam suas trajetorias.
-- O recorte considera escala fracionaria e restaura os limites graficos anteriores.
-- Incluido o teste `tests/v36_selection_scissor.lua` e a 24ª captura no LÖVE real, de peixe com barbatana alta. Nenhuma mudanca no motor, saves, imagens ou musica.
-- A reconstrucao completa 1:1 ainda depende da comparacao com o MIDlet.
+- A tela de trofeus deixa de ser uma lista de texto: sete posicoes mostram
+  a esfera azul de `trhopy_ball.png` quando extraida do **JAR do usuario**.
+  A disposicao em duas fileiras (4+3) e uma adaptacao nao validada 1:1.
+- Os peixes magicos ja descobertos aparecem sobre suas esferas usando os
+  mesmos sprites de corpo/barbatana da partida, e os nao descobertos
+  permanecem ocultos. Tocar em uma esfera exibe o nome correspondente.
+- O importador `scripts/import_j2me_assets.py` agora extrai tambem o arquivo
+  grafico `trhopy_ball.png`. Ele nao e versionado no repositorio publico.
+- O runner de testes continua funcional sem esse arquivo: os trofeus usam
+  um desenho de reserva, sem perder navegacao ou progresso.
+- Incluidos `tests/v37_trophy.lua` e captura adicional do menu TROPHY.
+  Biologia, mercado, audio, salvamento e demais menus nao foram alterados.
+
+## Novo na v36 — moldura sem sobreposicao de barbatanas
+
+- **Selecao de sprite:** o interior da moldura amarela J2ME e de 54×35 pixels. Peixes com barbatanas de ate 39 pixels eram desenhados sobre a borda e podiam invadir o painel superior; agora apenas o desenho selecionado respeita esse recorte, sem redimensionar os recursos originais.
+- **Compositor:** o fundo da regiao selecionada e restaurado usando exatamente a mesma area, removendo diferencas de 1px nas extremidades. O resto do aquario continua com o movimento natural, sem deslocar peixes.
+- **Coordenadas:** a janela utiliza uma funcao unica de conversao de pixels logicos 240×320 para o recorte nativo do LÖVE, incluindo escala fracionaria e restauracao de recortes anteriores.
+- **Regressao:** nova suite `tests/v36_selection_scissor.lua`; 24 capturas reais, agora com exemplar de barbatana alta. Motor, genetica, economia, arquivos de imagem e formato dos salvamentos intactos.
+- A comparacao 1:1 com o MIDlet Java em execucao ainda nao esta concluida.
 
 ## Novo na v35 — moldura superior e comparacao na sala correta
 
 - **Painel de selecao 240x320:** a moldura superior agora ocupa x=12..227, y=0..33, com interior arroxeado e linhas claras de relevo inspiradas na captura Java enviada. A versao anterior iniciava em y=1 e ultrapassava a base do painel.
-- **Comparacao honesta:** a fixture Greenfin Fruitfish/idade 21 do teste nativo agora tambem e capturada no **SALE TANK**, usando `tank3.png` e os letreiros For Sale! do mesmo aquario mostrado na referencia do usuario. Isso elimina uma comparacao enganosa com o fundo `tank1.png` do aquario principal. Os outros peixes sao apenas uma fixture de teste, sem tentativa de replicar trajetorias exatas do Midlet.
-- **Regressao:** adicionado `tests/v35_selection_panel.lua`; capturas reais sobem de 22 para 23 e o GitHub Actions acompanha a nova fixture.
+- **Comparacao honesta:** a fixture Greenfin Fruitfish/idade 21 do teste nativo agora tambem e capturada no **SALE TANK**, usando 
+`tank3.png` e os letreiros For Sale! do mesmo aquario mostrado na referencia do usuario. Isso elimina uma comparacao enganosa com o fundo 
+`tank1.png` do aquario principal. Os outros peixes sao apenas uma fixture de teste, sem tentativa de replicar trajetorias exatas do Midlet.
+- **Regressao:** adicionado 
+`tests/v35_selection_panel.lua`; capturas reais sobem de 22 para 23 e o GitHub Actions acompanha a nova fixture.
 - Nenhuma regra de jogo, recurso original, musica ou formato de salvamento foi alterado. Fidelidade 1:1 total continua pendente de capturas adicionais do MIDlet.
 
 ## Novo na v34 — selecao sem alterar o nado dos demais peixes

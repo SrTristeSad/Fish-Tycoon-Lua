@@ -123,10 +123,18 @@ function Smoke.new(view)
    assert(v.fishHits[#v.fishHits].id==fish.id)
   end},
   {'24-selecao-barbatana-alta',function(v)
+   -- Com 39px, a barbatana tipo 21 ultrapassaria a moldura de 37px
+   -- sem recorte de desenho. Somente fixture descartavel do CI.
    local fish=v.g.s.tanks.sale[1];assert(fish)
    fish.body=9;fish.tail=21;fish.age=21
    v.selected=fish.id;v.room='sale';v.screen='detail';v.time=1.5
    v:draw();assert(v.fishHits[#v.fishHits].id==fish.id)
+  end},
+  {'25-trofeus',function(v)
+   -- Apenas estado descartavel do smoke; nao toca no salvamento do jogador.
+   v.g.s.magic['1']=true
+   v.screen='collection';v.trophyIndex=1;v:draw()
+   assert(v.screen=='collection' and v.g:countMagic()>=1)
   end}
  }
  return setmetatable({v=view,steps=actions,n=1,ready=false,pending=false,done=false},Smoke)
@@ -135,8 +143,8 @@ function Smoke:afterDraw()
  if self.done or self.pending then return end
  local stage=self.steps[self.n]
  if not stage then
-  assert(love.filesystem.write('retro-smoke/ok.txt','Twenty-four J2ME-style screens rendered\n'))
-  self.done=true;print('FISH_RETRO_SMOKE_OK 24');love.event.quit(0);return
+  assert(love.filesystem.write('retro-smoke/ok.txt','Twenty-five J2ME-style screens rendered\n'))
+  self.done=true;print('FISH_RETRO_SMOKE_OK 25');love.event.quit(0);return
  end
  if not self.ready then
   local ok,err=pcall(stage[2],self.v)

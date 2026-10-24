@@ -1,27 +1,11 @@
-# Dados do jogador e saídas locais
-*.sav
-*.save
-*.bak
-*.tmp
-*.log
-*.love
-*.apk
-/build/
-/dist/
-/.vscode/
-/.idea/
-.DS_Store
-Thumbs.db
-__pycache__/
-*.pyc
-# JAR original: nao versionar distribuicao do jogo comercial
-*.jar
-
 
 # Arte comercial extraida localmente do JAR (nao versionar no repo publico)
 assets/original/assets.png
 assets/original/splash.png
 assets/original/gameMenuTank.png
 
-# Imagens de fontes e metricas comerciais extraidas apenas localmente
+# Proprietary font PNGs and metrics extracted by the user from JAR
 assets/local_font/
+
+# Trophy orb art is imported from the user's own JAR, never commit.
+assets/original/trhopy_ball.png
