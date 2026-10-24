@@ -31,6 +31,8 @@ local function check(desc,fn)
 end
 local g=Game.new(2000)
 local v=Retro.new(g,true);v:init()
+-- Teste historico de rotulos via printf, sem tipografia privada opcional.
+v.bitmapFont=nil
 local function press(x,y)
  v:draw();return v:press(v.ox+x*v.scale,v.oy+y*v.scale)
 end

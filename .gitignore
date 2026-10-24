@@ -22,3 +22,6 @@ __pycache__/
 assets/original/assets.png
 assets/original/splash.png
 assets/original/gameMenuTank.png
+
+# Imagens de fontes e metricas comerciais extraidas apenas localmente
+assets/local_font/

@@ -5,8 +5,10 @@ local Assets=require('core.assets')
 local Swim=require('ui.swim')
 local Catalog=require('core.catalog')
 local Config=require('core.config')
+local BitmapFont=require('ui.bitmap_font')
 local Retro={}; Retro.__index=Retro
 local W,H=240,320
+local bitmapFont -- initialized only for private JAR font assets
 local function rgb(r,g,b,a) love.graphics.setColor(r/255,g/255,b/255,a or 1) end
 local function fill(x,y,w,h,r,g,b,a)
  rgb(r,g,b,a);love.graphics.rectangle('fill',x,y,w,h)
@@ -16,7 +18,11 @@ local function stroke(x,y,w,h,r,g,b)
 end
 local function fontText(s,x,y,width,align,tint)
  if tint then rgb(tint[1],tint[2],tint[3]) else rgb(245,245,242) end
- love.graphics.printf(tostring(s),x,y,width or 220,align or 'left')
+ if bitmapFont then
+  bitmapFont:print(tostring(s),x,y,width or 220,align or 'left')
+ else
+  love.graphics.printf(tostring(s),x,y,width or 220,align or 'left')
+ end
 end
 local function centered(s,y,tint) fontText(s,10,y,220,'center',tint) end
 local function load(name)
@@ -38,6 +44,8 @@ function Retro:init()
  end
  self.font=love.graphics.newFont(9)
  self.font:setFilter('nearest','nearest')
+ self.bitmapFont=BitmapFont.new()
+ bitmapFont=self.bitmapFont
  -- Partes do atlas PNG original; alternativas simples sao exibidas
  -- quando o proprietario ainda nao importou assets.png de seu JAR.
  self.quads={}
@@ -627,6 +635,7 @@ function Retro:draw()
  self.buttons={};self.fishHits={}
  love.graphics.push();love.graphics.translate(self.ox,self.oy);love.graphics.scale(self.scale)
  love.graphics.setFont(self.font)
+ bitmapFont=self.bitmapFont
  if self.screen=='title' then self:title()
  elseif self.screen=='confirm' then self:confirm()
  elseif self.screen=='tank' or self.screen=='detail' then self:drawTank()

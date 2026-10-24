@@ -1,6 +1,16 @@
-# Fish Tycoon Lua — v22: controles Java e menus (240 × 320)
+# Fish Tycoon Lua — v23: fontes bitmap do JAR (240 × 320)
 
 Desde a v19, **a interface padrão é `ui/retro.lua`**, desenhada em 240 × 320 e ampliada sem perder proporção. A tela anterior (`ui/view.lua`) foi preservada para regressão, mas não é mais o menu principal. O motor Lua, sprites e estrutura de saves permanecem.
+
+## Novo na v23 — fontes bitmap recuperadas do JAR
+
+- Três atlas de fontes em `1.dat` (104 glifos por fonte) podem ser importados localmente com `python scripts/import_j2me_fonts.py Fish_Tycoon.jar`.
+- `ui/bitmap_font.lua` usa os deslocamentos reais por glifo encontrados na classe Java `i`: largura variável, alinhamento e recorte seguro de textos longos.
+- A versão local `.love` inclui as fontes extraídas do JAR enviado; o repositório público não inclui os PNGs comerciais, mas funciona com fonte reserva do LÖVE.
+- Nenhuma alteração na simulação, economia, genética ou estrutura dos salvamentos.
+- Testes: `tests/v23_bitmap_font.lua` valida largura, alinhamento, glifos, recorte, cache e comportamento sem fontes.
+
+**A interface ainda não está inteiramente 1:1.** A geometria de algumas telas precisa ser confrontada com screenshots do MIDlet.
 
 ## Novidades da v22 — controles Java e menus
 
@@ -31,7 +41,7 @@ Desde a v19, **a interface padrão é `ui/retro.lua`**, desenhada em 240 × 320 
 
 ## Jogar
 
-Abra `Aquario-de-Isola-v22.love` usando [LÖVE 2D 11.4](https://love2d.org/) ou execute `love .` no diretório. Inicialmente aparece um menu com **CONTINUE, NEW GAME, OPTIONS, ABOUT**. Para criar uma partida nova, clique em **NEW GAME**. Se já existir jogo salvo, há confirmação antes de substituí-lo; o save antigo é arquivado em `fish_tank_save_before_new_game.json` e permanece recuperável. Uma falha ao criar arquivo arquivado bloqueia a substituição.
+Abra `Aquario-de-Isola-v23.love` usando [LÖVE 2D 11.4](https://love2d.org/) ou execute `love .` no diretório. Inicialmente aparece um menu com **CONTINUE, NEW GAME, OPTIONS, ABOUT**. Para criar uma partida nova, clique em **NEW GAME**. Se já existir jogo salvo, há confirmação antes de substituí-lo; o save antigo é arquivado em `fish_tank_save_before_new_game.json` e permanece recuperável. Uma falha ao criar arquivo arquivado bloqueia a substituição.
 
 No aquário, toque em um peixe para abrir a seleção (informações e comandos **SELECT/BACK**). Na parte inferior, **FISH** seleciona um peixe e **MENU** abre o menu do jogo. A barra superior seleciona tanques e abre loja, pesquisa e coleção. O recipiente azul inferior dá acesso ao isolamento. Dentro do menu, os comandos **MOVE**, **FEED**, **TREAT**, compra de suprimentos, venda e pesquisa seguem ativos, usando o mesmo motor da v18.
 

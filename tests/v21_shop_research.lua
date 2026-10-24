@@ -29,6 +29,8 @@ for _,name in ipairs({'setColor','rectangle','line','draw','push','pop','transla
  'scale','setFont','clear'}) do love.graphics[name]=nop end
 local g=Game.new(2100)
 local v=Retro.new(g,true);v:init()
+-- Teste historico de rotulos via printf, sem tipografia privada opcional.
+v.bitmapFont=nil
 local count=0
 local function check(name,fn)
  local ok,err=pcall(fn);assert(ok,name..': '..tostring(err));count=count+1
