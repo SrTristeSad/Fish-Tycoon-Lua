@@ -33,7 +33,7 @@ local rooms={'main','second','sale'}
 local function roomName(r) return ({main='TANK 1',second='TANK 2',sale='SALE TANK',isolation='ISOLATION'})[r] or r end
 function Retro.new(game,hasSave)
  return setmetatable({g=game,hasSave=not not hasSave,screen='title',room='main',selected=nil,
-  popup=nil,popupFrom=nil,buttons={},fishHits={},images={},assets=Assets.new(),
+  popup=nil,popupFrom=nil,buttons={},fishHits={},softkeys={},images={},assets=Assets.new(),
   speed=1,soundEnabled=true,shopPage=1,selectedShopIndex=1,toast='',toastTime=0,time=0,browseIndex=1,
   scale=1,ox=0,oy=0,focus=nil,focusScreen=nil,onSave=nil,onNewGame=nil,onSound=nil},Retro)
 end
@@ -114,6 +114,7 @@ function Retro:menuButton(label,x,y,w,h,fn,disabled)
  if fn and not disabled then self:hit(x,y,w,h,fn) end
 end
 function Retro:buttonHint(left,right)
+ self.softkeys={left=left,right=right}
  fill(0,298,240,22,37,20,64)
  fill(0,299,240,2,118,79,164)
  fill(0,301,240,2,67,36,97)
@@ -166,10 +167,13 @@ function Retro:toolbar()
   {tip='R',kind='research',icon='hourglass'},
   {tip='$',kind='cash',icon='money'},
  }
+ -- Na barra J2ME da referencia, as tres miniaturas de tanque usam
+ -- colunas de 18 pixels; os oito controles seguintes usam 23-24px.
+ -- Bordas inteiras evitam frestas de clique ou sobreposicao de slots.
+ local edges={0,18,36,54,77,100,123,146,169,192,216,240}
  for i,item in ipairs(menu) do
-  -- O original ocupa toda a largura, sem faixa vazia junto ao dinheiro.
-  local x=math.floor((i-1)*W/#menu)
-  local slotW=math.floor(i*W/#menu)-x
+  local x=edges[i]
+  local slotW=edges[i+1]-x
   if not self:atlasIcon('slot',x,1,slotW,22) then
    fill(x,2,slotW,20,76,44,102);stroke(x,2,slotW,20,153,99,188)
   end
@@ -259,11 +263,15 @@ function Retro:fishDraw()
    stroke(sx-28,sy-15,56,32,242,208,28)
   end
   self.assets:drawFish(f,sx,sy,scale,face)
-  if self.room=='sale' and f.age>=20 and self.screen=='tank' then
+  if self.room=='sale' and f.age>=20 then
    fill(sx-19,sy+12,38,10,63,34,19,.91)
    fontText('For Sale!',sx-19,sy+12,38,'center',{239,217,148})
   end
-  self.fishHits[#self.fishHits+1]={id=f.id,x=sx,y=sy}
+  -- O alvo acompanha a dimensao do sprite desenhado, nao uma caixa
+  -- adulta fixa para todos os filhotes. Minimo de 10x8 para toque.
+  local spriteHalf=(f.age>=20 and 25 or (f.age>=6 and 18 or 11))*scale
+  self.fishHits[#self.fishHits+1]={id=f.id,x=sx,y=sy,
+    rx=math.max(10,spriteHalf),ry=math.max(8,(f.age>=20 and 16 or 11)*scale)}
  end
 end
 function Retro:statsBar(f)
@@ -647,7 +655,7 @@ function Retro:draw()
  self.scale=math.min(gw/W,gh/H)
  self.ox=math.floor((gw-W*self.scale)/2);self.oy=math.floor((gh-H*self.scale)/2)
  love.graphics.clear(.04,.03,.10,1)
- self.buttons={};self.fishHits={}
+ self.buttons={};self.fishHits={};self.softkeys={}
  love.graphics.push();love.graphics.translate(self.ox,self.oy);love.graphics.scale(self.scale)
  love.graphics.setFont(self.font)
  bitmapFont=self.bitmapFont
@@ -681,7 +689,7 @@ function Retro:press(px,py)
   for _,hit in ipairs(self.fishHits) do
    local dx,dy=x-hit.x,y-hit.y
    local distance=dx*dx+dy*dy
-   if math.abs(dx)<26 and math.abs(dy)<16 and distance<best then
+   if math.abs(dx)<(hit.rx or 26) and math.abs(dy)<(hit.ry or 16) and distance<best then
     closest,best=hit,distance
    end
   end
@@ -703,6 +711,15 @@ function Retro:press(px,py)
  return false
 end
 function Retro:key(k)
+ -- Softkeys classicas esquerda/direita do celular, equivalentes a F1/F2
+ -- no teclado de PC. So acionam comandos visiveis e habilitados.
+ if k=='f1' or k=='f2' then
+  local soft=self.softkeys and self.softkeys[k=='f1' and 'left' or 'right']
+  if soft and soft.fn and not soft.disabled then
+   soft.fn();self.focus=nil;return
+  end
+  return
+ end
  -- 2/4/6/8 e 5 correspondem ao teclado direcional J2ME.
  -- Em tela de peixe os direcionais ainda percorrem peixes (abaixo).
  if self.screen~='tank' and self.screen~='detail' then
