@@ -1,6 +1,14 @@
-# Fish Tycoon Lua — v27: menu J2ME (240 × 320)
+# Fish Tycoon Lua — v28: menu J2ME (240 × 320)
 
 Desde a v19, **a interface padrão é `ui/retro.lua`**, desenhada em 240 × 320 e ampliada sem perder proporção. A tela anterior (`ui/view.lua`) foi preservada para regressão, mas não é mais o menu principal. O motor Lua, sprites e estrutura de saves permanecem.
+
+## Novo na v28 — menus de ações, transferências e tratamentos
+
+- **Ações do peixe** organizadas numa lista compacta 240×320, com identificação, idade, saúde e preço. Vender diretamente e alterar preço só ficam disponíveis para **adultos no tanque de vendas**, em respeito às regras já implementadas pelo motor.
+- **Transferências** mostram ocupação/capacidade e bloqueiam visualmente destino atual, tanque fechado, tanque cheio, venda de juvenis e saída do isolamento durante gestação. O motor continua sendo a autoridade para todas as transferências.
+- **Tratamentos** exibem a doença e estoque disponível. Medicamentos inadequados, sem estoque ou hormônios para peixes acima de 40 ficam inativos; os demais aplicam as mesmas regras da v27.
+- O retorno **BACK/F2** permanece funcional e as 3 telas foram incluídas no teste do LÖVE nativo (18 capturas ao todo). Nenhum recurso original, simulação ou formato de salvamento foi alterado.
+- **Fidelidade:** essa organização é uma correção de usabilidade alinhada à resolução original, mas **a disposição exata do JAR ainda precisa de capturas dessas telas para verificação 1:1**.
 
 ## Novo na v27 — menu e navegação derivados do JAR
 
@@ -71,7 +79,7 @@ Desde a v19, **a interface padrão é `ui/retro.lua`**, desenhada em 240 × 320 
 
 ## Jogar
 
-Abra `Aquario-de-Isola-v27.love` usando [LÖVE 2D 11.4](https://love2d.org/) ou execute `love .` no diretório. Inicialmente aparece um menu com **CONTINUE, NEW GAME, OPTIONS, ABOUT**. Para criar uma partida nova, clique em **NEW GAME**. Se já existir jogo salvo, há confirmação antes de substituí-lo; o save antigo é arquivado em `fish_tank_save_before_new_game.json` e permanece recuperável. Uma falha ao criar arquivo arquivado bloqueia a substituição.
+Abra `Aquario-de-Isola-v28.love` usando [LÖVE 2D 11.4](https://love2d.org/) ou execute `love .` no diretório. Inicialmente aparece um menu com **CONTINUE, NEW GAME, OPTIONS, ABOUT**. Para criar uma partida nova, clique em **NEW GAME**. Se já existir jogo salvo, há confirmação antes de substituí-lo; o save antigo é arquivado em `fish_tank_save_before_new_game.json` e permanece recuperável. Uma falha ao criar arquivo arquivado bloqueia a substituição.
 
 No aquário, toque em um peixe para abrir a seleção (informações e comandos **SELECT/BACK**). Na parte inferior, **FISH** seleciona um peixe e **MENU** abre o menu do jogo. A barra superior seleciona tanques e abre loja, pesquisa e coleção. O recipiente azul inferior dá acesso ao isolamento. Dentro do menu, os comandos **MOVE**, **FEED**, **TREAT**, compra de suprimentos, venda e pesquisa seguem ativos, usando o mesmo motor da v18.
 
@@ -100,6 +108,7 @@ texlua tests/v24_viewport.lua
 texlua tests/v25_controls.lua
 texlua tests/v26_sale_art.lua
 texlua tests/v27_menu.lua
+texlua tests/v28_actions.lua
 # regressão completa
 for file in tests/*.lua; do texlua "$file"; done
 ```

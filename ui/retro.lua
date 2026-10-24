@@ -423,41 +423,102 @@ function Retro:about()
  centered('NOT AN OFFICIAL PORT',175)
  self:buttonHint(nil,{label='BACK',fn=function()self.screen=self.from or 'title' end})
 end
+-- Menu compacto baseado nos textos do proprio motor, sem botoes gigantes.
+-- Layout 240x320 e provisoriamente J2ME, pendente de referencia visual.
+function Retro:fishHeader(f)
+ local name=Catalog.nameFor(f.body,f.tail)
+ fontText(name,17,65,206,'center',{250,237,185})
+ fontText('AGE '..math.floor(f.age)..'   HEALTH '..math.floor(f.health or 0)..
+  '   $'..(f.price or 0),14,80,212,'center',{220,223,215})
+end
 function Retro:drawActions()
  self:panelTitle('FISH MENU')
- local f=self.selected and self.g:find(self.selected)
- if not f then self.screen='tank';return end
- centered('AGE '..math.floor(f.age)..'     $'..(f.price or 0),72,{239,218,167})
+ local f,room
+ if self.selected then f,room=self.g:find(self.selected) end
+ if not f then self.selected=nil;self.screen='tank';return end
+ self:fishHeader(f)
+ local saleEligible=room=='sale' and self.g:isAdult(f)
+ local food=(self.g.s.supplies.food or 0)
  local list={
-  {'FEED',function()local ok,msg=self.g:feed(f.id);self:notify(msg or ok) end},
-  {'TREAT',function()self.screen='treat' end},
-  {'MOVE',function()self.screen='move' end},
-  {'PRICE -5',function()local ok,n=self.g:changePrice(f.id,-5);self:notify(ok and '$'..n or n) end},
-  {'PRICE +5',function()local ok,n=self.g:changePrice(f.id,5);self:notify(ok and '$'..n or n) end},
-  {'SELL',function()local ok,n=self.g:sell(f.id);self:notify(ok and 'SOLD!' or n);if ok then self.selected=nil;self.screen='tank' end end},
+  {label='FEED   x'..food,fn=function()
+    local ok,msg=self.g:feed(f.id);self:notify(msg or (ok and 'FED' or 'NO FOOD'))
+   end,disabled=food<1 or (f.fed or 100)>=100},
+  {label='TREAT FISH',fn=function()self.screen='treat' end},
+  {label='MOVE FISH',fn=function()self.screen='move' end},
+  {label='PRICE -5',fn=function()
+    local ok,n=self.g:changePrice(f.id,-5);self:notify(ok and '$'..n or n)
+   end,disabled=not saleEligible},
+  {label='PRICE +5',fn=function()
+    local ok,n=self.g:changePrice(f.id,5);self:notify(ok and '$'..n or n)
+   end,disabled=not saleEligible},
+  {label='SELL NOW',fn=function()
+    local ok,n=self.g:sell(f.id)
+    self:notify(ok and 'SOLD!' or n)
+    if ok then self.selected=nil;self.screen='tank' end
+   end,disabled=not saleEligible},
  }
- for i,v in ipairs(list) do
-  local col=(i-1)%2;local row=math.floor((i-1)/2)
-  self:menuButton(v[1],17+col*106,99+row*46,100,39,v[2])
+ for i,item in ipairs(list) do
+  self:menuButton(item.label,23,97+(i-1)*30,194,25,item.fn,item.disabled)
  end
  self:buttonHint(nil,{label='BACK',fn=function()self.screen='detail' end})
 end
 function Retro:drawMove()
  self:panelTitle('MOVE FISH')
- local list={{'TANK 1','main'},{'TANK 2','second'},{'ISOLATION','isolation'},{'SALE TANK','sale'}}
- for i,v in ipairs(list) do self:menuButton(v[1],38,83+(i-1)*43,164,32,function()
-  local ok,msg=self.g:move(self.selected,v[2]);self:notify(msg or (ok and 'MOVED!' or 'CANNOT MOVE'))
-  if ok then self.room=v[2];self.screen='tank';self.selected=nil end
- end) end
+ local f,from
+ if self.selected then f,from=self.g:find(self.selected) end
+ if not f then self.selected=nil;self.screen='tank';return end
+ self:fishHeader(f)
+ local list={{'TANK 1','main'},{'TANK 2','second'},
+             {'ISOLATION','isolation'},{'SALE TANK','sale'}}
+ for i,item in ipairs(list) do
+  local room=item[2]
+  local count=#self.g.s.tanks[room]
+  local capacity=Config.CAPACITY[room]
+  local locked=room=='second' and not self.g.s.unlocked.second
+  local blocked=room==from or locked or count>=capacity or
+    (room=='sale' and not self.g:isAdult(f)) or
+    (from=='isolation' and f.eggs_at~=nil)
+  local name=item[1]..'    '..count..'/'..capacity
+  if room==from then name=item[1]..'  (CURRENT)'
+  elseif locked then name=item[1]..'  (LOCKED)'
+  elseif count>=capacity then name=item[1]..'  (FULL)'
+  elseif room=='sale' and not self.g:isAdult(f) then name=item[1]..'  (ADULT ONLY)'
+  elseif from=='isolation' and f.eggs_at then name=item[1]..'  (EGGS)' end
+  self:menuButton(name,18,103+(i-1)*36,204,29,function()
+   local ok,msg=self.g:move(self.selected,room)
+   self:notify(msg or (ok and 'MOVED!' or 'CANNOT MOVE'))
+   if ok then self.room=room;self.screen='tank';self.selected=nil end
+  end,blocked)
+ end
+ centered('SELECT A TANK WITH SPACE',259,{213,209,223})
  self:buttonHint(nil,{label='BACK',fn=function()self.screen='actions' end})
 end
 function Retro:drawTreat()
  self:panelTitle('TREAT FISH')
- local list={{'ICK','ick'},{'FUNGUS','fungus'},{'VITAMINS','vitamin'},{'HORMONE','hormone'},{'CHEMICAL','mutagen'}}
- for i,v in ipairs(list) do self:menuButton(v[1]..'  X'..(self.g.s.supplies[v[2]] or 0),23,75+(i-1)*39,194,32,function()
-  local ok,msg=self.g:medicine(self.selected,v[2]);self:notify(msg or (ok and 'APPLIED' or 'FAILED'))
-  if ok then self.screen='actions' end
- end) end
+ local f=self.selected and self.g:find(self.selected)
+ if not f then self.selected=nil;self.screen='tank';return end
+ self:fishHeader(f)
+ local disease=f.disease or 'NONE'
+ fontText('CONDITION: '..string.upper(disease),17,96,206,'center',
+  disease=='NONE' and {173,235,175} or {247,185,130})
+ local list={{'ICK','ick'},{'FUNGUS','fungus'},
+             {'VITAMINS','vitamin'},{'HORMONE','hormone'},
+             {'CHEMICAL','mutagen'}}
+ for i,item in ipairs(list) do
+  local kind=item[2]
+  local quantity=self.g.s.supplies[kind] or 0
+  local compatible=(kind~='ick' and kind~='fungus') or f.disease==kind
+  if kind=='hormone' and f.age>40 then compatible=false end
+  local disabled=quantity<1 or not compatible
+  local label=item[1]..'     x'..quantity
+  if not compatible then label=label..'  (N/A)' end
+  self:menuButton(label,23,115+(i-1)*31,194,26,function()
+   local ok,msg=self.g:medicine(self.selected,kind)
+   self:notify(msg or (ok and 'APPLIED' or 'FAILED'))
+   if ok then self.screen='actions' end
+  end,disabled)
+ end
+ centered('BUY MEDICINE AT STORE',279,{208,202,213})
  self:buttonHint(nil,{label='BACK',fn=function()self.screen='actions' end})
 end
 -- Rótulos compactos no idioma das capturas fornecidas; custos do motor

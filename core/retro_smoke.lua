@@ -47,7 +47,21 @@ function Smoke.new(view)
   {'15-trofeu',function(v)
    v:key('escape');v:draw()
    v:press(v.ox+114*v.scale,v.oy+155*v.scale)
-   assert(v.screen=='collection') end}
+   assert(v.screen=='collection') end},
+  {'16-acoes-peixe',function(v)
+   v:key('escape');v:key('escape');v:draw()
+   v:press(v.ox+9*v.scale,v.oy+12*v.scale)
+   assert(v.room=='main' and v.screen=='tank')
+   v:draw();local h=v.fishHits[1];assert(h)
+   v:press(v.ox+h.x*v.scale,v.oy+h.y*v.scale)
+   assert(v.screen=='detail');v:key('5');assert(v.screen=='actions') end},
+  {'17-transferir-peixe',function(v)
+   v:press(v.ox+112*v.scale,v.oy+165*v.scale)
+   assert(v.screen=='move') end},
+  {'18-tratar-peixe',function(v)
+   v:key('escape');assert(v.screen=='actions')
+   v:draw();v:press(v.ox+112*v.scale,v.oy+134*v.scale)
+   assert(v.screen=='treat') end}
  }
  return setmetatable({v=view,steps=actions,n=1,ready=false,pending=false,done=false},Smoke)
 end
@@ -55,8 +69,8 @@ function Smoke:afterDraw()
  if self.done or self.pending then return end
  local stage=self.steps[self.n]
  if not stage then
-  assert(love.filesystem.write('retro-smoke/ok.txt','Fifteen J2ME-style screens rendered\n'))
-  self.done=true;print('FISH_RETRO_SMOKE_OK 15');love.event.quit(0);return
+  assert(love.filesystem.write('retro-smoke/ok.txt','Eighteen J2ME-style screens rendered\n'))
+  self.done=true;print('FISH_RETRO_SMOKE_OK 18');love.event.quit(0);return
  end
  if not self.ready then
   local ok,err=pcall(stage[2],self.v)
