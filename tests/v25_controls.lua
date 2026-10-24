@@ -72,14 +72,16 @@ check('F1 e F2 ativam somente os comandos inferiores visiveis',function()
  v:draw();v:key('f2');assert(v.screen=='pause')
  v.screen='title';v:draw();v:key('f1');assert(v.screen=='title')
 end)
-check('For Sale permanece visivel na selecao do tanque de vendas',function()
+check('placas For Sale ja pertencem ao fundo tank3 sem texto flutuante',function()
  local f=assert(g:addFish('sale',4,3,20))
- v.bitmapFont=nil  -- usa printf do mock para observar textos renderizados
+ assert(v.assets.images.tank3,'Fundo tank3 original deve existir')
+ v.bitmapFont=nil
  v.room='sale';v.screen='detail';v.selected=f.id
  printed={};v:draw()
- local found=false
- for _,s in ipairs(printed)do if s=='For Sale!' then found=true;break end end
- assert(found,'Etiqueta de venda desapareceu da selecao')
+ for _,s in ipairs(printed) do
+  assert(s~='For Sale!','Texto duplicado acompanhando o peixe')
+ end
+ assert(#v.fishHits>0)
 end)
 check('nenhum controle modifica por si as regras ou versao de salvamento',function()
  assert(g.s.cash==savedCash)

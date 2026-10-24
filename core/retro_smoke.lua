@@ -24,7 +24,16 @@ function Smoke.new(view)
   {'09-configuracoes',function(v)
    v:key('escape');v:draw()
    v:press(v.ox+114*v.scale,v.oy+215*v.scale)
-   assert(v.screen=='settings') end}
+   assert(v.screen=='settings') end},
+  {'10-vendas',function(v)
+   v:key('escape');v:key('escape');v:draw()
+   v:press(v.ox+45*v.scale,v.oy+12*v.scale)
+   assert(v.screen=='tank' and v.room=='sale')
+   assert(v.g:addFish('sale',3,4,20)) end},
+  {'11-vendas-peixe',function(v)
+   local h=v.fishHits[1];assert(h)
+   v:press(v.ox+h.x*v.scale,v.oy+h.y*v.scale)
+   assert(v.screen=='detail' and v.room=='sale') end}
  }
  return setmetatable({v=view,steps=actions,n=1,ready=false,pending=false,done=false},Smoke)
 end
@@ -32,8 +41,8 @@ function Smoke:afterDraw()
  if self.done or self.pending then return end
  local stage=self.steps[self.n]
  if not stage then
-  assert(love.filesystem.write('retro-smoke/ok.txt','Nine J2ME-style screens rendered\n'))
-  self.done=true;print('FISH_RETRO_SMOKE_OK 9');love.event.quit(0);return
+  assert(love.filesystem.write('retro-smoke/ok.txt','Eleven J2ME-style screens rendered\n'))
+  self.done=true;print('FISH_RETRO_SMOKE_OK 11');love.event.quit(0);return
  end
  if not self.ready then
   local ok,err=pcall(stage[2],self.v)

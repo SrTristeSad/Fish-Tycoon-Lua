@@ -1,6 +1,13 @@
-# Fish Tycoon Lua — v25: fontes bitmap do JAR (240 × 320)
+# Fish Tycoon Lua — v26: fontes bitmap do JAR (240 × 320)
 
 Desde a v19, **a interface padrão é `ui/retro.lua`**, desenhada em 240 × 320 e ampliada sem perder proporção. A tela anterior (`ui/view.lua`) foi preservada para regressão, mas não é mais o menu principal. O motor Lua, sprites e estrutura de saves permanecem.
+
+## Novo na v26 — placas originais e duas telas novas de verificacao
+
+- A arte `tank3.png` ja inclui duas placas `For Sale!` fixas no solo. Removido o texto extra que seguia cada peixe no tanque de vendas, duplicando as placas. Precos, selecao, venda e demais comportamentos permanecem iguais.
+- Na ausencia do `splash.png` comercial, o titulo reserva usa `FISH TYCOON / MOBILE`, sem a palavra `LUA` que nao aparecia no original.
+- O smoke nativo do LÖVE captura **11 telas**, incluindo o tanque de vendas e a selecao de um peixe vendido. A nova suíte `v26_sale_art` verifica a arte do fundo, a ausencia de placas extras e o toque.
+- O save continua v9; a comparacao 1:1 completa dos menus e o teste Android seguem pendentes.
 
 ## Novo na v25 — controles 1:1 da barra e selecao
 
@@ -57,7 +64,7 @@ Desde a v19, **a interface padrão é `ui/retro.lua`**, desenhada em 240 × 320 
 
 ## Jogar
 
-Abra `Aquario-de-Isola-v25.love` usando [LÖVE 2D 11.4](https://love2d.org/) ou execute `love .` no diretório. Inicialmente aparece um menu com **CONTINUE, NEW GAME, OPTIONS, ABOUT**. Para criar uma partida nova, clique em **NEW GAME**. Se já existir jogo salvo, há confirmação antes de substituí-lo; o save antigo é arquivado em `fish_tank_save_before_new_game.json` e permanece recuperável. Uma falha ao criar arquivo arquivado bloqueia a substituição.
+Abra `Aquario-de-Isola-v26.love` usando [LÖVE 2D 11.4](https://love2d.org/) ou execute `love .` no diretório. Inicialmente aparece um menu com **CONTINUE, NEW GAME, OPTIONS, ABOUT**. Para criar uma partida nova, clique em **NEW GAME**. Se já existir jogo salvo, há confirmação antes de substituí-lo; o save antigo é arquivado em `fish_tank_save_before_new_game.json` e permanece recuperável. Uma falha ao criar arquivo arquivado bloqueia a substituição.
 
 No aquário, toque em um peixe para abrir a seleção (informações e comandos **SELECT/BACK**). Na parte inferior, **FISH** seleciona um peixe e **MENU** abre o menu do jogo. A barra superior seleciona tanques e abre loja, pesquisa e coleção. O recipiente azul inferior dá acesso ao isolamento. Dentro do menu, os comandos **MOVE**, **FEED**, **TREAT**, compra de suprimentos, venda e pesquisa seguem ativos, usando o mesmo motor da v18.
 
@@ -84,6 +91,7 @@ texlua tests/v21_shop_research.lua
 texlua tests/v22_keypad.lua
 texlua tests/v24_viewport.lua
 texlua tests/v25_controls.lua
+texlua tests/v26_sale_art.lua
 # regressão completa
 for file in tests/*.lua; do texlua "$file"; done
 ```
@@ -92,3 +100,6 @@ GitHub Actions contém dois testes nativos no LÖVE/Xvfb: o anterior para a inte
 
 A base canônica é a branch `main` de https://github.com/SrTristeSad/Fish-Tycoon-Lua. Toda alteração deve ter commit. Consulte também `AGENTS.md` e `RECURSOS_E_DIREITOS.md`.
 Veja [`docs/FASE_21.md`](docs/FASE_21.md) para o escopo e as limitações desta fase.
+
+
+Detalhes adicionais: [FASE_26](docs/FASE_26.md).

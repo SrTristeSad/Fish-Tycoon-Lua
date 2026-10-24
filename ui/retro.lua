@@ -263,10 +263,8 @@ function Retro:fishDraw()
    stroke(sx-28,sy-15,56,32,242,208,28)
   end
   self.assets:drawFish(f,sx,sy,scale,face)
-  if self.room=='sale' and f.age>=20 then
-   fill(sx-19,sy+12,38,10,63,34,19,.91)
-   fontText('For Sale!',sx-19,sy+12,38,'center',{239,217,148})
-  end
+  -- As duas placas de venda ja estao impressas no fundo tank3.png
+  -- nas margens do cascalho: nao desenhar copias sobre os peixes.
   -- O alvo acompanha a dimensao do sprite desenhado, nao uma caixa
   -- adulta fixa para todos os filhotes. Minimo de 10x8 para toque.
   local spriteHalf=(f.age>=20 and 25 or (f.age>=6 and 18 or 11))*scale
@@ -333,7 +331,7 @@ function Retro:title()
   fill(17,61,206,79,28,13,68,.85)
   stroke(17,61,206,79,245,195,80)
   centered('FISH TYCOON',79,{253,218,118})
-  centered('MOBILE - LUA',103,{240,238,213})
+  centered('MOBILE',103,{240,238,213})
  end
  fill(12,180,216,124,34,18,66,.87);stroke(12,180,216,124,172,112,205)
  self:menuButton('CONTINUE',38,187,164,24,function()
