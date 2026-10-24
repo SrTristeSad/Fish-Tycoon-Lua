@@ -28,12 +28,12 @@ local function roomName(r) return ({main='TANK 1',second='TANK 2',sale='SALE TAN
 function Retro.new(game,hasSave)
  return setmetatable({g=game,hasSave=not not hasSave,screen='title',room='main',selected=nil,
   popup=nil,popupFrom=nil,buttons={},fishHits={},images={},assets=Assets.new(),
-  speed=1,soundEnabled=true,shopPage=1,toast='',toastTime=0,time=0,browseIndex=1,
+  speed=1,soundEnabled=true,shopPage=1,selectedShopIndex=1,toast='',toastTime=0,time=0,browseIndex=1,
   scale=1,ox=0,oy=0,onSave=nil,onNewGame=nil,onSound=nil},Retro)
 end
 function Retro:init()
  self.assets:init()
- for _,name in ipairs({'splash','assets','gameMenuTank','menutank'}) do
+ for _,name in ipairs({'splash','assets','gameMenuTank','menutank','store'}) do
   self.images[name]=load(name)
  end
  self.font=love.graphics.newFont(9)
@@ -52,6 +52,26 @@ function Retro:init()
   for name,c in pairs(coords) do
    if c[1]+c[3]<=iw and c[2]+c[4]<=ih then
     self.quads[name]={q=love.graphics.newQuad(c[1],c[2],c[3],c[4],iw,ih),w=c[3],h=c[4]}
+   end
+  end
+ end
+ -- Itens recortados do atlas store.png do JAR (113x123).
+ -- As coordenadas sao do arquivo original, e NAO de imagens recriadas.
+ -- Nem todos os produtos tiveram sprite individual identificado: nesses
+ -- casos, o layout usa o quadro de reserva sem desenhar sprite incorreto.
+ self.storeQuads={}
+ local store=self.images.store
+ if store and love.graphics.newQuad then
+  local iw,ih=store:getDimensions()
+  local coords={food={97,52,15,20},ick={1,49,20,18},fungus={92,46,18,23},
+   vitamin={23,73,22,25},hormone={23,46,24,29},mutagen={52,1,23,24},
+   eggs={84,0,23,25},aerator={57,21,18,23},heater={94,83,17,23},
+   snail={77,104,18,16},plant={61,53,21,29},
+   curing_plant={31,28,25,22},fertility_plant={31,52,22,23},
+   decor={64,100,19,20},second={25,1,30,19}}
+  for id,q in pairs(coords) do
+   if q[1]+q[3]<=iw and q[2]+q[4]<=ih then
+    self.storeQuads[id]={quad=love.graphics.newQuad(q[1],q[2],q[3],q[4],iw,ih),w=q[3],h=q[4]}
    end
   end
  end
@@ -392,41 +412,113 @@ function Retro:drawTreat()
  end) end
  self:buttonHint(nil,{label='BACK',fn=function()self.screen='actions' end})
 end
+-- Rótulos compactos no idioma das capturas fornecidas; custos do motor
+-- Lua permanecem provisórios, não apresentados como valores do JAR.
+local supplyLabels={food='FISH FOOD',ick='ICK TREATMENT',fungus='FUNGUS CURE',
+ vitamin='VITAMINS',hormone='GROWTH HORMONE',mutagen='UNKNOWN CHEMICAL',
+ eggs='FISH EGGS',aerator='AERATOR',heater='HEATER',snail='CLEANER SNAIL',
+ plant='NUTRIENT PLANT',curing_plant='MEDICINAL PLANT',
+ fertility_plant='FERTILITY PLANT',decor='DECORATIONS',second='TANK 2'}
+local supplyNotes={food='FOOD FOR THE TANK',ick='TREAT FISH WITH ICK',
+ fungus='TREAT FUNGUS',vitamin='IMPROVE FISH HEALTH',
+ hormone='SPEED UP GROWTH',mutagen='MAY CHANGE FISH',
+ eggs='HATCH NEW FISH',aerator='IMPROVE WATER',heater='CONTROL TEMPERATURE',
+ snail='KEEP WATER CLEAN',plant='HELP FEED FISH',
+ curing_plant='SUPPORT FISH HEALTH',fertility_plant='MORE BABY FISH',
+ decor='ATTRACT CUSTOMERS',second='UNLOCK ANOTHER TANK'}
+function Retro:storeIcon(id,x,y)
+ local atlas=self.images.store
+ local sprite=self.storeQuads and self.storeQuads[id]
+ if not atlas or not sprite then return false end
+ rgb(255,255,255)
+ local sc=math.min(27/sprite.w,28/sprite.h,1.35)
+ love.graphics.draw(atlas,sprite.quad,x+(28-sprite.w*sc)/2,
+  y+(29-sprite.h*sc)/2,0,sc,sc)
+ return true
+end
 function Retro:shop()
  self:panelTitle('FISH SUPPLIES')
- fontText('CASH: $'..self.g.s.cash,18,66,198,'right',{254,231,126})
- for i=1,5 do
-  local item=Catalog.supplies[(self.shopPage-1)*5+i]
+ local total=#Catalog.supplies
+ local pages=math.ceil(total/4)
+ self.shopPage=math.max(1,math.min(self.shopPage,pages))
+ local startIndex=(self.shopPage-1)*4+1
+ if not self.selectedShopIndex or self.selectedShopIndex<startIndex
+    or self.selectedShopIndex>startIndex+3 then
+  self.selectedShopIndex=startIndex
+ end
+ fontText('CASH $'..math.floor(self.g.s.cash),20,66,201,'right',{255,238,139})
+ for row=0,3 do
+  local i=startIndex+row
+  local item=Catalog.supplies[i]
   if item then
-   local y=82+(i-1)*39
-   fontText(item.title:sub(1,23),18,y,144)
-   fontText('$'..item.price,164,y,57,'right',{243,206,129})
-   self:menuButton('BUY',172,y+13,51,21,function()
+   local y=83+row*43
+   fill(15,y,210,39,48,25,80,.9)
+   stroke(15,y,210,39,117,75,145)
+   if self.selectedShopIndex==i then
+    stroke(16,y+1,208,37,241,210,45)
+   end
+   if not self:storeIcon(item.id,20,y+4) then
+    fill(21,y+5,27,28,69,45,104)
+    fontText('?',27,y+13,15,'center',{222,205,152})
+   end
+   fontText(supplyLabels[item.id] or item.title:upper(),54,y+6,156,'left',
+    {245,241,207})
+   fontText('$'..tostring(item.price),54,y+22,57,'left',{254,220,119})
+   self:menuButton('BUY',171,y+20,48,18,function()
+    self.selectedShopIndex=i
     local ok,msg=self.g:purchase(item.id)
     self:notify(ok and 'PURCHASED' or msg)
    end)
+   self:hit(15,y,153,39,function() self.selectedShopIndex=i end)
   end
  end
- self:menuButton('<',53,280,40,18,function()self.shopPage=math.max(1,self.shopPage-1) end)
- fontText(self.shopPage..'/'..math.ceil(#Catalog.supplies/5),98,284,44,'center')
- self:menuButton('>',147,280,40,18,function()self.shopPage=math.min(math.ceil(#Catalog.supplies/5),self.shopPage+1) end)
+ local item=Catalog.supplies[self.selectedShopIndex]
+ fill(15,257,210,22,32,17,59,.94)
+ stroke(15,257,210,22,120,83,156)
+ if item then
+  fontText(supplyNotes[item.id] or (item.desc or ''):upper():sub(1,33),19,265,202,'center',{215,213,191})
+ end
+ self:menuButton('<',55,281,36,17,function()
+  self.shopPage=math.max(1,self.shopPage-1)
+  self.selectedShopIndex=(self.shopPage-1)*4+1
+ end,self.shopPage<=1)
+ fontText(self.shopPage..'/'..pages,100,284,40,'center',{246,228,180})
+ self:menuButton('>',148,281,36,17,function()
+  self.shopPage=math.min(pages,self.shopPage+1)
+  self.selectedShopIndex=(self.shopPage-1)*4+1
+ end,self.shopPage>=pages)
  self:buttonHint(nil,{label='BACK',fn=function()self.screen='pause' end})
 end
 function Retro:research()
  self:panelTitle('RESEARCH')
+ local active=self.g:researchInfo()
  for i,entry in ipairs(Catalog.research) do
   local lvl=self.g.s.research[entry.id] or 0
-  local y=80+(i-1)*62
-  fontText(entry.title:upper()..' '..lvl..'/3',17,y,200)
-  local p=self.g:researchProjection(entry.id)
-  if p then fontText(p.current:sub(1,38),17,y+14,200,'left',{194,221,206}) end
-  self:menuButton('RESEARCH',28,y+30,182,25,function()
+  local y=77+(i-1)*65
+  fill(16,y,208,60,49,29,84,.95)
+  stroke(16,y,208,60,134,94,161)
+  fontText(entry.title:upper(),23,y+5,116,'left',{249,225,154})
+  fontText('LEVEL '..lvl..'/'..Config.RESEARCH_MAX,137,y+5,78,'right')
+  -- Barra de nivel, inspirada na apresentacao compacta J2ME.
+  fill(23,y+21,130,5,17,9,34)
+  local progress=math.floor(130*lvl/Config.RESEARCH_MAX)
+  fill(23,y+21,progress,5,112,197,87)
+  local preview=self.g:researchProjection(entry.id)
+  if preview then fontText(preview.current:sub(1,29),23,y+29,186,'left',
+    {201,219,190}) end
+  local disabled=lvl>=Config.RESEARCH_MAX or (self.g.s.research_job~=false and self.g.s.research_job~=nil)
+  self:menuButton(lvl>=Config.RESEARCH_MAX and 'MAX' or 'START',157,y+42,57,16,function()
    local ok,msg=self.g:startResearch(entry.id)
    self:notify(ok and 'RESEARCH STARTED' or msg)
-  end,lvl>=Config.RESEARCH_MAX or self.g.s.research_job~=false)
+  end,disabled)
  end
- local job=self.g:researchInfo()
- if job then centered('IN PROGRESS: '..math.ceil(job.remaining/60)..' MIN',280) end
+ fill(16,275,208,21,34,20,61,.96)
+ if active then
+  fontText('IN PROGRESS: '..math.ceil(active.remaining/60)..' MIN',18,281,204,'center',
+   {225,227,167})
+ else
+  fontText('CHOOSE A FIELD TO RESEARCH',18,281,204,'center',{211,204,189})
+ end
  self:buttonHint(nil,{label='BACK',fn=function()self.screen='pause' end})
 end
 function Retro:collection()
