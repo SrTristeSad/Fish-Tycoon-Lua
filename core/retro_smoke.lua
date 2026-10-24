@@ -135,6 +135,17 @@ function Smoke.new(view)
    v.g.s.magic['1']=true
    v.screen='collection';v.trophyIndex=1;v:draw()
    assert(v.screen=='collection' and v.g:countMagic()>=1)
+  end},
+  {'26-suprimentos-indisponiveis',function(v)
+   -- O CI nao grava esta partida: estados criados para captura visual.
+   v.g.s.cash=0;v.g.s.gear.aerator=true
+   v.screen='shop';v.shopPage=2;v.selectedShopIndex=8;v:draw()
+   assert(v.screen=='shop')
+  end},
+  {'27-pesquisa-custos',function(v)
+   v.g.s.cash=120;v.g.s.research_job=false
+   v.screen='research';v:draw()
+   assert(v.screen=='research')
   end}
  }
  return setmetatable({v=view,steps=actions,n=1,ready=false,pending=false,done=false},Smoke)
@@ -143,8 +154,8 @@ function Smoke:afterDraw()
  if self.done or self.pending then return end
  local stage=self.steps[self.n]
  if not stage then
-  assert(love.filesystem.write('retro-smoke/ok.txt','Twenty-five J2ME-style screens rendered\n'))
-  self.done=true;print('FISH_RETRO_SMOKE_OK 25');love.event.quit(0);return
+  assert(love.filesystem.write('retro-smoke/ok.txt','Twenty-seven J2ME-style screens rendered\n'))
+  self.done=true;print('FISH_RETRO_SMOKE_OK 27');love.event.quit(0);return
  end
  if not self.ready then
   local ok,err=pcall(stage[2],self.v)

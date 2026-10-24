@@ -1,6 +1,14 @@
-# Fish Tycoon Lua — v37: menu J2ME (240 × 320)
+# Fish Tycoon Lua — v38: menu J2ME (240 × 320)
 
 Desde a v19, **a interface padrão é `ui/retro.lua`**, desenhada em 240 × 320 e ampliada sem perder proporção. A tela anterior (`ui/view.lua`) foi preservada para regressão, mas não é mais o menu principal. O motor Lua, sprites e estrutura de saves permanecem.
+
+## Novo na v38 — compras e pesquisas sem comandos impossiveis
+
+- A loja exibe **OWN** para equipamentos/tanque adicional ja adquiridos, **FULL** quando nao cabem mais ovos e **NO $** quando falta dinheiro. Esses botoes ficam desativados antes do toque, usando os mesmos limites de `Game:purchase`.
+- Consumiveis mostram as doses/porcoes existentes ao lado do preco; nenhuma compra automatica ocorre ao selecionar um item.
+- Pesquisas mostram dinheiro atual, custo da proxima melhoria e duracao em minutos segundo `core/config.lua`; os controles START ficam indisponiveis durante outra pesquisa, no ultimo nivel e quando falta dinheiro.
+- Incluidas verificacoes em `tests/v38_shop_research_states.lua` e duas capturas nativas extras no CI. **Os custos e tempos sao provisoes do port Lua, nao valores autenticados do JAR J2ME.**
+- Somente interface: o motor, os saldos, os recursos graficos e os salvamentos nao foram alterados. A disposicao ainda nao foi confirmada 1:1 com o menu Java.
 
 ## Novo na v37 — arte do TROPHY recuperada do JAR
 

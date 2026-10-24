@@ -711,12 +711,27 @@ function Retro:shop()
    end
    fontText(supplyLabels[item.id] or item.title:upper(),54,y+6,156,'left',
     {245,241,207})
-   fontText('$'..tostring(item.price),54,y+22,57,'left',{254,220,119})
-   self:menuButton('BUY',171,y+20,48,18,function()
+   -- Os estados abaixo refletem as precondicoes reais de Game:purchase,
+   -- nao estimativas de preco ou regras novas. O botao fica indisponivel
+   -- antes do clique, em vez de prometer uma compra impossivel.
+   local state=self.g.s
+   local owned=(item.id=='second' and state.unlocked.second) or
+    (state.gear[item.id] == true)
+   local eggFull=item.id=='eggs' and
+    (#state.eggs+#state.tanks.main)>Config.CAPACITY.main-2
+   local shortCash=state.cash<item.price
+   local stock=state.supplies[item.id]
+   local stockText=type(stock)=='number' and ('  x'..math.floor(stock)) or
+    (item.id=='eggs' and ('  x'..#state.eggs) or '')
+   fontText('$'..tostring(item.price)..stockText,54,y+22,114,'left',{254,220,119})
+   local buyLabel=owned and 'OWN' or eggFull and 'FULL' or
+    shortCash and 'NO $' or 'BUY'
+   local cannotBuy=owned or eggFull or shortCash
+   self:menuButton(buyLabel,171,y+20,48,18,function()
     self.selectedShopIndex=i
     local ok,msg=self.g:purchase(item.id)
     self:notify(ok and 'PURCHASED' or msg)
-   end)
+   end,cannotBuy)
    self:hit(15,y,153,39,function() self.selectedShopIndex=i end)
   end
  end
@@ -740,6 +755,7 @@ end
 function Retro:research()
  self:panelTitle('RESEARCH')
  local active=self.g:researchInfo()
+ fontText('CASH $'..math.floor(self.g.s.cash),20,61,200,'right',{255,238,139})
  for i,entry in ipairs(Catalog.research) do
   local lvl=self.g.s.research[entry.id] or 0
   local y=77+(i-1)*65
@@ -764,8 +780,20 @@ function Retro:research()
    end
    fontText(summary,23,y+29,186,'left',{201,219,190})
   end
-  local disabled=lvl>=Config.RESEARCH_MAX or (self.g.s.research_job~=false and self.g.s.research_job~=nil)
-  self:menuButton(lvl>=Config.RESEARCH_MAX and 'MAX' or 'START',157,y+42,57,16,function()
+  -- Mostrar custo/tempo reais do proximo nivel do motor Lua.
+  -- O JAR ainda nao autenticou esses valores; nao os atribuir ao Java.
+  local complete=lvl>=Config.RESEARCH_MAX
+  local nextLevel=lvl+1
+  local cost=not complete and Config.RESEARCH_COSTS[entry.id][nextLevel] or nil
+  local duration=not complete and Config.RESEARCH_SECONDS[nextLevel] or nil
+  local running=self.g.s.research_job~=false and self.g.s.research_job~=nil
+  local poor=cost and self.g.s.cash<cost
+  local status=complete and 'MAX LEVEL' or
+    ('$'..cost..' / '..math.ceil(duration/60)..' MIN')
+  fontText(status,23,y+45,129,'left',poor and {245,159,147} or {245,219,153})
+  local disabled=complete or running or poor
+  self:menuButton(complete and 'MAX' or running and 'BUSY' or
+   poor and 'NO $' or 'START',157,y+42,57,16,function()
    local ok,msg=self.g:startResearch(entry.id)
    self:notify(ok and 'RESEARCH STARTED' or msg)
   end,disabled)
