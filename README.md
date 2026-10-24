@@ -1,6 +1,13 @@
-# Fish Tycoon Lua — v34: menu J2ME (240 × 320)
+# Fish Tycoon Lua — v35: menu J2ME (240 × 320)
 
 Desde a v19, **a interface padrão é `ui/retro.lua`**, desenhada em 240 × 320 e ampliada sem perder proporção. A tela anterior (`ui/view.lua`) foi preservada para regressão, mas não é mais o menu principal. O motor Lua, sprites e estrutura de saves permanecem.
+
+## Novo na v35 — moldura superior e comparacao na sala correta
+
+- **Painel de selecao 240x320:** a moldura superior agora ocupa x=12..227, y=0..33, com interior arroxeado e linhas claras de relevo inspiradas na captura Java enviada. A versao anterior iniciava em y=1 e ultrapassava a base do painel.
+- **Comparacao honesta:** a fixture Greenfin Fruitfish/idade 21 do teste nativo agora tambem e capturada no **SALE TANK**, usando `tank3.png` e os letreiros For Sale! do mesmo aquario mostrado na referencia do usuario. Isso elimina uma comparacao enganosa com o fundo `tank1.png` do aquario principal. Os outros peixes sao apenas uma fixture de teste, sem tentativa de replicar trajetorias exatas do Midlet.
+- **Regressao:** adicionado `tests/v35_selection_panel.lua`; capturas reais sobem de 22 para 23 e o GitHub Actions acompanha a nova fixture.
+- Nenhuma regra de jogo, recurso original, musica ou formato de salvamento foi alterado. Fidelidade 1:1 total continua pendente de capturas adicionais do MIDlet.
 
 ## Novo na v34 — selecao sem alterar o nado dos demais peixes
 

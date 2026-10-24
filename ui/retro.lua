@@ -375,7 +375,20 @@ function Retro:fishDraw()
  end
 end
 function Retro:statsBar(f)
- fill(13,1,214,34,62,33,96);stroke(13,1,214,34,176,118,198)
+ -- Bezel da tela de selecao J2ME (imagem de referencia 240x320):
+ -- x=12..227, y=0..33, interior escuro e borda roxa com brilho inferior.
+ -- O painel anterior era um retangulo plano de 34px iniciado em y=1,
+ -- avançando sobre a moldura amarela que comeca em y=34.
+ fill(12,0,216,33,140,67,227)
+ fill(13,1,214,31,132,75,207)
+ fill(14,2,212,29,18,0,61)
+ fill(15,3,210,26,81,59,121)
+ fill(16,4,208,24,94,66,139)
+ fill(14,2,1,29,20,0,63)
+ fill(225,2,1,29,20,0,63)
+ fill(13,29,214,2,189,132,245)
+ fill(14,31,212,1,173,122,229)
+ fill(16,32,208,1,117,89,199)
  fontText('FED',17,4,30)
  fontText('HEALTH',17,17,42)
  fill(60,7,16,3,22,7,43);fill(60,7,math.max(0,16*(f.fed or 0)/100),3,160,220,102)

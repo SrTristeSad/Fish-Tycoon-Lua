@@ -1,7 +1,7 @@
 function love.conf(t)
  t.identity='mar_de_isola_lua'
  t.version='11.4'
- t.window.title='Aquario de Isola - Lua v34'
+ t.window.title='Aquario de Isola - Lua v35'
  t.window.width=480
  t.window.height=640
  t.window.resizable=true

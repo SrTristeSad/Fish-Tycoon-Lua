@@ -105,6 +105,22 @@ function Smoke.new(view)
    v:draw()
    assert(v.fishHits[#v.fishHits].x==91)
    assert(v.fishHits[#v.fishHits].y==53)
+  end},
+  {'23-referencia-vendas',function(v)
+   -- Mesma sala e exemplar da imagem fornecida pelo usuario, nao
+   -- tanque principal com plantas diferentes (comparacao v34).
+   v.room='sale';v.screen='detail';v.selected=nil
+   local tank=v.g.s.tanks.sale
+   while #tank<5 do
+    assert(v.g:addFish('sale',3+(#tank%7),4+(#tank%9),21))
+   end
+   local fish=tank[1]
+   fish.body=9;fish.tail=17;fish.age=21;fish.fed=100;fish.health=100
+   v.selected=fish.id;v.time=1.5
+   assert(v.g:find(fish.id)==fish)
+   v:draw()
+   assert(v.room=='sale' and v.screen=='detail')
+   assert(v.fishHits[#v.fishHits].id==fish.id)
   end}
  }
  return setmetatable({v=view,steps=actions,n=1,ready=false,pending=false,done=false},Smoke)
@@ -113,8 +129,8 @@ function Smoke:afterDraw()
  if self.done or self.pending then return end
  local stage=self.steps[self.n]
  if not stage then
-  assert(love.filesystem.write('retro-smoke/ok.txt','Twenty-two J2ME-style screens rendered\n'))
-  self.done=true;print('FISH_RETRO_SMOKE_OK 22');love.event.quit(0);return
+  assert(love.filesystem.write('retro-smoke/ok.txt','Twenty-three J2ME-style screens rendered\n'))
+  self.done=true;print('FISH_RETRO_SMOKE_OK 23');love.event.quit(0);return
  end
  if not self.ready then
   local ok,err=pcall(stage[2],self.v)
