@@ -14,7 +14,17 @@ function Smoke.new(view)
   {'05-menu-pausa',function(v)
    v:key('escape');v:key('escape');v:key('escape');assert(v.screen=='pause') end},
   {'06-suprimentos',function(v) v:press(v.ox+114*v.scale,v.oy+119*v.scale);assert(v.screen=='shop') end},
-  {'07-configuracoes',function(v) v:key('escape');v:draw();v:press(v.ox+114*v.scale,v.oy+215*v.scale);assert(v.screen=='settings') end}
+  {'07-suprimentos-pagina2',function(v)
+   v:press(v.ox+165*v.scale,v.oy+289*v.scale)
+   assert(v.screen=='shop' and v.shopPage==2) end},
+  {'08-pesquisas',function(v)
+   v:key('escape');v:draw()
+   v:press(v.ox+114*v.scale,v.oy+151*v.scale)
+   assert(v.screen=='research') end},
+  {'09-configuracoes',function(v)
+   v:key('escape');v:draw()
+   v:press(v.ox+114*v.scale,v.oy+215*v.scale)
+   assert(v.screen=='settings') end}
  }
  return setmetatable({v=view,steps=actions,n=1,ready=false,pending=false,done=false},Smoke)
 end
@@ -22,8 +32,8 @@ function Smoke:afterDraw()
  if self.done or self.pending then return end
  local stage=self.steps[self.n]
  if not stage then
-  assert(love.filesystem.write('retro-smoke/ok.txt','Seven J2ME-style screens rendered\n'))
-  self.done=true;print('FISH_RETRO_SMOKE_OK 7');love.event.quit(0);return
+  assert(love.filesystem.write('retro-smoke/ok.txt','Nine J2ME-style screens rendered\n'))
+  self.done=true;print('FISH_RETRO_SMOKE_OK 9');love.event.quit(0);return
  end
  if not self.ready then
   local ok,err=pcall(stage[2],self.v)
