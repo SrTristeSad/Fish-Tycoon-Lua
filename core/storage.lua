@@ -1,6 +1,6 @@
 local json=require('core.json')
 local Game=require('core.game')
-local M={filename='fish_tank_save.json',backup='fish_tank_save.backup.json'}
+local M={filename='fish_tank_save.json',backup='fish_tank_save.backup.json',archive='fish_tank_save_before_new_game.json'}
 
 local function decodeGame(raw)
  if type(raw)~='string' or #raw==0 then return nil,'Arquivo vazio' end
@@ -74,5 +74,23 @@ function M.load()
   end
  end
  return nil,'Save e backup invalidos: '..firstError
+end
+-- Inicia nova partida somente depois de arquivar um save valido e verificar
+-- que o novo arquivo foi gravado. Nao apagar backup anterior nem usar remove().
+function M.startNewGame(nextGame)
+ local fs=love and love.filesystem
+ if not fs then return false,'Armazenamento indisponivel' end
+ local previous=M.load()
+ if previous then
+  local payload=json.encode(previous.s)
+  local ok,err=fs.write(M.archive,payload)
+  if not ok or fs.read(M.archive)~=payload then
+   return false,'Nao foi possivel arquivar a partida anterior: '..tostring(err)
+  end
+ end
+ -- M.save ainda mantem um backup do principal anterior, quando valido.
+ local ok,err=M.save(nextGame)
+ if not ok then return false,err end
+ return true
 end
 return M

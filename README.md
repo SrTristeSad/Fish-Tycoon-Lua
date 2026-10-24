@@ -1,82 +1,35 @@
-# Aquário de Isola — Fish Tycoon em Lua (v18)
+# Fish Tycoon Lua — v19: reconstrução de apresentação J2ME (240 × 320)
 
-Reconstrução experimental em **Lua + LÖVE 2D 11.4** que continua diretamente o código da v16, com referência ao JAR J2ME 1.0.1 fornecido pelo usuário. Não é um port oficial nem uma reimplementação completa da lógica proprietária.
+A partir da v19, **a interface padrão é `ui/retro.lua`**, desenhada em 240 × 320 e ampliada sem perder proporção. A tela anterior (`ui/view.lua`) foi preservada para regressão, mas não é mais o menu principal. O motor Lua, sprites e estrutura de saves permanecem.
 
-## Iniciar no Windows
+## Jogar
 
-1. Instale o [LÖVE 2D](https://love2d.org/) (11.4 ou compatível).
-2. Abra `Aquario-de-Isola-v18.love`. Alternativamente, extraia `FishTycoonLua_v18_codigo_fonte.zip` e abra `INICIAR_WINDOWS.bat` dentro da pasta do projeto.
-3. Clique ou toque nos peixes para selecionar. As teclas **1–4** mudam de página, **espaço** alterna a velocidade e **Esc** fecha diálogos.
+Abra `Aquario-de-Isola-v19.love` usando [LÖVE 2D 11.4](https://love2d.org/) ou execute `love .` no diretório. Inicialmente aparece um menu com **CONTINUE, NEW GAME, OPTIONS, ABOUT**. Para criar uma partida nova, clique em **NEW GAME**. Se já existir jogo salvo, há confirmação antes de substituí-lo; o save antigo é arquivado em `fish_tank_save_before_new_game.json` e permanece recuperável. Uma falha ao criar arquivo arquivado bloqueia a substituição.
 
-**Não contém APK Android nem executável Windows independente.** A v16 inclui um teste nativo do LÖVE no GitHub Actions (Xvfb), com PNGs das telas. Verifique o resultado do workflow antes de tratar a validação nativa como concluída; Android continua não testado.
+No aquário, toque em um peixe para abrir a seleção (informações e comandos **SELECT/BACK**). Na parte inferior, **FISH** seleciona um peixe e **MENU** abre o menu do jogo. A barra superior seleciona tanques e abre loja, pesquisa e coleção. O recipiente azul inferior dá acesso ao isolamento. Dentro do menu, os comandos **MOVE**, **FEED**, **TREAT**, compra de suprimentos, venda e pesquisa seguem ativos, usando o mesmo motor da v18.
 
-## O que funciona no projeto
+**Configurações**: música, velocidade e intervalo de crescimento. Não há necessidade de editar arquivos para jogar de novo. A simulação fica pausada no menu inicial e nas configurações; continua durante a partida.
 
-- 18 peixes por tanque de criação, dois peixes no isolamento, tanque de venda, segundo tanque desbloqueável;
-- 21 tipos de corpo e 21 de barbatanas, cruzamento, ovos, nascimento, crescimento, sete descobertas especiais;
-- alimentação, doenças, tratamentos, lojas, compradores automáticos, cotação por variedade, pesquisas e equipamentos;
-- cinco faixas de áudio OGG convertidas dos MIDI originais e gráficos recuperados do JAR;
-- salvar/carregar com backup anterior, histórico de visitas, simulação offline limitada a 24 horas.
+## Fidelidade e recursos do JAR
 
-## Novo na v18
+Foram adotadas as proporções 240 × 320, a composição `tanktop.png` + `tank1/2/3.png`, o recipiente `isolation_tank.png`, a barra superior compacta e a estrutura da tela de seleção da imagem de referência do jogo original. O pacote local `.love` inclui também `splash.png`, `assets.png` e `gameMenuTank.png`, extraídos do JAR de referência.
 
-- **Contagio reconstruido do bytecode:** `n.a(o)` conta todos os peixes doentes nos tres tanques `o.i[0..2]` **antes** das atualizacoes. O Lua considera `main`, `second` e `sale`, deixando o isolamento externo (`l.b`) fora da contagem.
-- **Risco de doenca:** `n.a(m,int)` agora usa **risco base + 6 por doente no conjunto dos tanques + 15 se idade > 600**, com os descontos de equipamentos ja comprovados. Remove o multiplicador por aquario cheio e o aumento por fome extrema, que eram adaptacoes sem suporte no Java.
-- **Maturidade:** novos casos de doenca so sao sorteados em peixes adultos (a partir de 20 unidades de idade), como no guard `m.d()` que antecede a chamada no MIDlet.
-- **Sem alteracao de saves:** permanece no formato v9. O estado dos peixes e os assets existentes sao preservados.
-- **Testes:** `tests/v18_contagion.lua` confere a contagem inicial, infecoes dentro do mesmo ciclo, maturidade e carregamento de saves. Os testes de capturas nativas com LÖVE continuam no GitHub Actions.
-
-## Novo na v17
-
-- **Saúde biológica do JAR:** implementada a etapa de `n.c(m)` que impede recuperação de saúde para peixes doentes ou com alimentação inferior a 5 unidades e aplica **-1 por doença** no núcleo biológico. Os equipamentos são avaliados antes dessa regra.
-- **Pesquisas:** origem dos números identificada na projeção (biologia JAR nos três níveis recuperados, extrapolação no quarto nível e custos/prazos do port Lua).
-- **Risco biológico auditável:** `Care.originalDiseaseThreshold` agora também expõe os acréscimos `+6 × exposição` e `+15` após 600 unidades de idade, previstos em `n.a(m,int)`; a lotação ainda permanece adaptada.
-- **Testes:** nova suíte `tests/v17_biology.lua` para transições de saúde, efeitos dos equipamentos, limites da pesquisa e proteção dos salvamentos antigos.
-- **Compatibilidade:** mesmo formato de salvamento v9 e os mesmos recursos gráficos/áudio. Nenhum arquivo original modificado.
-
-## Novo na v16
-
-- **Teste nativo automático:** workflow GitHub Actions inicia o LÖVE em tela virtual e captura sete imagens reais; script Python inspeciona os PNGs e os disponibiliza como artefatos.
-- **Controles reais:** teste de troca entre aquário, isolamento, vendas, loja, pesquisas e coleção usando `love.mousepressed`, além de mudança para modo paisagem.
-- **Proteção de dados:** modo de teste só é habilitado por `FISH_NATIVE_SMOKE=1` e não lê ou escreve o save do jogador.
-- **Sem mudança de gameplay:** recursos, pesquisas, genética e formato do save v15 continuam iguais.
-
-## Mudanças acumuladas da v15
-
-- **Distribuição dos peixes:** os 18 peixes agora utilizam uma grade com margens de segurança para o corpo, as barbatanas e o aro de seleção, preservando o nado determinístico da v10. Evita que peixes da primeira e da última coluna fiquem parcialmente encobertos pelo painel.
-- **Controles:** nova suíte `tests/v15_controls.lua` para toques nas abas, resolução pequena, letterboxing em paisagem, seleção por toque, bloqueio por modais e limites dos botões.
-- **Genética JAR:** corrigida a mutação no nascimento de vários filhotes: ocorre uma vez por gestação, antes das cópias; as fórmulas de média continuam preservadas. As probabilidades de pesquisa autenticadas por bytecode permanecem inalteradas.
-- **Verificação:** testes de interface com API LÖVE simulada e os PNGs reais. **Não houve abertura de janela real nem validação em Android**; esses testes continuam pendentes.
-
-## Verificar
-
-Em um terminal na pasta do código-fonte, com `texlua` ou TeX Live:
+Por direitos de redistribuição, os **três PNGs adicionais não foram publicados no GitHub público**. Para completar visualmente uma instalação criada apenas a partir do repositório, utilize o JAR que você possui e execute:
 
 ```sh
-texlua tests/run.lua
-texlua tests/v9_regression.lua
-texlua tests/v9_storage.lua
-texlua tests/v10_swim.lua
-texlua tests/v10_ui_smoke.lua
-texlua tests/v11_timeline.lua
-texlua tests/v11_research.lua
-texlua tests/v11_ui_smoke.lua
-texlua tests/v12_offline.lua
-texlua tests/v12_save_safety.lua
-texlua tests/v13_integrity.lua
-texlua tests/v14_render.lua
-texlua tests/v15_controls.lua
-texlua tests/v15_jar_genetics.lua
-texlua tests/v17_biology.lua
-texlua tests/v18_contagion.lua
-FISH_NATIVE_SMOKE=1 texlua tests/v16_native_driver.lua
-texlua tests/view_smoke.lua
+python3 scripts/import_j2me_assets.py /caminho/para/Fish_Tycoon_240x320.jar
 ```
 
-Ou execute `TESTAR_LUA.bat` no Windows para repetir todas as suítes. A v16 preserva as suítes anteriores e amplia a validação dos alvos de toque e das margens visuais. O `TESTAR_LUA.bat` executa todas as suítes de testes e desempenho.
+Sem os três PNGs, o jogo continua jogável, com título desenhado pelo código e fundos já existentes. O `.love` de teste disponibilizado na conversa contém a arte do JAR. O `README` separa o que já se aproxima visualmente do original do que ainda exige investigação: fontes gráficas exatas, layout de todos os menus, nomes reais e telas não fornecidas nas referências.
 
-## Direitos e fidelidade
+## Testes
 
-Uma parte das regras de criação e economia foi inferida do bytecode Java; outras seguem aproximadas. Sprites, músicas e nomes originais têm seus titulares de direitos. A extração para estudo não equivale a uma licença para distribuir ou comercializar esses recursos. Antes de publicar, substitua recursos sem permissão por assets próprios ou licenciados.
+```sh
+texlua tests/v19_retro.lua
+# regressão completa
+for file in tests/*.lua; do texlua "$file"; done
+```
 
-Detalhes em [`docs/FASE_17.md`](docs/FASE_17.md), [`docs/FASE_16.md`](docs/FASE_16.md), [`docs/FASE_15.md`](docs/FASE_15.md) e [`docs/FASE_15_JAR.md`](docs/FASE_15_JAR.md) e [`docs/FASE_14.md`](docs/FASE_14.md) e [`docs/FASE_13.md`](docs/FASE_13.md).
+GitHub Actions contém dois testes nativos no LÖVE/Xvfb: o anterior para a interface legada e o novo `FISH_RETRO_SMOKE=1`, que captura sete telas J2ME em 480 × 640. **Isso valida renderização e navegação, não comprova correspondência pixel a pixel com todo o jogo Java.**
+
+A base canônica é a branch `main` de https://github.com/SrTristeSad/Fish-Tycoon-Lua. Toda alteração deve ter commit. Consulte também `AGENTS.md` e `RECURSOS_E_DIREITOS.md`.

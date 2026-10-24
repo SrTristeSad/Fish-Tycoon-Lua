@@ -16,3 +16,9 @@ __pycache__/
 *.pyc
 # JAR original: nao versionar distribuicao do jogo comercial
 *.jar
+
+
+# Arte comercial extraida localmente do JAR (nao versionar no repo publico)
+assets/original/assets.png
+assets/original/splash.png
+assets/original/gameMenuTank.png

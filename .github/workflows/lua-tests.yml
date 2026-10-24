@@ -44,3 +44,26 @@ jobs:
           name: fish-tycoon-v16-native-love
           if-no-files-found: warn
           path: ~/.local/share/love/mar_de_isola_lua/native-smoke/
+
+  retro-love:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install actual LÖVE and virtual screen
+        run: sudo apt-get update && sudo apt-get install -y love xvfb
+      - name: Render J2ME 240x320 user interface and navigate seven screens
+        env:
+          FISH_RETRO_SMOKE: '1'
+          SDL_AUDIODRIVER: dummy
+          LIBGL_ALWAYS_SOFTWARE: '1'
+        run: timeout 90s xvfb-run -a -s '-screen 0 1280x960x24' love .
+      - name: Validate screenshots from LÖVE
+        run: python3 scripts/validate_retro_screenshots.py
+      - name: Upload retro screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fish-tycoon-v19-retro-screenshots
+          if-no-files-found: warn
+          path: ~/.local/share/love/mar_de_isola_lua/retro-smoke/

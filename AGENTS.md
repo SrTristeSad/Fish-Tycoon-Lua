@@ -2,7 +2,7 @@
 
 ## Fonte principal
 
-O repositório `SrTristeSad/Fish-Tycoon-Lua`, branch `main`, é a referência canônica do projeto. A base atual é a versão **v14**, em Lua + LÖVE 2D.
+O repositório `SrTristeSad/Fish-Tycoon-Lua`, branch `main`, é a referência canônica do projeto. A base atual é a versão **v19**, em Lua + LÖVE 2D.
 
 ## Regra obrigatória de versionamento
 

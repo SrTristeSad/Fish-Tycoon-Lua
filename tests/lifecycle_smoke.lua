@@ -2,7 +2,7 @@ package.path='./?.lua;./?/init.lua;'..package.path
 local noop=function() end
 local files={}
 love={
- graphics={newFont=function() return {setFilter=noop} end,getDimensions=function() return 468,858 end},
+ graphics={newFont=function() return {setFilter=noop} end,getDimensions=function() return 480,640 end},
  timer={getTime=function() return 100 end},
  filesystem={
   getInfo=function(key) return files[key] and {size=#files[key]} or nil end,
@@ -16,6 +16,9 @@ for _,key in ipairs({'setColor','rectangle','print','printf','setFont','setLineW
 end
 assert(loadfile('main.lua'))()
 love.load();love.update(1);love.draw()
+-- v19: o menu inicial exige NOVO JOGO antes de existir save.
+love.mousepressed(240,450,1);love.draw()
+assert(files['fish_tank_save.json'])
 love.keypressed('2');love.draw()
 love.touchpressed(1,100,250);love.draw()
 love.focus(false);love.focus(true)

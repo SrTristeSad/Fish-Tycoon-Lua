@@ -1,6 +1,7 @@
 local Game=require('core.game')
 local Storage=require('core.storage')
-local View=require('ui.view')
+local LegacyView=require('ui.view')
+local Retro=require('ui.retro')
 local Audio=require('core.audio')
 local OfflineReport=require('core.offline_report')
 local game,view,music,nativeSmoke
@@ -13,13 +14,19 @@ local function save()
 end
 
 function love.load()
+ if os.getenv('FISH_RETRO_SMOKE')=='1' then
+  game=Game.new(1900)
+  view=Retro.new(game,true);view:init()
+  nativeSmoke=require('core.retro_smoke').new(view)
+  return
+ end
  if os.getenv('FISH_NATIVE_SMOKE')=='1' then
   -- Teste isolado: nao le nem grava a partida do jogador.
   game=Game.new(1600)
   for i=5,18 do
    assert(game:addFish('main',((i-1)%21)+1,((i*3-1)%21)+1,20))
   end
-  view=View.new(game);view:init()
+  view=LegacyView.new(game);view:init()
   nativeSmoke=require('core.native_smoke').new(view)
   return
  end
@@ -28,11 +35,19 @@ function love.load()
  local before=loaded and OfflineReport.snapshot(game) or nil
  local passed=loaded and game:offline(os.time()) or 0
  local report=OfflineReport.build(before,game,passed)
- view=View.new(game);view:init();view.onSave=save
- if passed>=60 then view:showOfflineReport(report) end
- music=Audio.new();music:init();view.onSound=function() return music:toggle() end
+ view=Retro.new(game,loaded~=nil);view:init()
+ view.onSave=save
+ view.onNewGame=function()
+  local nextGame=Game.new()
+  local ok,msg=Storage.startNewGame(nextGame)
+  if not ok then return false,msg end
+  game=nextGame;autosave=0
+  return true,nil,nextGame
+ end
+ music=Audio.new();music:init()
+ view.onSound=function()return music:toggle() end
+ if passed>=60 then view.offlineReport=report end
  if err and loaded then view:notify(err)
- elseif passed>60 then view:notify('Progresso offline: '..math.floor(passed/60)..' min simulados')
  elseif err and err~='Sem salvamento anterior' then view:notify(err) end
 end
 
@@ -40,10 +55,14 @@ function love.update(dt)
  if nativeSmoke then view:update(math.min(dt,1));return end
  if not focused then return end
  dt=math.min(dt,1)
- game:advance(dt*game.s.game_speed)
+ if view.isPlaying==nil or view:isPlaying() then
+  game:advance(dt*game.s.game_speed)
+ end
  view:update(dt)
- if music then music:update(view.page,view.room) end
- autosave=autosave+dt
+ if music then
+  music:update((view.screen=='tank' or view.screen=='detail') and 'tank' or 'menu',view.room)
+ end
+ if view.isPlaying==nil or view:isPlaying() then autosave=autosave+dt end
  if autosave>=12 then
   autosave=0
   save()
@@ -66,13 +85,16 @@ end
 function love.keypressed(key) view:key(key) end
 function love.focus(f)
  focused=f
- if not f then if music then music:pause() end;save()
+ if not f then if music then music:pause() end;if view.hasSave==nil or view.hasSave then save() end
  else
   local before=OfflineReport.snapshot(game)
   local passed=game:offline(os.time())
-  if passed>=60 then view:showOfflineReport(OfflineReport.build(before,game,passed)) end
+  if passed>=60 then
+   local report=OfflineReport.build(before,game,passed)
+   if view.showOfflineReport then view:showOfflineReport(report) else view.offlineReport=report;view:notify('OFFLINE PROGRESS SAVED') end
+  end
  end
 end
 function love.quit()
- if not nativeSmoke then save() end
+ if not nativeSmoke and (view.hasSave==nil or view.hasSave) then save() end
 end
