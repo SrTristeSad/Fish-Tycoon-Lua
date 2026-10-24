@@ -1,6 +1,14 @@
-# Fish Tycoon Lua — v32: menu J2ME (240 × 320)
+# Fish Tycoon Lua — v33: menu J2ME (240 × 320)
 
 Desde a v19, **a interface padrão é `ui/retro.lua`**, desenhada em 240 × 320 e ampliada sem perder proporção. A tela anterior (`ui/view.lua`) foi preservada para regressão, mas não é mais o menu principal. O motor Lua, sprites e estrutura de saves permanecem.
+
+## Novo na v33 — isolador visível e seleção com moldura superior
+
+- **Dois peixes no recipiente:** os centros foram corrigidos para x=96 e x=144 no recipiente de 98px; a largura e a altura são ajustadas somente nesse compartimento para manter o sprite entre x=70..168 e y=274..298, sem ficar atrás dos botões inferiores.
+- **Peixe selecionado no isolamento:** usa a moldura amarela e a âncora (91,53), como as demais telas de seleção. Os outros exemplares continuam visíveis no recipiente inferior.
+- **Aquários sem redução artificial:** sprites dos tanques continuam com 21/35/50px nativos da v32. A redução na bandeja é uma adaptação visual de layout, ainda não confirmada contra a exibição do MIDlet Java.
+- **Validação:** nova suíte `tests/v33_isolation_layout.lua` verifica todas as 441 combinações adultas no isolador, áreas de toque, teclas inferiores, desenho sem mutar o jogo e navegação. O GitHub Actions passa a capturar 22 telas, com duas novas telas do isolamento.
+- **Sem alteração de simulação:** salvamentos v9, genética, pesquisas, preços e PNGs originais não foram modificados.
 
 ## Novo na v32 — sprites 1:1 por idade
 

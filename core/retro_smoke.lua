@@ -80,7 +80,27 @@ function Smoke.new(view)
    local nx,ny=0,0
    for _ in pairs(xs) do nx=nx+1 end
    for _ in pairs(ys) do ny=ny+1 end
-   assert(#v.fishHits==18 and nx>=13 and ny>=13,'Nado ainda parece grade') end}
+   assert(#v.fishHits==18 and nx>=13 and ny>=13,'Nado ainda parece grade') end},
+  {'21-isolamento-dois',function(v)
+   local fish=v.g.s.tanks.main
+   fish[#fish].body=12;fish[#fish].tail=21
+   assert(v.g:move(fish[#fish].id,'isolation'))
+   assert(v.g:move(fish[#fish].id,'isolation'))
+   v.room='isolation';v.selected=nil;v.screen='tank';v:draw()
+   assert(#v.fishHits==2)
+   for _,hit in ipairs(v.fishHits) do
+    assert(hit.x-hit.rx>=70 and hit.x+hit.rx<=168)
+    assert(hit.y-hit.ry>=274 and hit.y+hit.ry<=298)
+   end
+  end},
+  {'22-isolamento-selecao',function(v)
+   local h=v.fishHits[1];assert(h)
+   v:press(v.ox+h.x*v.scale,v.oy+h.y*v.scale)
+   assert(v.screen=='detail' and v.room=='isolation')
+   v:draw()
+   assert(v.fishHits[#v.fishHits].x==91)
+   assert(v.fishHits[#v.fishHits].y==53)
+  end}
  }
  return setmetatable({v=view,steps=actions,n=1,ready=false,pending=false,done=false},Smoke)
 end
@@ -88,8 +108,8 @@ function Smoke:afterDraw()
  if self.done or self.pending then return end
  local stage=self.steps[self.n]
  if not stage then
-  assert(love.filesystem.write('retro-smoke/ok.txt','Twenty J2ME-style screens rendered\n'))
-  self.done=true;print('FISH_RETRO_SMOKE_OK 20');love.event.quit(0);return
+  assert(love.filesystem.write('retro-smoke/ok.txt','Twenty-two J2ME-style screens rendered\n'))
+  self.done=true;print('FISH_RETRO_SMOKE_OK 22');love.event.quit(0);return
  end
  if not self.ready then
   local ok,err=pcall(stage[2],self.v)

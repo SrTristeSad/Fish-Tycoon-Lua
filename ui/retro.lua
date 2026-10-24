@@ -311,35 +311,29 @@ function Retro:fishDraw()
  local function renderFish(i,f,selected)
   local x,y,face=Swim.position(f,i,self.room,self.time)
   local sx,sy
-  if self.room=='isolation' then
-   sx=83+((i-1)%2)*64;sy=281
+  local fishWidth,fishHeight=FishGeometry.size(f)
+  -- Na pequena bandeja inferior, ha somente dois espacos uteis de 48px.
+  -- Os sprites de ate 50x39px nao cabem com escala 1 nesse recorte:
+  -- ajustar APENAS a apresentacao na bandeja, nunca nos aquarios.
+  local scale=1
+  if self.room=='isolation' and not selected then
+   sx=96+((i-1)%2)*48
+   sy=286
+   scale=math.min(1,48/fishWidth,24/fishHeight)
   else
-   -- O modulo visual J2ME ja fornece coordenadas em 240x320.
-   -- Nao transformar a grade da antiga interface moderna.
+   -- J2ME: coordenadas diretas 240x320; sem grade ou escala artificial.
    sx,sy=x,y
   end
-  -- A captura J2ME da tela de selecao coloca o exemplar destacado
-  -- na primeira fileira, logo abaixo do painel FED / HEALTH:
-  -- retangulo x=63..119, y=34..71 em uma tela de 240x320.
-  -- O restante dos peixes continua nadando; nenhuma posicao ou
-  -- atributo do motor e modificado.
-  if selected and self.room~='isolation' then
-   sx,sy=91,53
-  end
-  -- O JAR ja armazena os sprites nos tamanhos finais: nao usar 85%.
-  -- m.a() retorna larguras 21 (alevino), 35 (jovem), 50 (adulto).
-  local scale=1
-  local fishWidth,fishHeight=FishGeometry.size(f)
-  local half,halfY=fishWidth/2,fishHeight/2
-  if self.room~='isolation' then
+  -- A referencia original da selecao (x=63..119, y=34..71) tambem
+  -- se aplica ao exemplar retirado da bandeja de isolamento.
+  if selected then sx,sy=91,53;scale=1 end
+  local half,halfY=fishWidth*scale/2,fishHeight*scale/2
+  if self.room~='isolation' or selected then
    sx=math.max(half+2,math.min(W-half-2,sx))
    -- Reserva o HUD superior e a bandeja inferior em todos os tamanhos.
-   -- Na selecao, preserva a ancora (91,53) da captura Java.
    if not selected then sy=math.max(35+halfY,math.min(270-halfY,sy)) end
-   -- Na selecao, o peixe de interesse fica sozinho dentro da moldura
-   -- amarela. Deslocar apenas o desenho dos outros quando cruzam essa
-   -- area; os tempos, indices e atributos dos peixes nao mudam.
-   if self.screen=='detail' and selectedFish and not selected then
+   -- Peixes comuns nao devem encobrir a moldura selecionada.
+   if self.room~='isolation' and self.screen=='detail' and selectedFish and not selected then
     if math.abs(sx-91)<(28+half+5) and math.abs(sy-53)<(19+halfY+5) then
      if sx<91 then sx=math.max(half+2,91-28-half-5)
      else sx=math.min(W-half-2,91+28+half+5) end

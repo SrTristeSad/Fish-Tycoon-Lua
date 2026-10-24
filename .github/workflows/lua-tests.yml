@@ -52,7 +52,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install actual LÖVE and virtual screen
         run: sudo apt-get update && sudo apt-get install -y love xvfb
-      - name: Render J2ME 240x320 interface and navigate twenty screens
+      - name: Render J2ME 240x320 interface and navigate twenty-two screens
         env:
           FISH_RETRO_SMOKE: '1'
           SDL_AUDIODRIVER: dummy
@@ -64,6 +64,6 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: fish-tycoon-v31-retro-screenshots
+          name: fish-tycoon-v33-retro-screenshots
           if-no-files-found: warn
           path: ~/.local/share/love/mar_de_isola_lua/retro-smoke/
