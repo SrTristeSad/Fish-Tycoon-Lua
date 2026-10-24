@@ -121,6 +121,12 @@ function Smoke.new(view)
    v:draw()
    assert(v.room=='sale' and v.screen=='detail')
    assert(v.fishHits[#v.fishHits].id==fish.id)
+  end},
+  {'24-selecao-barbatana-alta',function(v)
+   local fish=v.g.s.tanks.sale[1];assert(fish)
+   fish.body=9;fish.tail=21;fish.age=21
+   v.selected=fish.id;v.room='sale';v.screen='detail';v.time=1.5
+   v:draw();assert(v.fishHits[#v.fishHits].id==fish.id)
   end}
  }
  return setmetatable({v=view,steps=actions,n=1,ready=false,pending=false,done=false},Smoke)
@@ -129,8 +135,8 @@ function Smoke:afterDraw()
  if self.done or self.pending then return end
  local stage=self.steps[self.n]
  if not stage then
-  assert(love.filesystem.write('retro-smoke/ok.txt','Twenty-three J2ME-style screens rendered\n'))
-  self.done=true;print('FISH_RETRO_SMOKE_OK 23');love.event.quit(0);return
+  assert(love.filesystem.write('retro-smoke/ok.txt','Twenty-four J2ME-style screens rendered\n'))
+  self.done=true;print('FISH_RETRO_SMOKE_OK 24');love.event.quit(0);return
  end
  if not self.ready then
   local ok,err=pcall(stage[2],self.v)

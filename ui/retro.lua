@@ -26,6 +26,25 @@ local function fontText(s,x,y,width,align,tint)
  end
 end
 local function centered(s,y,tint) fontText(s,10,y,220,'center',tint) end
+-- Recorte do interior da selecao em pixels reais de janela LÖVE.
+-- Preserva tambem um eventual scissor externo.
+local function logicalScissor(view,x,y,w,h,fn)
+ local gfx=love.graphics
+ if not (gfx.getScissor and gfx.setScissor) then return fn() end
+ local ox,oy,ow,oh=gfx.getScissor()
+ local left=math.floor(view.ox+x*view.scale)
+ local top=math.floor(view.oy+y*view.scale)
+ local right=math.ceil(view.ox+(x+w)*view.scale)
+ local bottom=math.ceil(view.oy+(y+h)*view.scale)
+ if ox then
+  left=math.max(left,ox);top=math.max(top,oy)
+  right=math.min(right,ox+ow);bottom=math.min(bottom,oy+oh)
+ end
+ gfx.setScissor(left,top,math.max(0,right-left),math.max(0,bottom-top))
+ local ok,err=pcall(fn)
+ if ox then gfx.setScissor(ox,oy,ow,oh) else gfx.setScissor() end
+ if not ok then error(err,0) end
+end
 local function load(name)
  local ok,img=pcall(love.graphics.newImage,'assets/original/'..name..'.png')
  if ok and img then img:setFilter('nearest','nearest');return img end
@@ -336,9 +355,14 @@ function Retro:fishDraw()
    -- a moldura e tratada como um overlay, sem teletransportar ninguem.
   end
   if selected then
+   -- Barbatanas de 39px nao devem cobrir a borda ou o HUD.
    stroke(sx-28,sy-19,56,37,242,208,28)
+   logicalScissor(self,sx-27,sy-18,54,35,function()
+    self.assets:drawFish(f,sx,sy,scale,face)
+   end)
+  else
+   self.assets:drawFish(f,sx,sy,scale,face)
   end
-  self.assets:drawFish(f,sx,sy,scale,face)
   -- As placas For Sale! ja estao pintadas em tank3.png, no cascalho.
   self.fishHits[#self.fishHits+1]={id=f.id,x=sx,y=sy,
     rx=math.max(10,half),ry=math.max(8,halfY)}
@@ -354,18 +378,11 @@ function Retro:fishDraw()
    local sky=self.assets.images.tanktop
    local gfx=love.graphics
    if sky and gfx.getScissor and gfx.setScissor then
-    local oldX,oldY,oldW,oldH=gfx.getScissor()
-    -- Scissor trabalha em pixels de janela, nao nas coordenadas
-    -- transformadas de 240x320 da tela do jogo.
-    local x=math.floor(self.ox+64*self.scale)
-    local y=math.floor(self.oy+35*self.scale)
-    local x2=math.ceil(self.ox+118*self.scale)
-    local y2=math.ceil(self.oy+70*self.scale)
-    gfx.setScissor(x,y,x2-x,y2-y)
-    rgb(255,255,255)
-    gfx.draw(sky,0,24)
-    if oldX then gfx.setScissor(oldX,oldY,oldW,oldH)
-    else gfx.setScissor() end
+    -- Restaurar a agua exatamente dentro da mesma moldura.
+    logicalScissor(self,64,35,54,35,function()
+     rgb(255,255,255)
+     gfx.draw(sky,0,24)
+    end)
    elseif not sky then
     -- Fundo azul de reserva, apenas quando o recurso JAR nao existe.
     fill(64,35,54,35,11,110,181)

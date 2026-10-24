@@ -1,6 +1,14 @@
-# Fish Tycoon Lua — v35: menu J2ME (240 × 320)
+# Fish Tycoon Lua — v36: menu J2ME (240 × 320)
 
 Desde a v19, **a interface padrão é `ui/retro.lua`**, desenhada em 240 × 320 e ampliada sem perder proporção. A tela anterior (`ui/view.lua`) foi preservada para regressão, mas não é mais o menu principal. O motor Lua, sprites e estrutura de saves permanecem.
+
+## Novo na v36 — recorte fiel da moldura de selecao
+
+- A moldura amarela do J2ME mede **56×37 pixels**, com interior de **54×35**. Algumas barbatanas originais têm 39px e antes cobriam a borda ou entravam no HUD. O sprite destacado agora respeita o recorte interno sem perder sua escala nativa.
+- O fundo da selecao e restaurado no mesmo recorte; os outros peixes nao sao movidos nem mudam suas trajetorias.
+- O recorte considera escala fracionaria e restaura os limites graficos anteriores.
+- Incluido o teste `tests/v36_selection_scissor.lua` e a 24ª captura no LÖVE real, de peixe com barbatana alta. Nenhuma mudanca no motor, saves, imagens ou musica.
+- A reconstrucao completa 1:1 ainda depende da comparacao com o MIDlet.
 
 ## Novo na v35 — moldura superior e comparacao na sala correta
 
