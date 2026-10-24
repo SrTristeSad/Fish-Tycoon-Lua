@@ -1,11 +1,11 @@
-# Aquário de Isola — Fish Tycoon em Lua (v17)
+# Aquário de Isola — Fish Tycoon em Lua (v18)
 
 Reconstrução experimental em **Lua + LÖVE 2D 11.4** que continua diretamente o código da v16, com referência ao JAR J2ME 1.0.1 fornecido pelo usuário. Não é um port oficial nem uma reimplementação completa da lógica proprietária.
 
 ## Iniciar no Windows
 
 1. Instale o [LÖVE 2D](https://love2d.org/) (11.4 ou compatível).
-2. Abra `Aquario-de-Isola-v17.love`. Alternativamente, extraia `FishTycoonLua_v17_codigo_fonte.zip` e abra `INICIAR_WINDOWS.bat` dentro da pasta do projeto.
+2. Abra `Aquario-de-Isola-v18.love`. Alternativamente, extraia `FishTycoonLua_v18_codigo_fonte.zip` e abra `INICIAR_WINDOWS.bat` dentro da pasta do projeto.
 3. Clique ou toque nos peixes para selecionar. As teclas **1–4** mudam de página, **espaço** alterna a velocidade e **Esc** fecha diálogos.
 
 **Não contém APK Android nem executável Windows independente.** A v16 inclui um teste nativo do LÖVE no GitHub Actions (Xvfb), com PNGs das telas. Verifique o resultado do workflow antes de tratar a validação nativa como concluída; Android continua não testado.
@@ -17,6 +17,14 @@ Reconstrução experimental em **Lua + LÖVE 2D 11.4** que continua diretamente 
 - alimentação, doenças, tratamentos, lojas, compradores automáticos, cotação por variedade, pesquisas e equipamentos;
 - cinco faixas de áudio OGG convertidas dos MIDI originais e gráficos recuperados do JAR;
 - salvar/carregar com backup anterior, histórico de visitas, simulação offline limitada a 24 horas.
+
+## Novo na v18
+
+- **Contagio reconstruido do bytecode:** `n.a(o)` conta todos os peixes doentes nos tres tanques `o.i[0..2]` **antes** das atualizacoes. O Lua considera `main`, `second` e `sale`, deixando o isolamento externo (`l.b`) fora da contagem.
+- **Risco de doenca:** `n.a(m,int)` agora usa **risco base + 6 por doente no conjunto dos tanques + 15 se idade > 600**, com os descontos de equipamentos ja comprovados. Remove o multiplicador por aquario cheio e o aumento por fome extrema, que eram adaptacoes sem suporte no Java.
+- **Maturidade:** novos casos de doenca so sao sorteados em peixes adultos (a partir de 20 unidades de idade), como no guard `m.d()` que antecede a chamada no MIDlet.
+- **Sem alteracao de saves:** permanece no formato v9. O estado dos peixes e os assets existentes sao preservados.
+- **Testes:** `tests/v18_contagion.lua` confere a contagem inicial, infecoes dentro do mesmo ciclo, maturidade e carregamento de saves. Os testes de capturas nativas com LÖVE continuam no GitHub Actions.
 
 ## Novo na v17
 
@@ -60,6 +68,7 @@ texlua tests/v14_render.lua
 texlua tests/v15_controls.lua
 texlua tests/v15_jar_genetics.lua
 texlua tests/v17_biology.lua
+texlua tests/v18_contagion.lua
 FISH_NATIVE_SMOKE=1 texlua tests/v16_native_driver.lua
 texlua tests/view_smoke.lua
 ```

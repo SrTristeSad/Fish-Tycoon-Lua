@@ -472,6 +472,9 @@ function Game:_events()
 end
 function Game:_tick()
  local s=self.s
+ -- n.a(o) conta peixes doentes uma vez ANTES de iterar os tres tanques.
+ -- Um novo caso surgido durante este ciclo so aumenta o risco no proximo.
+ local exposure=Care.diseaseExposure(self)
  for _,room in ipairs(ORDER) do
   local fishes=s.tanks[room]
   for i=#fishes,1,-1 do
@@ -484,7 +487,7 @@ function Game:_tick()
    end
    -- Resistencias, alimentacao e risco de doenca centralizados para
    -- isolar regras do JAR das aproximacoes de gameplay.
-   Care.step(self,f,room)
+   Care.step(self,f,room,exposure)
    if f.health==0 then
     table.remove(fishes,i);s.stats.lost=s.stats.lost+1
     self:message('Um peixe morreu no '..room..'.')

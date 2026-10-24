@@ -1,7 +1,6 @@
 -- Fish Tycoon J2ME 1.0.1: logica reconstruida a partir de n.c(m),
 -- n.a(m,boolean) e n.a(m,int), com adaptacoes declaradas abaixo.
 -- O Java usa indices de 0 a 20. Os peixes Lua usam indices 1 a 21.
-local C = require('core.config')
 local Care = {}
 local function clamp(v) return math.max(0,math.min(100,math.floor(v))) end
 
@@ -50,16 +49,30 @@ function Care.originalDiseaseThreshold(body,foodLevel,exposure,age)
  if b%4==0 then base=({10,5,1})[level]
  elseif (b-2)%4==0 then base=({20,10,3})[level]
  elseif b%2==1 then base=({30,20,5})[level] end
- -- n.a(m,int): risco = base + 6*parametro_int + (idade > 600 ? 15 : 0).
- -- O parametro adicional vem do contexto de cada chamada Java. No port
- -- atual o risco por lotacao ainda usa sua regra antiga, separadamente.
+ -- n.a(m,int): risco = base + 6*numero de doentes + (idade>600 ? 15 : 0).
+ -- Em n.a(o) este numero e calculado ANTES de atualizar os peixes.
  return base+6*math.max(0,math.floor(exposure or 0))
    +((age or 0)>600 and 15 or 0)
 end
 
--- Densidade, equipamentos, medicamentos e efeitos magicos sao
--- adaptacoes jogaveis, e NAO formulas autenticadas do MIDlet.
-function Care.step(game,f,room)
+-- n.a(o): antes dos ciclos biologicos, o Java conta m.g() entre as
+-- tres matrizes o.i[0..2]. O peixe de isolamento vive em l.b, fora
+-- destas matrizes. Nesta versao as tres salas sao main, second e sale.
+function Care.diseaseExposure(game)
+ local count=0
+ for _,room in ipairs({'main','second','sale'}) do
+  for _,fish in ipairs(game.s.tanks[room]) do
+   if fish.disease then count=count+1 end
+  end
+ end
+ return count
+end
+
+-- Equipamentos, medicamentos e efeitos magicos ainda incluem algumas
+-- adaptacoes jogaveis que nao sao formulas autenticadas do MIDlet.
+-- `exposure` deve ser coletado UMA VEZ antes dos passos do ciclo, tal
+-- como n.a(o) faz com a contagem de m.g() antes de iterar os peixes.
+function Care.step(game,f,room,exposure)
  local s=game.s
  local foodLevel=s.research.food or 0
  local environmentLevel=s.research.environment or 0
@@ -84,23 +97,22 @@ function Care.step(game,f,room)
  if f.fed<=2 then delta=delta-4
  elseif f.fed<20 then delta=delta-2 end
  f.health=clamp((f.health or 100)+delta)
- -- Um aquario lotado eleva o risco. A base numerica vem do JAR;
- -- o fator por lotacao e a atenuacao dos equipamentos sao hipoteses.
- local fishCount=#s.tanks[room]
- local overcrowded=fishCount>=math.ceil(C.CAPACITY[room]*.75)
- local risk=Care.originalDiseaseThreshold(f.body,foodLevel)
- if overcrowded then risk=risk*3 end -- adaptacao Lua, lotacao
- if f.age>600 then risk=risk+15 end -- n.a(m,int): idade avancada
- -- b.d(15): planta de cura reduz o limiar pela metade.
- if s.gear.curing_plant then risk=math.floor(risk/2) end
- -- b.d(11): caracol de limpeza tem 50% de chance de reduzir o
- -- limiar pela metade em cada avaliacao.
- if s.gear.snail and game:int(0,99)<=49 then risk=math.floor(risk/2) end
- if f.fed<=2 then risk=risk*2 end -- adaptacao Lua, fome extrema
- if not f.disease and game:random()*10000<risk then
-  f.disease=game:int(0,1)==0 and 'ick' or 'fungus'
-  s.stats.infections=(s.stats.infections or 0)+1
-  game:message('Sinais de '..(f.disease=='ick' and 'Ick' or 'fungos')..' em um peixe!')
+ -- n.a(m,int) so e chamado se m.d()==true: peixes adultos (idade>=20).
+ -- O risco e base + 6 por peixe doente no conjunto dos tres tanques
+ -- + 15 quando idade>600. Sem multiplicador de lotacao do port antigo.
+ if f.age>=20 and not f.disease then
+  local risk=Care.originalDiseaseThreshold(f.body,foodLevel,
+   exposure or Care.diseaseExposure(game),f.age)
+  -- b.d(15): planta de cura reduz o limiar pela metade.
+  if s.gear.curing_plant then risk=math.floor(risk/2) end
+  -- b.d(11): caracol de limpeza tem 50% de chance de reduzir o
+  -- limiar pela metade em cada avaliacao.
+  if s.gear.snail and game:int(0,99)<=49 then risk=math.floor(risk/2) end
+  if game:random()*10000<risk then
+   f.disease=game:int(0,1)==0 and 'ick' or 'fungus'
+   s.stats.infections=(s.stats.infections or 0)+1
+   game:message('Sinais de '..(f.disease=='ick' and 'Ick' or 'fungos')..' em um peixe!')
+  end
  end
  if f.disease and game:hasMagic('cure',room) and game:random()<.2 then
   f.disease=false
