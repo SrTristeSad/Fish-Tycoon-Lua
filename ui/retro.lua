@@ -512,7 +512,10 @@ function Retro:research()
    elseif entry.id=='environment' then
     summary='HEALTH '..(preview.current:match('([%+%-]?%d+%.?%d*)/ciclo') or '?')..'/CYCLE'
    else
-    summary='SHOP INTEREST '..(preview.current:match('(%d+)
+    summary='SHOP INTEREST '..(preview.current:match('(%d+)$') or '?')
+   end
+   fontText(summary,23,y+29,186,'left',{201,219,190})
+  end
   local disabled=lvl>=Config.RESEARCH_MAX or (self.g.s.research_job~=false and self.g.s.research_job~=nil)
   self:menuButton(lvl>=Config.RESEARCH_MAX and 'MAX' or 'START',157,y+42,57,16,function()
    local ok,msg=self.g:startResearch(entry.id)
