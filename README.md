@@ -1,6 +1,14 @@
-# Fish Tycoon Lua — v23: fontes bitmap do JAR (240 × 320)
+# Fish Tycoon Lua — v24: fontes bitmap do JAR (240 × 320)
 
 Desde a v19, **a interface padrão é `ui/retro.lua`**, desenhada em 240 × 320 e ampliada sem perder proporção. A tela anterior (`ui/view.lua`) foi preservada para regressão, mas não é mais o menu principal. O motor Lua, sprites e estrutura de saves permanecem.
+
+## Novo na v24 — dimensões e seleção 240×320
+
+- **Escala real:** a janela usa toda a largura/altura cabível, inclusive em tamanhos não múltiplos de 240×320 (por exemplo, 468×858). O filtro de texturas continua nearest; o motor biológico e o salvamento não mudaram.
+- **Corpos inteiros:** posições visuais dos peixes são limitadas pela metade da largura de cada faixa etária, evitando peixes adultos cortados nas bordas da água.
+- **Seleção:** peixes adultos selecionados recuperam o corpo de 50 pixels do atlas do JAR; o destaque amarelo e os alvos de toque acompanham a posição efetivamente desenhada.
+- **Painel de saúde:** a barra normal usa verde, como na captura J2ME; quando a saúde cai abaixo de 35 a barra fica avermelhada.
+- **Testes:** `tests/v24_viewport.lua` verifica a área lógica, escala em tamanhos fracionários, alvo de seleção, ordem de desenho, bordas e preservação dos dados do jogo. **Não equivale a uma comparação pixel a pixel com o JAR.**
 
 ## Novo na v23 — fontes bitmap recuperadas do JAR
 
@@ -41,7 +49,7 @@ Desde a v19, **a interface padrão é `ui/retro.lua`**, desenhada em 240 × 320 
 
 ## Jogar
 
-Abra `Aquario-de-Isola-v23.love` usando [LÖVE 2D 11.4](https://love2d.org/) ou execute `love .` no diretório. Inicialmente aparece um menu com **CONTINUE, NEW GAME, OPTIONS, ABOUT**. Para criar uma partida nova, clique em **NEW GAME**. Se já existir jogo salvo, há confirmação antes de substituí-lo; o save antigo é arquivado em `fish_tank_save_before_new_game.json` e permanece recuperável. Uma falha ao criar arquivo arquivado bloqueia a substituição.
+Abra `Aquario-de-Isola-v24.love` usando [LÖVE 2D 11.4](https://love2d.org/) ou execute `love .` no diretório. Inicialmente aparece um menu com **CONTINUE, NEW GAME, OPTIONS, ABOUT**. Para criar uma partida nova, clique em **NEW GAME**. Se já existir jogo salvo, há confirmação antes de substituí-lo; o save antigo é arquivado em `fish_tank_save_before_new_game.json` e permanece recuperável. Uma falha ao criar arquivo arquivado bloqueia a substituição.
 
 No aquário, toque em um peixe para abrir a seleção (informações e comandos **SELECT/BACK**). Na parte inferior, **FISH** seleciona um peixe e **MENU** abre o menu do jogo. A barra superior seleciona tanques e abre loja, pesquisa e coleção. O recipiente azul inferior dá acesso ao isolamento. Dentro do menu, os comandos **MOVE**, **FEED**, **TREAT**, compra de suprimentos, venda e pesquisa seguem ativos, usando o mesmo motor da v18.
 
@@ -66,6 +74,7 @@ texlua tests/v19_retro.lua
 texlua tests/v20_visual_controls.lua
 texlua tests/v21_shop_research.lua
 texlua tests/v22_keypad.lua
+texlua tests/v24_viewport.lua
 # regressão completa
 for file in tests/*.lua; do texlua "$file"; done
 ```

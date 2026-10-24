@@ -245,7 +245,15 @@ function Retro:fishDraw()
    sx=17+(x-70)/281*206
    sy=48+(y-233)/220*154
   end
-  local scale=f.age<20 and .85 or .78
+  -- O JAR desenha adultos perto dos 50px originais quando selecionados.
+  -- A grade do port ainda organiza o nado, mas a margem deve considerar
+  -- metade do corpo real; a seleção nao pode esconder peixes nas bordas.
+  local scale=f.age<20 and .85 or (self.screen=='detail' and 1 or .85)
+  if self.room~='isolation' then
+   local half=(f.age>=20 and 25 or (f.age>=6 and 18 or 11))*scale
+   sx=math.max(half+2,math.min(W-half-2,sx))
+   sy=math.max(35+half*.65,math.min(270-half*.65,sy))
+  end
   if self.selected==f.id and self.screen=='detail' then
    -- Marcador de navegacao visto na captura original do J2ME.
    stroke(sx-28,sy-15,56,32,242,208,28)
@@ -263,7 +271,12 @@ function Retro:statsBar(f)
  fontText('FED',17,4,30)
  fontText('HEALTH',17,17,42)
  fill(60,7,16,3,22,7,43);fill(60,7,math.max(0,16*(f.fed or 0)/100),3,160,220,102)
- fill(60,20,16,3,22,7,43);fill(60,20,math.max(0,16*(f.health or 0)/100),3,210,140,122)
+ fill(60,20,16,3,22,7,43)
+ if (f.health or 0)>=35 then
+  fill(60,20,math.max(0,16*(f.health or 0)/100),3,160,220,102)
+ else
+  fill(60,20,math.max(0,16*(f.health or 0)/100),3,210,140,122)
+ end
  -- Nomes recuperados da tabela inglesa do JAR, indices 51..92.
  local fullname=Catalog.nameFor(f.body,f.tail)
  local finName=Catalog.finNames[f.tail] or 'FIN'
@@ -627,9 +640,11 @@ function Retro:activateFocus()
 end
 function Retro:draw()
  local gw,gh=love.graphics.getDimensions()
+ -- Usar toda a altura/largura disponivel inclusive em telas fracionarias:
+ -- 468x858 deve renderizar ~468px de largura, nao apenas 240px.
+ -- Filtros nearest das texturas mantem pixels definidos. Escala inteira
+ -- surge naturalmente em 480x640 e 720x960; sem barras adicionais.
  self.scale=math.min(gw/W,gh/H)
- -- manter pixels nitidos em 2x/3x sempre que possivel
- if self.scale>=1 then self.scale=math.max(1,math.floor(self.scale)) end
  self.ox=math.floor((gw-W*self.scale)/2);self.oy=math.floor((gh-H*self.scale)/2)
  love.graphics.clear(.04,.03,.10,1)
  self.buttons={};self.fishHits={}
