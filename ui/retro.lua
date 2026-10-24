@@ -29,7 +29,7 @@ function Retro.new(game,hasSave)
  return setmetatable({g=game,hasSave=not not hasSave,screen='title',room='main',selected=nil,
   popup=nil,popupFrom=nil,buttons={},fishHits={},images={},assets=Assets.new(),
   speed=1,soundEnabled=true,shopPage=1,selectedShopIndex=1,toast='',toastTime=0,time=0,browseIndex=1,
-  scale=1,ox=0,oy=0,onSave=nil,onNewGame=nil,onSound=nil},Retro)
+  scale=1,ox=0,oy=0,focus=nil,focusScreen=nil,onSave=nil,onNewGame=nil,onSound=nil},Retro)
 end
 function Retro:init()
  self.assets:init()
@@ -45,9 +45,9 @@ function Retro:init()
  if atlas and love.graphics.newQuad then
   local iw,ih=atlas:getDimensions()
   local coords={slot={20,153,18,25},fish={88,219,16,23},
-   food={115,181,21,36},cart={31,218,23,24},
-   hourglass={125,94,11,14},money={111,157,20,23},
-   breed={113,113,23,18},medicine={113,181,21,36},
+   food={112,195,23,26},cart={31,218,23,24},
+   hourglass={125,94,11,14},money={110,156,22,24},
+   breed={113,113,23,18},medicine={113,98,23,18},
    arrow={94,123,24,12},heart={104,132,28,25}}
   for name,c in pairs(coords) do
    if c[1]+c[3]<=iw and c[2]+c[4]<=ih then
@@ -88,6 +88,7 @@ end
 function Retro:setGame(game,hasSave)
  self.g=game;self.hasSave=not not hasSave
  self.selected=nil;self.browseIndex=1;self.room='main';self.screen='tank';self.popup=nil
+ self.focus=nil;self.focusScreen=nil
 end
 function Retro:isPlaying() return self.hasSave and self.screen~='title' and self.screen~='confirm' and self.screen~='settings' end
 function Retro:notify(message) self.toast=tostring(message or '');self.toastTime=3.3 end
@@ -158,25 +159,27 @@ function Retro:toolbar()
   {tip='$',kind='cash',icon='money'},
  }
  for i,item in ipairs(menu) do
-  local x=(i-1)*19
-  if not self:atlasIcon('slot',x,1,19,22) then
-   fill(x,2,18,20,76,44,102);stroke(x,2,18,20,153,99,188)
+  -- O original ocupa toda a largura, sem faixa vazia junto ao dinheiro.
+  local x=math.floor((i-1)*W/#menu)
+  local slotW=math.floor(i*W/#menu)-x
+  if not self:atlasIcon('slot',x,1,slotW,22) then
+   fill(x,2,slotW,20,76,44,102);stroke(x,2,slotW,20,153,99,188)
   end
   local active=(item.room and item.room==self.room) or
    (item.kind=='fish' and self.screen=='detail')
-  if active then stroke(x+1,3,17,18,239,222,70) end
+  if active then stroke(x+1,3,slotW-2,18,239,222,70) end
   if item.kind=='tank' then
    local idx=i
    local preview=self.tankIcons[idx]
    if preview then
     rgb(255,255,255)
-    love.graphics.draw(preview.image,preview.quad,x+3,5,0,13/70,13/75)
-   else fontText(item.tip,x+2,7,15,'center',{224,252,180}) end
-   fontText(item.tip,x+11,13,7,'right',{255,249,153})
-  elseif not self:atlasIcon(item.icon,x+3,4,13,15) then
-   fontText(item.tip,x+2,7,15,'center',{230,223,185})
+    love.graphics.draw(preview.image,preview.quad,x+4,5,0,14/70,13/75)
+   else fontText(item.tip,x+2,7,slotW-4,'center',{224,252,180}) end
+   fontText(item.tip,x+slotW-8,13,6,'right',{255,249,153})
+  elseif not self:atlasIcon(item.icon,x+math.floor((slotW-15)/2),4,15,15) then
+   fontText(item.tip,x+2,7,slotW-4,'center',{230,223,185})
   end
-  self:hit(x,2,19,21,function()
+  self:hit(x,2,slotW,21,function()
    if item.kind=='tank' then
     if item.room=='second' and not self.g.s.unlocked.second then
      self:notify('TANK 2: BUY AT STORE')
@@ -199,8 +202,8 @@ function Retro:toolbar()
    elseif item.kind=='research' then self.screen='research' end
   end)
  end
- rgb(223,235,193)
- fontText('$'..math.floor(self.g.s.cash),211,8,29,'right',{240,223,162})
+ -- O J2ME usa o ultimo quadrado para o icone de dinheiro.
+ -- A quantia fica na tela da loja, sem sobrepor a barra superior.
 end
 function Retro:beginBrowse()
  local tank=self.g.s.tanks[self.room]
@@ -331,8 +334,14 @@ function Retro:confirm()
  self:menuButton('CANCEL',34,201,173,23,function()self.screen='title' end)
 end
 function Retro:panelTitle(title)
- self:background('main');self:toolbar()
- fill(9,37,222,242,37,22,70,.96);stroke(9,37,222,242,168,116,187)
+ -- menutank.png e um fundo de 240x256 usado nos menus J2ME.
+ -- Evita exibir os corais do aquario de jogo atras de loja e pesquisa.
+ if self.images.menutank then
+  rgb(255,255,255)
+  love.graphics.draw(self.images.menutank,0,24)
+ else self:background('main') end
+ self:toolbar()
+ fill(9,37,222,242,37,22,70,.88);stroke(9,37,222,242,168,116,187)
  centered(title,49,{246,226,164})
 end
 function Retro:pause()
@@ -540,6 +549,74 @@ function Retro:collection()
  end
  self:buttonHint(nil,{label='BACK',fn=function()self.screen='pause' end})
 end
+-- Navegacao de celulares Java: destaque amarelo no botao ativo.
+-- Atua SOMENTE na interface; nao altera genetica ou salvamentos.
+function Retro:focusableButtons()
+ local out={}
+ for i,b in ipairs(self.buttons) do
+  if b.y>26 and b.y<299 and b.w>=15 and b.h>=12 then out[#out+1]=i end
+ end
+ if #out==0 then for i=1,#self.buttons do out[#out+1]=i end end
+ return out
+end
+function Retro:ensureFocus()
+ if self.focusScreen~=self.screen then
+  self.focus=nil
+  self.focusScreen=self.screen
+ end
+ local valid=false
+ for _,i in ipairs(self:focusableButtons()) do if self.focus==i then valid=true;break end end
+ if not valid then
+  local candidates=self:focusableButtons()
+  self.focus=candidates[1]
+  -- Os itens centrais do menu devem receber destaque antes da barra superior.
+  local chosen=math.huge
+  for _,i in ipairs(candidates) do
+   local b=self.buttons[i]
+   local metric=b.y*100+math.abs((b.x+b.w/2)-120)
+   if metric<chosen then chosen=metric;self.focus=i end
+  end
+ end
+end
+function Retro:drawFocus()
+ if self.screen=='tank' or self.screen=='detail' then return end
+ self:ensureFocus()
+ local b=self.focus and self.buttons[self.focus]
+ if b then
+  rgb(255,216,47)
+  love.graphics.rectangle('line',b.x+.5,b.y+.5,b.w-1,b.h-1)
+ end
+end
+function Retro:moveFocus(dx,dy)
+ self:ensureFocus()
+ local current=self.focus and self.buttons[self.focus]
+ if not current then return false end
+ local cx,cy=current.x+current.w/2,current.y+current.h/2
+ local bestIndex,bestScore=nil,math.huge
+ for _,i in ipairs(self:focusableButtons()) do
+  local b=self.buttons[i]
+  if i~=self.focus then
+   local ox,oy=(b.x+b.w/2)-cx,(b.y+b.h/2)-cy
+   local forward=ox*dx+oy*dy
+   if forward>1 then
+    local side=math.abs(ox*dy-oy*dx)
+    local score=forward+side*2.1
+    if score<bestScore then bestScore=score;bestIndex=i end
+   end
+  end
+ end
+ if bestIndex then self.focus=bestIndex;return true end
+ return false
+end
+function Retro:activateFocus()
+ self:ensureFocus()
+ local b=self.focus and self.buttons[self.focus]
+ if not b then return false end
+ b.fn()
+ -- A tela pode ter mudado: descartar o destaque antigo.
+ if self.focusScreen~=self.screen then self.focus=nil end
+ return true
+end
 function Retro:draw()
  local gw,gh=love.graphics.getDimensions()
  self.scale=math.min(gw/W,gh/H)
@@ -563,6 +640,7 @@ function Retro:draw()
  elseif self.screen=='research' then self:research()
  elseif self.screen=='collection' then self:collection()
  end
+ self:drawFocus()
  if self.toastTime>0 then
   fill(10,263,220,23,46,23,71,.95)
   fontText(self.toast:sub(1,52),14,268,212,'center',{251,229,153})
@@ -594,12 +672,25 @@ function Retro:press(px,py)
  for i=#self.buttons,1,-1 do
   local b=self.buttons[i]
   if x>=b.x and x<=b.x+b.w and y>=b.y and y<=b.y+b.h then
+   self.focus=i;self.focusScreen=self.screen
    b.fn();return true
   end
  end
  return false
 end
 function Retro:key(k)
+ -- 2/4/6/8 e 5 correspondem ao teclado direcional J2ME.
+ -- Em tela de peixe os direcionais ainda percorrem peixes (abaixo).
+ if self.screen~='tank' and self.screen~='detail' then
+  local direction={up={0,-1},down={0,1},left={-1,0},right={1,0},
+   ['2']={0,-1},['8']={0,1},['4']={-1,0},['6']={1,0},
+   kp8={0,1},kp2={0,-1},kp4={-1,0},kp6={1,0}}
+  local dir=direction[k]
+  if dir then self:moveFocus(dir[1],dir[2]);return end
+  if k=='5' or k=='kp5' or k=='return' or k=='kpenter' or k=='space' then
+   if self:activateFocus() then return end
+  end
+ end
  -- Navegacao classica dos aparelhos Java: 4/6 (anterior/proximo),
  -- 2/8 para percorrer e 5 para selecionar. Mouse e toque continuam.
  if self.screen=='detail' and (k=='left' or k=='right' or k=='up' or k=='down' or k=='4' or k=='6' or k=='2' or k=='8' or k=='kp4' or k=='kp6') then

@@ -84,7 +84,7 @@ end)
 check('atalho de alimentacao nao altera a tela',function()
  v.screen='tank';v.room='main';v.selected=nil
  local old=g.s.stats.food_given
- assert(press(86,10));assert(v.screen=='tank')
+ assert(press(98,10));assert(v.screen=='tank')
  assert(g.s.stats.food_given>=old)
 end)
 check('peixes de isolamento aparecem acima do recipiente',function()
