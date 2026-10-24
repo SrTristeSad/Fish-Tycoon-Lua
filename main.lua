@@ -3,7 +3,7 @@ local Storage=require('core.storage')
 local View=require('ui.view')
 local Audio=require('core.audio')
 local OfflineReport=require('core.offline_report')
-local game,view,music
+local game,view,music,nativeSmoke
 local autosave=0
 local suppressMouseUntil=0
 local focused=true
@@ -13,6 +13,16 @@ local function save()
 end
 
 function love.load()
+ if os.getenv('FISH_NATIVE_SMOKE')=='1' then
+  -- Teste isolado: nao le nem grava a partida do jogador.
+  game=Game.new(1600)
+  for i=5,18 do
+   assert(game:addFish('main',((i-1)%21)+1,((i*3-1)%21)+1,20))
+  end
+  view=View.new(game);view:init()
+  nativeSmoke=require('core.native_smoke').new(view)
+  return
+ end
  local loaded,err=Storage.load()
  game=loaded or Game.new()
  local before=loaded and OfflineReport.snapshot(game) or nil
@@ -27,6 +37,7 @@ function love.load()
 end
 
 function love.update(dt)
+ if nativeSmoke then view:update(math.min(dt,1));return end
  if not focused then return end
  dt=math.min(dt,1)
  game:advance(dt*game.s.game_speed)
@@ -39,7 +50,10 @@ function love.update(dt)
  end
 end
 
-function love.draw() view:draw() end
+function love.draw()
+ view:draw()
+ if nativeSmoke then nativeSmoke:afterDraw() end
+end
 function love.mousepressed(x,y,button)
  if button~=1 then return end
  if love.timer.getTime()<suppressMouseUntil then return end
@@ -59,4 +73,6 @@ function love.focus(f)
   if passed>=60 then view:showOfflineReport(OfflineReport.build(before,game,passed)) end
  end
 end
-function love.quit() save() end
+function love.quit()
+ if not nativeSmoke then save() end
+end

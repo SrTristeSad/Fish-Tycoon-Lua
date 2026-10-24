@@ -18,3 +18,29 @@ jobs:
             echo "Testando $script"
             lua5.4 "$script"
           done
+      - name: Testar driver das capturas com API simulada
+        env:
+          FISH_NATIVE_SMOKE: '1'
+        run: lua5.4 tests/v16_native_driver.lua
+  native-love:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - name: Instalar LÖVE e tela virtual
+        run: sudo apt-get update && sudo apt-get install -y love xvfb
+      - name: Executar jogo real e capturar sete telas
+        env:
+          FISH_NATIVE_SMOKE: '1'
+          SDL_AUDIODRIVER: dummy
+          LIBGL_ALWAYS_SOFTWARE: '1'
+        run: timeout 90s xvfb-run -a -s '-screen 0 1280x960x24' love .
+      - name: Conferir capturas de tela reais
+        run: python3 scripts/validate_native_screenshots.py
+      - name: Publicar capturas de tela
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fish-tycoon-v16-native-love
+          if-no-files-found: warn
+          path: ~/.local/share/love/mar_de_isola_lua/native-smoke/
