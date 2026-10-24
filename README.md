@@ -1,11 +1,11 @@
-# Aquário de Isola — Fish Tycoon em Lua (v16)
+# Aquário de Isola — Fish Tycoon em Lua (v17)
 
-Reconstrução experimental em **Lua + LÖVE 2D 11.4** que continua diretamente o código da v15, com referência ao JAR J2ME 1.0.1 fornecido pelo usuário. Não é um port oficial nem uma reimplementação completa da lógica proprietária.
+Reconstrução experimental em **Lua + LÖVE 2D 11.4** que continua diretamente o código da v16, com referência ao JAR J2ME 1.0.1 fornecido pelo usuário. Não é um port oficial nem uma reimplementação completa da lógica proprietária.
 
 ## Iniciar no Windows
 
 1. Instale o [LÖVE 2D](https://love2d.org/) (11.4 ou compatível).
-2. Abra `Aquario-de-Isola-v16.love`. Alternativamente, extraia `FishTycoonLua_v16_codigo_fonte.zip` e abra `INICIAR_WINDOWS.bat` dentro da pasta do projeto.
+2. Abra `Aquario-de-Isola-v17.love`. Alternativamente, extraia `FishTycoonLua_v17_codigo_fonte.zip` e abra `INICIAR_WINDOWS.bat` dentro da pasta do projeto.
 3. Clique ou toque nos peixes para selecionar. As teclas **1–4** mudam de página, **espaço** alterna a velocidade e **Esc** fecha diálogos.
 
 **Não contém APK Android nem executável Windows independente.** A v16 inclui um teste nativo do LÖVE no GitHub Actions (Xvfb), com PNGs das telas. Verifique o resultado do workflow antes de tratar a validação nativa como concluída; Android continua não testado.
@@ -17,6 +17,14 @@ Reconstrução experimental em **Lua + LÖVE 2D 11.4** que continua diretamente 
 - alimentação, doenças, tratamentos, lojas, compradores automáticos, cotação por variedade, pesquisas e equipamentos;
 - cinco faixas de áudio OGG convertidas dos MIDI originais e gráficos recuperados do JAR;
 - salvar/carregar com backup anterior, histórico de visitas, simulação offline limitada a 24 horas.
+
+## Novo na v17
+
+- **Saúde biológica do JAR:** implementada a etapa de `n.c(m)` que impede recuperação de saúde para peixes doentes ou com alimentação inferior a 5 unidades e aplica **-1 por doença** no núcleo biológico. Os equipamentos são avaliados antes dessa regra.
+- **Pesquisas:** origem dos números identificada na projeção (biologia JAR nos três níveis recuperados, extrapolação no quarto nível e custos/prazos do port Lua).
+- **Risco biológico auditável:** `Care.originalDiseaseThreshold` agora também expõe os acréscimos `+6 × exposição` e `+15` após 600 unidades de idade, previstos em `n.a(m,int)`; a lotação ainda permanece adaptada.
+- **Testes:** nova suíte `tests/v17_biology.lua` para transições de saúde, efeitos dos equipamentos, limites da pesquisa e proteção dos salvamentos antigos.
+- **Compatibilidade:** mesmo formato de salvamento v9 e os mesmos recursos gráficos/áudio. Nenhum arquivo original modificado.
 
 ## Novo na v16
 
@@ -51,6 +59,7 @@ texlua tests/v13_integrity.lua
 texlua tests/v14_render.lua
 texlua tests/v15_controls.lua
 texlua tests/v15_jar_genetics.lua
+texlua tests/v17_biology.lua
 FISH_NATIVE_SMOKE=1 texlua tests/v16_native_driver.lua
 texlua tests/view_smoke.lua
 ```
@@ -61,4 +70,4 @@ Ou execute `TESTAR_LUA.bat` no Windows para repetir todas as suítes. A v16 pres
 
 Uma parte das regras de criação e economia foi inferida do bytecode Java; outras seguem aproximadas. Sprites, músicas e nomes originais têm seus titulares de direitos. A extração para estudo não equivale a uma licença para distribuir ou comercializar esses recursos. Antes de publicar, substitua recursos sem permissão por assets próprios ou licenciados.
 
-Detalhes em [`docs/FASE_16.md`](docs/FASE_16.md), [`docs/FASE_15.md`](docs/FASE_15.md) e [`docs/FASE_15_JAR.md`](docs/FASE_15_JAR.md) e [`docs/FASE_14.md`](docs/FASE_14.md) e [`docs/FASE_13.md`](docs/FASE_13.md).
+Detalhes em [`docs/FASE_17.md`](docs/FASE_17.md), [`docs/FASE_16.md`](docs/FASE_16.md), [`docs/FASE_15.md`](docs/FASE_15.md) e [`docs/FASE_15_JAR.md`](docs/FASE_15_JAR.md) e [`docs/FASE_14.md`](docs/FASE_14.md) e [`docs/FASE_13.md`](docs/FASE_13.md).

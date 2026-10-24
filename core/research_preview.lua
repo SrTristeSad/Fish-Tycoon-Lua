@@ -34,6 +34,7 @@ function R.preview(game,id)
  return {level=level,max=level>=Config.RESEARCH_MAX,
   current=describe(level),next=(level<Config.RESEARCH_MAX and describe(level+1) or nil),
   -- Keeps the interface honest about what is original and what is not.
-  source='Balanceamento experimental do port Lua'}
+  source=(id=='advertising' and 'Publicidade experimental do port Lua'
+    or 'Biologia JAR: niveis 1-3; nivel 4 e custos experimentais')}
 end
 return R

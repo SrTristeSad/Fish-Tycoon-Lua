@@ -27,16 +27,34 @@ function Care.environmentDelta(body,tail,level)
  return 0
 end
 
+-- n.c(m), offsets 256..303 (javap): depois dos ganhos ocasionais de
+-- equipamento, se o peixe estiver doente ou com reserva g[7] < 5,
+-- QUALQUER delta positivo e zerado. Depois, a doenca subtrai 1 ponto.
+-- Os bonuses sao aplicados antes deste bloqueio, como no Java.
+-- Este metodo apenas representa o nucleo J2ME; sem as penalidades de
+-- fome critica e bonus extras adotados pelo port Lua.
+function Care.originalConditionDelta(body,tail,level,fed,diseased,bonuses)
+ local delta=Care.environmentDelta(body,tail,level)+math.max(0,math.floor(bonuses or 0))
+ if (diseased or (fed or 100)<5) and delta>0 then delta=0 end
+ if diseased then delta=delta-1 end
+ return delta
+end
+
 -- n.a(m,int) se baseia na forma e na pesquisa de nutricao para
 -- definir risco inicial (por 10000). Outros modificadores do JAR
 -- ainda nao foram integralmente mapeados.
-function Care.originalDiseaseThreshold(body,foodLevel)
+function Care.originalDiseaseThreshold(body,foodLevel,exposure,age)
  local b=body-1
  local level=math.max(1,math.min(3,math.floor((foodLevel or 0)+1)))
- if b%4==0 then return ({10,5,1})[level] end
- if (b-2)%4==0 then return ({20,10,3})[level] end
- if b%2==1 then return ({30,20,5})[level] end
- return 2
+ local base=2
+ if b%4==0 then base=({10,5,1})[level]
+ elseif (b-2)%4==0 then base=({20,10,3})[level]
+ elseif b%2==1 then base=({30,20,5})[level] end
+ -- n.a(m,int): risco = base + 6*parametro_int + (idade > 600 ? 15 : 0).
+ -- O parametro adicional vem do contexto de cada chamada Java. No port
+ -- atual o risco por lotacao ainda usa sua regra antiga, separadamente.
+ return base+6*math.max(0,math.floor(exposure or 0))
+   +((age or 0)>600 and 15 or 0)
 end
 
 -- Densidade, equipamentos, medicamentos e efeitos magicos sao
@@ -52,16 +70,19 @@ function Care.step(game,f,room)
  if s.gear.plant and f.fed<=2 and game:int(0,99)<=20 then
   f.fed=clamp(f.fed+5)
  end
- local delta=Care.environmentDelta(f.body,f.tail,environmentLevel+1)
- if environmentLevel>=3 then delta=delta+2 end -- bonus extra Lua, nao JAR
- -- b.d(9/10): sistemas de temperatura e aeracao podem dar +1
- -- por ciclo cada, se j.c(100)<=40 (41%).
- if s.gear.heater and game:int(0,99)<=40 then delta=delta+1 end
- if s.gear.aerator and game:int(0,99)<=40 then delta=delta+1 end
- if game:hasMagic('vitality',room) then delta=delta+1 end
+ -- O Java aplica os bonus de equipamentos ANTES de bloquear cura em
+ -- peixes doentes ou com menos de 5 unidades de alimento.
+ local bonus=0
+ if environmentLevel>=3 then bonus=bonus+2 end -- extra Lua, nao JAR
+ -- b.d(9/10): aerador e temperatura, +1 com chance de 41% cada.
+ if s.gear.heater and game:int(0,99)<=40 then bonus=bonus+1 end
+ if s.gear.aerator and game:int(0,99)<=40 then bonus=bonus+1 end
+ if game:hasMagic('vitality',room) then bonus=bonus+1 end -- extra Lua
+ local delta=Care.originalConditionDelta(f.body,f.tail,environmentLevel+1,
+   f.fed,not not f.disease,bonus)
+ -- Penalidade adicional de fome critica: regra EXCLUSIVA do port Lua.
  if f.fed<=2 then delta=delta-4
  elseif f.fed<20 then delta=delta-2 end
- if f.disease then delta=delta-C.SICK_DAMAGE end
  f.health=clamp((f.health or 100)+delta)
  -- Um aquario lotado eleva o risco. A base numerica vem do JAR;
  -- o fator por lotacao e a atenuacao dos equipamentos sao hipoteses.
