@@ -3,6 +3,7 @@
 -- A simulacao original do port fica isolada em core/game.lua.
 local Assets=require('core.assets')
 local Swim=require('ui.j2me_motion')
+local FishGeometry=require('ui.fish_geometry')
 local Catalog=require('core.catalog')
 local Config=require('core.config')
 local BitmapFont=require('ui.bitmap_font')
@@ -325,16 +326,20 @@ function Retro:fishDraw()
   if selected and self.room~='isolation' then
    sx,sy=91,53
   end
-  local scale=f.age<20 and .85 or (selected and 1 or .85)
+  -- O JAR ja armazena os sprites nos tamanhos finais: nao usar 85%.
+  -- m.a() retorna larguras 21 (alevino), 35 (jovem), 50 (adulto).
+  local scale=1
+  local fishWidth,fishHeight=FishGeometry.size(f)
+  local half,halfY=fishWidth/2,fishHeight/2
   if self.room~='isolation' then
-   local half=(f.age>=20 and 25 or (f.age>=6 and 18 or 11))*scale
    sx=math.max(half+2,math.min(W-half-2,sx))
-   sy=math.max(35+half*.65,math.min(270-half*.65,sy))
+   -- Reserva o HUD superior e a bandeja inferior em todos os tamanhos.
+   -- Na selecao, preserva a ancora (91,53) da captura Java.
+   if not selected then sy=math.max(35+halfY,math.min(270-halfY,sy)) end
    -- Na selecao, o peixe de interesse fica sozinho dentro da moldura
    -- amarela. Deslocar apenas o desenho dos outros quando cruzam essa
    -- area; os tempos, indices e atributos dos peixes nao mudam.
    if self.screen=='detail' and selectedFish and not selected then
-    local halfY=math.max(8,(f.age>=20 and 16 or 11)*scale)
     if math.abs(sx-91)<(28+half+5) and math.abs(sy-53)<(19+halfY+5) then
      if sx<91 then sx=math.max(half+2,91-28-half-5)
      else sx=math.min(W-half-2,91+28+half+5) end
@@ -346,9 +351,8 @@ function Retro:fishDraw()
   end
   self.assets:drawFish(f,sx,sy,scale,face)
   -- As placas For Sale! ja estao pintadas em tank3.png, no cascalho.
-  local spriteHalf=(f.age>=20 and 25 or (f.age>=6 and 18 or 11))*scale
   self.fishHits[#self.fishHits+1]={id=f.id,x=sx,y=sy,
-    rx=math.max(10,spriteHalf),ry=math.max(8,(f.age>=20 and 16 or 11)*scale)}
+    rx=math.max(10,half),ry=math.max(8,halfY)}
  end
  -- Desenhar o selecionado POR ULTIMO garante que outros peixes nao
  -- cubram o corpo e o contorno amarelo da tela de detalhes.

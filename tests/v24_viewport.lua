@@ -2,6 +2,7 @@
 -- V22: teclado classico J2ME sem dependencia de uma janela grafica.
 package.path='./?.lua;./?/init.lua;'..package.path
 local Retro=require('ui.retro');local Game=require('core.game')
+local Geometry=require('ui.fish_geometry')
 local noop=function() end
 love={graphics={
  newFont=function()return {setFilter=noop}end,
@@ -52,8 +53,8 @@ check('centro do adulto e juvenil sempre inteiro na agua',function()
   v.time=t;v:draw()
   for i,f in ipairs(tank) do
    local hit=v.fishHits[i]
-   local scale=f.age<20 and .85 or .85
-   local half=(f.age>=20 and 25 or (f.age>=6 and 18 or 11))*scale
+   local w,h=Geometry.size(f)
+   local half=w/2
    assert(hit.x-half>=-1 and hit.x+half<=241)
    assert(hit.y>=35 and hit.y<270)
   end
