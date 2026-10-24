@@ -4,7 +4,7 @@ A captura original enviada pelo usuário mostra a seleção de um peixe com **co
 
 ## Correção visual
 
-No `ui/retro.lua`, somente enquanto `screen == "detail"`, o exemplar selecionado passa a ser desenhado no ponto lógico **(91,53)**, dentro de uma moldura de 56 × 37 pixels. Ele é o último renderizado do tanque, preservando corpo e contorno visíveis. Os outros peixes continuam usando `Swim.position`, com índice estável. Ao voltar ao tanque, o peixe retoma sua animação normal.
+No `ui/retro.lua`, somente enquanto `screen == "detail"`, o exemplar selecionado passa a ser desenhado no ponto lógico **(91,53)**, dentro de uma moldura de 56 × 37 pixels. Ele é o último renderizado do tanque, preservando corpo e contorno visíveis. Se outro peixe cruzaria o retângulo de destaque, só sua posição de desenho é deslocada para a borda mais próxima, mantendo os valores de `Swim.position` e o índice intactos. Ao voltar ao tanque, o peixe retoma sua animação normal.
 
 Nenhuma propriedade física do peixe é alterada. Os sprites e as fontes comerciais seguem opcionais no repositório público; o pacote local preserva os recursos extraídos para estudo.
 

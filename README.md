@@ -5,7 +5,7 @@ Desde a v19, **a interface padrão é `ui/retro.lua`**, desenhada em 240 × 320 
 ## Novo na v30 — seleção do peixe conforme a captura J2ME
 
 - **Foco do peixe:** na tela de detalhes, o peixe selecionado é desenhado na região superior central, com o retângulo amarelo de 56 × 37 pixels cuja posição foi medida na captura J2ME fornecida (x=63, y=34). Antes, o destaque acompanhava a trajetória aleatória do peixe e aparecia frequentemente longe da referência.
-- **Camadas:** o peixe selecionado é renderizado depois dos demais para evitar que seu corpo e o marcador amarelo sejam encobertos. Os outros peixes continuam nadando, mas sem alterar o estado da simulação.
+- **Camadas:** o peixe selecionado é renderizado por último e os outros têm o desenho deslocado quando invadiriam a moldura de destaque. Continuam com trajetórias próprias, sem alterar o estado da simulação.
 - **Voltar e navegar:** SELECT/BACK e 2/4/6/8 continuam permitindo explorar os peixes; ao sair da seleção o peixe volta à posição normal de nado. O toque na tela do aquário mantém o alvo proporcional ao sprite.
 - **Testes:** `tests/v30_selection.lua` valida posição do contorno, ordem de desenho, troca de exemplar e ausência de mutação do save. `core/retro_smoke.lua` acrescenta uma captura nativa dedicada à seleção de outro peixe. Nenhuma regra de pesquisa, genética ou economia foi alterada.
 

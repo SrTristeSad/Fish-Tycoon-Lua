@@ -63,6 +63,14 @@ check('selecionado adulto usa ancora e contorno amarelo da referencia',function(
  assert(focusedOutline(),'Moldura x=63..119 e y=34..71 nao encontrada')
  local last=hits[#hits]
  assert(last.id==first.id and last.x==91 and last.y==53 and last.scale==1)
+ -- Outro peixe nao deve invadir a caixa amarela (x=63..119, y=34..71).
+ for _,h in ipairs(view.fishHits) do
+  if h.id~=first.id then
+   local intersects=(h.x+h.rx>63 and h.x-h.rx<119 and
+                     h.y+h.ry>34 and h.y-h.ry<71)
+   assert(not intersects,'Outro peixe encobriu a area de selecao')
+  end
+ end
 end)
 check('o selecionado e sempre desenhado por ultimo',function()
  view.selected=other.id

@@ -329,6 +329,16 @@ function Retro:fishDraw()
    local half=(f.age>=20 and 25 or (f.age>=6 and 18 or 11))*scale
    sx=math.max(half+2,math.min(W-half-2,sx))
    sy=math.max(35+half*.65,math.min(270-half*.65,sy))
+   -- Na selecao, o peixe de interesse fica sozinho dentro da moldura
+   -- amarela. Deslocar apenas o desenho dos outros quando cruzam essa
+   -- area; os tempos, indices e atributos dos peixes nao mudam.
+   if self.screen=='detail' and selectedFish and not selected then
+    local halfY=math.max(8,(f.age>=20 and 16 or 11)*scale)
+    if math.abs(sx-91)<(28+half+5) and math.abs(sy-53)<(19+halfY+5) then
+     if sx<91 then sx=math.max(half+2,91-28-half-5)
+     else sx=math.min(W-half-2,91+28+half+5) end
+    end
+   end
   end
   if selected then
    stroke(sx-28,sy-19,56,37,242,208,28)
