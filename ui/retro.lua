@@ -1017,7 +1017,15 @@ function Retro:press(px,py)
  local x=(px-self.ox)/self.scale
  local y=(py-self.oy)/self.scale
  if x<0 or x>=W or y<0 or y>=H then return false end
- -- Clicar em um peixe abre a mesma tela de selecao observada no J2ME.
+ -- UI controls must take precedence over fish sprites at overlapping edges.
+ -- Otherwise a fish near a softkey can intercept a MENU or SELECT tap.
+ for i=#self.buttons,1,-1 do
+  local b=self.buttons[i]
+  if x>=b.x and x<=b.x+b.w and y>=b.y and y<=b.y+b.h then
+   self.focus=i;self.focusScreen=self.screen
+   b.fn();return true
+  end
+ end
  if self.screen=='tank' then
   local closest,best=nil,math.huge
   for _,hit in ipairs(self.fishHits) do
@@ -1033,13 +1041,6 @@ function Retro:press(px,py)
     if f.id==closest.id then self.browseIndex=i;break end
    end
    return true
-  end
- end
- for i=#self.buttons,1,-1 do
-  local b=self.buttons[i]
-  if x>=b.x and x<=b.x+b.w and y>=b.y and y<=b.y+b.h then
-   self.focus=i;self.focusScreen=self.screen
-   b.fn();return true
   end
  end
  return false
