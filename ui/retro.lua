@@ -35,7 +35,7 @@ function Retro.new(game,hasSave)
  return setmetatable({g=game,hasSave=not not hasSave,screen='title',room='main',selected=nil,
   popup=nil,popupFrom=nil,buttons={},fishHits={},softkeys={},images={},assets=Assets.new(),
   speed=1,soundEnabled=true,shopPage=1,selectedShopIndex=1,toast='',toastTime=0,time=0,browseIndex=1,
-  confirmFrom='title',
+  confirmFrom='title',utilityReturn=nil,
   scale=1,ox=0,oy=0,focus=nil,focusScreen=nil,onSave=nil,onNewGame=nil,onSound=nil},Retro)
 end
 function Retro:init()
@@ -97,6 +97,23 @@ end
 function Retro:setGame(game,hasSave)
  self.g=game;self.hasSave=not not hasSave
  self.selected=nil;self.browseIndex=1;self.room='main';self.screen='tank';self.popup=nil
+ self.focus=nil;self.focusScreen=nil;self.utilityReturn=nil
+end
+-- Loja/pesquisas devem retornar ao aquario ou menu que as abriu,
+-- sem prender o jogador no menu de pausa (regressao da v28).
+function Retro:openUtility(target)
+ assert(target=='shop' or target=='research')
+ if self.screen~='shop' and self.screen~='research' then
+  self.utilityReturn=self.screen
+ end
+ self.screen=target
+ self.focus=nil;self.focusScreen=nil
+end
+function Retro:leaveUtility()
+ local dest=self.utilityReturn or 'pause'
+ if dest=='shop' or dest=='research' then dest='pause' end
+ self.utilityReturn=nil
+ self.screen=dest
  self.focus=nil;self.focusScreen=nil
 end
 function Retro:isPlaying() return self.hasSave and self.screen~='title' and self.screen~='confirm' and self.screen~='settings' end
@@ -113,6 +130,48 @@ function Retro:menuButton(label,x,y,w,h,fn,disabled)
  fill(x+2,y+2,w-4,2,129,85,164)
  fontText(label,x+3,y+math.floor((h-10)/2),w-6,'center',disabled and {141,126,149} or {185,252,150})
  if fn and not disabled then self:hit(x,y,w,h,fn) end
+end
+-- Linha ilustrada: os icones sao obtidos do atlas J2ME ja importado,
+-- e nao de desenhos substitutos novos. Reserva de texto sem esse atlas.
+function Retro:iconRow(label,x,y,w,h,fn,disabled,icon)
+ fill(x,y,w,h,63,34,93)
+ stroke(x,y,w,h,150,99,184)
+ fill(x+2,y+2,w-4,2,129,85,164)
+ local shown=false
+ if icon then
+  if icon.kind=='store' then
+   shown=self:storeIcon(icon.name,x+4,y+3,21,h-6)
+  elseif icon.kind=='tank' then
+   shown=self:roomIcon(icon.name,x+5,y+3,19,h-6)
+  elseif icon.kind=='atlas' then
+   shown=self:atlasIcon(icon.name,x+7,y+math.floor((h-16)/2),16,16)
+  end
+  if not shown then fontText(icon.fallback or '?',x+6,y+math.floor((h-10)/2),17,'center',
+   disabled and {134,116,139} or {223,210,148}) end
+ end
+ fontText(label,x+32,y+math.floor((h-10)/2),w-37,'left',
+  disabled and {141,126,149} or {185,252,150})
+ if fn and not disabled then self:hit(x,y,w,h,fn) end
+end
+function Retro:roomIcon(room,x,y,w,h)
+ local ids={main=1,second=2,sale=3}
+ local idx=ids[room]
+ if idx and self.tankIcons[idx] then
+  local img=self.tankIcons[idx]
+  rgb(255,255,255)
+  love.graphics.draw(img.image,img.quad,x,y,0,w/70,h/75)
+  return true
+ end
+ if room=='isolation' then
+  local img=self.assets.images.isolation_tank
+  if img then
+   local iw,ih=img:getDimensions()
+   rgb(255,255,255)
+   love.graphics.draw(img,x,y,0,w/iw,h/ih)
+   return true
+  end
+ end
+ return false
 end
 function Retro:buttonHint(left,right)
  self.softkeys={left=left,right=right}
@@ -211,8 +270,8 @@ function Retro:toolbar()
     else self:notify('BREED IN ISOLATION') end
    elseif item.kind=='species' then
     if self.selected then self.screen='detail' else self:notify('SELECT A FISH FIRST') end
-   elseif item.kind=='shop' or item.kind=='cash' then self.screen='shop';self.shopPage=1
-   elseif item.kind=='research' then self.screen='research' end
+   elseif item.kind=='shop' or item.kind=='cash' then self:openUtility('shop');self.shopPage=1
+   elseif item.kind=='research' then self:openUtility('research') end
   end)
  end
  -- O J2ME usa o ultimo quadrado para o icone de dinheiro.
@@ -238,7 +297,7 @@ function Retro:fishDraw()
  local tank=self.g.s.tanks[self.room]
  if self.room=='second' and not self.g.s.unlocked.second then
   fill(25,114,190,34,34,24,65,.9);centered('TANK 2 LOCKED',119)
-  self:menuButton('GO TO STORE',75,156,90,22,function()self.screen='shop' end)
+  self:menuButton('GO TO STORE',75,156,90,22,function()self:openUtility('shop') end)
   return
  end
  for i,f in ipairs(tank) do
@@ -440,25 +499,25 @@ function Retro:drawActions()
  local saleEligible=room=='sale' and self.g:isAdult(f)
  local food=(self.g.s.supplies.food or 0)
  local list={
-  {label='FEED   x'..food,fn=function()
+  {label='FEED   x'..food,icon={kind='atlas',name='food',fallback='F'},fn=function()
     local ok,msg=self.g:feed(f.id);self:notify(msg or (ok and 'FED' or 'NO FOOD'))
    end,disabled=food<1 or (f.fed or 100)>=100},
-  {label='TREAT FISH',fn=function()self.screen='treat' end},
-  {label='MOVE FISH',fn=function()self.screen='move' end},
-  {label='PRICE -5',fn=function()
+  {label='TREAT FISH',icon={kind='atlas',name='medicine',fallback='+'},fn=function()self.screen='treat' end},
+  {label='MOVE FISH',icon={kind='atlas',name='arrow',fallback='>'},fn=function()self.screen='move' end},
+  {label='PRICE -5',icon={kind='atlas',name='money',fallback='$'},fn=function()
     local ok,n=self.g:changePrice(f.id,-5);self:notify(ok and '$'..n or n)
    end,disabled=not saleEligible},
-  {label='PRICE +5',fn=function()
+  {label='PRICE +5',icon={kind='atlas',name='money',fallback='$'},fn=function()
     local ok,n=self.g:changePrice(f.id,5);self:notify(ok and '$'..n or n)
    end,disabled=not saleEligible},
-  {label='SELL NOW',fn=function()
+  {label='SELL NOW',icon={kind='atlas',name='cart',fallback='$'},fn=function()
     local ok,n=self.g:sell(f.id)
     self:notify(ok and 'SOLD!' or n)
     if ok then self.selected=nil;self.screen='tank' end
    end,disabled=not saleEligible},
  }
  for i,item in ipairs(list) do
-  self:menuButton(item.label,23,97+(i-1)*30,194,25,item.fn,item.disabled)
+  self:iconRow(item.label,23,97+(i-1)*30,194,25,item.fn,item.disabled,item.icon)
  end
  self:buttonHint(nil,{label='BACK',fn=function()self.screen='detail' end})
 end
@@ -484,11 +543,11 @@ function Retro:drawMove()
   elseif count>=capacity then name=item[1]..'  (FULL)'
   elseif room=='sale' and not self.g:isAdult(f) then name=item[1]..'  (ADULT ONLY)'
   elseif from=='isolation' and f.eggs_at then name=item[1]..'  (EGGS)' end
-  self:menuButton(name,18,103+(i-1)*36,204,29,function()
+  self:iconRow(name,18,103+(i-1)*36,204,29,function()
    local ok,msg=self.g:move(self.selected,room)
    self:notify(msg or (ok and 'MOVED!' or 'CANNOT MOVE'))
    if ok then self.room=room;self.screen='tank';self.selected=nil end
-  end,blocked)
+  end,blocked,{kind='tank',name=room,fallback=tostring(i)})
  end
  centered('SELECT A TANK WITH SPACE',259,{213,209,223})
  self:buttonHint(nil,{label='BACK',fn=function()self.screen='actions' end})
@@ -512,11 +571,11 @@ function Retro:drawTreat()
   local disabled=quantity<1 or not compatible
   local label=item[1]..'     x'..quantity
   if not compatible then label=label..'  (N/A)' end
-  self:menuButton(label,23,115+(i-1)*31,194,26,function()
+  self:iconRow(label,23,115+(i-1)*31,194,26,function()
    local ok,msg=self.g:medicine(self.selected,kind)
    self:notify(msg or (ok and 'APPLIED' or 'FAILED'))
    if ok then self.screen='actions' end
-  end,disabled)
+  end,disabled,{kind='store',name=kind,fallback='+'})
  end
  centered('BUY MEDICINE AT STORE',279,{208,202,213})
  self:buttonHint(nil,{label='BACK',fn=function()self.screen='actions' end})
@@ -535,14 +594,15 @@ local supplyNotes={food='FOOD FOR THE TANK',ick='TREAT FISH WITH ICK',
  snail='KEEP WATER CLEAN',plant='HELP FEED FISH',
  curing_plant='SUPPORT FISH HEALTH',fertility_plant='MORE BABY FISH',
  decor='ATTRACT CUSTOMERS',second='UNLOCK ANOTHER TANK'}
-function Retro:storeIcon(id,x,y)
+function Retro:storeIcon(id,x,y,boxW,boxH)
  local atlas=self.images.store
  local sprite=self.storeQuads and self.storeQuads[id]
  if not atlas or not sprite then return false end
  rgb(255,255,255)
- local sc=math.min(27/sprite.w,28/sprite.h,1.35)
- love.graphics.draw(atlas,sprite.quad,x+(28-sprite.w*sc)/2,
-  y+(29-sprite.h*sc)/2,0,sc,sc)
+ boxW,boxH=boxW or 28,boxH or 29
+ local sc=math.min(boxW/sprite.w,boxH/sprite.h,1.35)
+ love.graphics.draw(atlas,sprite.quad,x+(boxW-sprite.w*sc)/2,
+  y+(boxH-sprite.h*sc)/2,0,sc,sc)
  return true
 end
 function Retro:shop()
@@ -596,7 +656,7 @@ function Retro:shop()
   self.shopPage=math.min(pages,self.shopPage+1)
   self.selectedShopIndex=(self.shopPage-1)*4+1
  end,self.shopPage>=pages)
- self:buttonHint(nil,{label='BACK',fn=function()self.screen='pause' end})
+ self:buttonHint(nil,{label='BACK',fn=function()self:leaveUtility() end})
 end
 function Retro:research()
  self:panelTitle('RESEARCH')
@@ -638,7 +698,7 @@ function Retro:research()
  else
   fontText('CHOOSE A FIELD TO RESEARCH',18,281,204,'center',{211,204,189})
  end
- self:buttonHint(nil,{label='BACK',fn=function()self.screen='pause' end})
+ self:buttonHint(nil,{label='BACK',fn=function()self:leaveUtility() end})
 end
 -- TROPHY usa a colecao das sete especies magicas ja existente.
 -- STATS e HELP exibem os dados e os controles do port sem fingir que
@@ -855,6 +915,9 @@ function Retro:key(k)
  end
  if (k=='f' or k=='space') and self.screen=='tank' then self:beginBrowse();return end
  if (k=='5' or k=='kp5') and self.screen=='detail' then self.screen='actions';return end
+ if (k=='escape' or k=='back') and (self.screen=='shop' or self.screen=='research') then
+  self:leaveUtility();return
+ end
  if k=='escape'  or k=='back' then
   local back={title='title',confirm='title',tank='pause',detail='tank',pause='tank',
    settings=self.from or 'title',actions='detail',move='actions',treat='actions',
