@@ -19,3 +19,6 @@ a tela ainda permite consultar todos os trofeus com simbolos de reserva.
 A suite `tests/v37_trophy.lua` verifica renderizacao com e sem recurso,
 sete slots selecionaveis, exibicao de variedades e invariancia de cash/RNG/save.
 O CI captura tambem a tela 25 no LÖVE real. Nenhum dado persistido foi alterado.
+
+O teclado 4/6 desloca a selecao amarela junto ao foco, eliminando
+os dois destaques simultaneos que apareceram no primeiro teste nativo.

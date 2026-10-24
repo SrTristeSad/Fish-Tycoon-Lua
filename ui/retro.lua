@@ -830,6 +830,7 @@ function Retro:collection()
  centered(self.g:countMagic()..' / 7 DISCOVERED',69,{241,219,144})
  local ball=self.images.trhopy_ball
  self.trophyIndex=math.max(1,math.min(7,self.trophyIndex or 1))
+ self.trophyFocusIndices={}
  for i,magic in ipairs(Catalog.magic) do
   -- Quatro esferas na primeira fileira e tres centralizadas na segunda.
   local col=(i-1)%4
@@ -853,6 +854,7 @@ function Retro:collection()
   end
   fontText(tostring(i),x+16,y+48,12,'center',{235,221,170})
   self:hit(x,y,44,44,function()self.trophyIndex=i end)
+  self.trophyFocusIndices[#self.buttons]=i
  end
  local active=Catalog.magic[self.trophyIndex]
  local acquired=self.g.s.magic[tostring(self.trophyIndex)]
@@ -865,6 +867,12 @@ end
 -- Navegacao de celulares Java: destaque amarelo no botao ativo.
 -- Atua SOMENTE na interface; nao altera genetica ou salvamentos.
 function Retro:focusableButtons()
+ if self.screen=='collection' and self.trophyFocusIndices then
+  local indices={}
+  for index in pairs(self.trophyFocusIndices) do indices[#indices+1]=index end
+  table.sort(indices)
+  if #indices>0 then return indices end
+ end
  local out={}
  for i,b in ipairs(self.buttons) do
   if b.y>26 and b.y<299 and b.w>=15 and b.h>=12 then out[#out+1]=i end
@@ -880,6 +888,11 @@ function Retro:ensureFocus()
  local valid=false
  for _,i in ipairs(self:focusableButtons()) do if self.focus==i then valid=true;break end end
  if not valid then
+  if self.screen=='collection' and self.trophyFocusIndices then
+   for n,i in pairs(self.trophyFocusIndices) do
+    if i==self.trophyIndex then self.focus=n;return end
+   end
+  end
   local candidates=self:focusableButtons()
   self.focus=candidates[1]
   -- Os itens centrais do menu devem receber destaque antes da barra superior.
@@ -893,6 +906,7 @@ function Retro:ensureFocus()
 end
 function Retro:drawFocus()
  if self.screen=='tank' or self.screen=='detail' then return end
+ if self.screen=='collection' then self:ensureFocus();return end
  self:ensureFocus()
  local b=self.focus and self.buttons[self.focus]
  if b then
@@ -918,7 +932,13 @@ function Retro:moveFocus(dx,dy)
    end
   end
  end
- if bestIndex then self.focus=bestIndex;return true end
+ if bestIndex then
+  self.focus=bestIndex
+  if self.screen=='collection' and self.trophyFocusIndices then
+   self.trophyIndex=self.trophyFocusIndices[bestIndex] or self.trophyIndex
+  end
+  return true
+ end
  return false
 end
 function Retro:activateFocus()
