@@ -81,8 +81,11 @@ function love.draw()
  view:draw()
  if nativeSmoke then nativeSmoke:afterDraw() end
 end
-function love.mousepressed(x,y,button)
+function love.mousepressed(x,y,button,istouch)
  if button~=1 then return end
+ -- LÖVE 11.x can generate a mouse event from the same touch.
+ -- Ignore that synthetic mouse press, even if it arrives after the timer guard.
+ if istouch then return end
  if love.timer.getTime()<suppressMouseUntil then return end
  view:press(x,y)
 end
