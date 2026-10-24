@@ -66,7 +66,21 @@ function Smoke.new(view)
    v:key('escape');assert(v.screen=='actions')
    v:key('escape');assert(v.screen=='detail')
    assert(v:browseFish(1))
-   assert(v.screen=='detail' and v.selected) end}
+   assert(v.screen=='detail' and v.selected) end},
+  {'20-nado-livre',function(v)
+   v:key('escape');assert(v.screen=='tank')
+   v.room='main';v.selected=nil
+   local tank=v.g.s.tanks.main
+   for i=#tank+1,18 do assert(v.g:addFish('main',(i%21)+1,((i+6)%21)+1,20)) end
+   v.time=8;v:draw()
+   local xs,ys={},{}
+   for _,hit in ipairs(v.fishHits) do
+    xs[math.floor(hit.x+.5)]=true;ys[math.floor(hit.y+.5)]=true
+   end
+   local nx,ny=0,0
+   for _ in pairs(xs) do nx=nx+1 end
+   for _ in pairs(ys) do ny=ny+1 end
+   assert(#v.fishHits==18 and nx>=13 and ny>=13,'Nado ainda parece grade') end}
  }
  return setmetatable({v=view,steps=actions,n=1,ready=false,pending=false,done=false},Smoke)
 end
@@ -74,8 +88,8 @@ function Smoke:afterDraw()
  if self.done or self.pending then return end
  local stage=self.steps[self.n]
  if not stage then
-  assert(love.filesystem.write('retro-smoke/ok.txt','Nineteen J2ME-style screens rendered\n'))
-  self.done=true;print('FISH_RETRO_SMOKE_OK 19');love.event.quit(0);return
+  assert(love.filesystem.write('retro-smoke/ok.txt','Twenty J2ME-style screens rendered\n'))
+  self.done=true;print('FISH_RETRO_SMOKE_OK 20');love.event.quit(0);return
  end
  if not self.ready then
   local ok,err=pcall(stage[2],self.v)

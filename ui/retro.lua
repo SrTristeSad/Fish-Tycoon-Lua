@@ -2,7 +2,7 @@
 -- splash.png, tanktop.png, tank1..3.png, isolation_tank.png do JAR.
 -- A simulacao original do port fica isolada em core/game.lua.
 local Assets=require('core.assets')
-local Swim=require('ui.swim')
+local Swim=require('ui.j2me_motion')
 local Catalog=require('core.catalog')
 local Config=require('core.config')
 local BitmapFont=require('ui.bitmap_font')
@@ -313,8 +313,9 @@ function Retro:fishDraw()
   if self.room=='isolation' then
    sx=83+((i-1)%2)*64;sy=281
   else
-   sx=17+(x-70)/281*206
-   sy=48+(y-233)/220*154
+   -- O modulo visual J2ME ja fornece coordenadas em 240x320.
+   -- Nao transformar a grade da antiga interface moderna.
+   sx,sy=x,y
   end
   -- A captura J2ME da tela de selecao coloca o exemplar destacado
   -- na primeira fileira, logo abaixo do painel FED / HEALTH:

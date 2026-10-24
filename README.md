@@ -1,11 +1,18 @@
-# Fish Tycoon Lua — v30: menu J2ME (240 × 320)
+# Fish Tycoon Lua — v31: menu J2ME (240 × 320)
 
 Desde a v19, **a interface padrão é `ui/retro.lua`**, desenhada em 240 × 320 e ampliada sem perder proporção. A tela anterior (`ui/view.lua`) foi preservada para regressão, mas não é mais o menu principal. O motor Lua, sprites e estrutura de saves permanecem.
+
+## Novo na v31 — nado independente baseado no JAR
+
+- **Distribuição livre**: os peixes deixam de ocupar quatro colunas fixas. Posição inicial e direção passam a ser derivadas do identificador individual, com trajetórias independentes em todo o aquário.
+- **Velocidade e direção**: o novo renderizador `ui/j2me_motion.lua` usa a representação de movimento 16.16 identificada em `m.n()`/`h.c()` no Java. A conversão para segundos (60 atualizações/segundo) e a semente visual por ID são adaptações documentadas, **não equivalência 1:1 comprovada**.
+- **Sem alterar a partida**: a nova trajetória é apenas de apresentação. Não usa o gerador aleatório da simulação, não introduz campos no salvamento e não altera o antigo `ui/swim.lua` usado pelos testes da interface moderna.
+- **Seleção preservada**: ao selecionar um peixe, sua moldura permanece na posição J2ME conhecida e outros peixes não devem invadi-la. `tests/v31_motion.lua` testa limites, deslocamento, direção, independência da ordem, salvamento e interação.
 
 ## Novo na v30 — seleção do peixe conforme a captura J2ME
 
 - **Foco do peixe:** na tela de detalhes, o peixe selecionado é desenhado na região superior central, com o retângulo amarelo de 56 × 37 pixels cuja posição foi medida na captura J2ME fornecida (x=63, y=34). Antes, o destaque acompanhava a trajetória aleatória do peixe e aparecia frequentemente longe da referência.
-- **Camadas:** o peixe selecionado é renderizado por último e os outros têm o desenho deslocado quando invadiriam a moldura de destaque. Continuam com trajetórias próprias, sem alterar o estado da simulação.
+- **Camadas:** o peixe selecionado é renderizado depois dos demais para evitar que seu corpo e o marcador amarelo sejam encobertos. Os outros peixes continuam nadando, mas sem alterar o estado da simulação.
 - **Voltar e navegar:** SELECT/BACK e 2/4/6/8 continuam permitindo explorar os peixes; ao sair da seleção o peixe volta à posição normal de nado. O toque na tela do aquário mantém o alvo proporcional ao sprite.
 - **Testes:** `tests/v30_selection.lua` valida posição do contorno, ordem de desenho, troca de exemplar e ausência de mutação do save. `core/retro_smoke.lua` acrescenta uma captura nativa dedicada à seleção de outro peixe. Nenhuma regra de pesquisa, genética ou economia foi alterada.
 
@@ -93,7 +100,7 @@ Desde a v19, **a interface padrão é `ui/retro.lua`**, desenhada em 240 × 320 
 
 ## Jogar
 
-Abra `Aquario-de-Isola-v30.love` usando [LÖVE 2D 11.4](https://love2d.org/) ou execute `love .` no diretório. Inicialmente aparece um menu com **CONTINUE, NEW GAME, OPTIONS, ABOUT**. Para criar uma partida nova, clique em **NEW GAME**. Se já existir jogo salvo, há confirmação antes de substituí-lo; o save antigo é arquivado em `fish_tank_save_before_new_game.json` e permanece recuperável. Uma falha ao criar arquivo arquivado bloqueia a substituição.
+Abra `Aquario-de-Isola-v31.love` usando [LÖVE 2D 11.4](https://love2d.org/) ou execute `love .` no diretório. Inicialmente aparece um menu com **CONTINUE, NEW GAME, OPTIONS, ABOUT**. Para criar uma partida nova, clique em **NEW GAME**. Se já existir jogo salvo, há confirmação antes de substituí-lo; o save antigo é arquivado em `fish_tank_save_before_new_game.json` e permanece recuperável. Uma falha ao criar arquivo arquivado bloqueia a substituição.
 
 No aquário, toque em um peixe para abrir a seleção (informações e comandos **SELECT/BACK**). Na parte inferior, **FISH** seleciona um peixe e **MENU** abre o menu do jogo. A barra superior seleciona tanques e abre loja, pesquisa e coleção. O recipiente azul inferior dá acesso ao isolamento. Dentro do menu, os comandos **MOVE**, **FEED**, **TREAT**, compra de suprimentos, venda e pesquisa seguem ativos, usando o mesmo motor da v18.
 
