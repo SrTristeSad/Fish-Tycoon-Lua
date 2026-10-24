@@ -616,22 +616,4 @@ function Retro:key(k)
   elseif self.screen=='detail' then self.screen='actions' end
  end
 end
-return Retro) or '?')
-   end
-   fontText(summary,23,y+29,186,'left',{201,219,190})
-  end
-  local disabled=lvl>=Config.RESEARCH_MAX or (self.g.s.research_job~=false and self.g.s.research_job~=nil)
-  self:menuButton(lvl>=Config.RESEARCH_MAX and 'MAX' or 'START',157,y+42,57,16,function()
-   local ok,msg=self.g:startResearch(entry.id)
-   self:notify(ok and 'RESEARCH STARTED' or msg)
-  end,disabled)
- end
- fill(16,275,208,21,34,20,61,.96)
- if active then
-  fontText('IN PROGRESS: '..math.ceil(active.remaining/60)..' MIN',18,281,204,'center',
-   {225,227,167})
- else
-  fontText('CHOOSE A FIELD TO RESEARCH',18,281,204,'center',{211,204,189})
- end
- self:buttonHint(nil,{label='BACK',fn=function()self.screen='pause' end})
-end
+return Retro
