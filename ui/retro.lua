@@ -1078,7 +1078,7 @@ function Retro:key(k)
   self:leaveUtility();return
  end
  if k=='escape'  or k=='back' then
-  local back={title='title',confirm='title',tank='pause',detail='tank',pause='tank',
+  local back={title='title',confirm=self.confirmFrom or 'title',tank='pause',detail='tank',pause='tank',
    settings=self.from or 'title',actions='detail',move='actions',treat='actions',
    shop='pause',research='pause',collection='pause',about=self.from or 'title',
    stats='pause',help='pause'}
