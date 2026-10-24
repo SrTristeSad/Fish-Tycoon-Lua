@@ -22,7 +22,7 @@ Reconstrução experimental em **Lua + LÖVE 2D 11.4** que continua diretamente 
 
 - **Distribuição dos peixes:** os 18 peixes agora utilizam uma grade com margens de segurança para o corpo, as barbatanas e o aro de seleção, preservando o nado determinístico da v10. Evita que peixes da primeira e da última coluna fiquem parcialmente encobertos pelo painel.
 - **Controles:** nova suíte `tests/v15_controls.lua` para toques nas abas, resolução pequena, letterboxing em paisagem, seleção por toque, bloqueio por modais e limites dos botões.
-- **Compatibilidade:** nenhuma alteração em genética, mercado, pesquisa, salvamento ou recursos do JAR nesta etapa; o mesmo save continua aceito.
+- **Genética JAR:** corrigida a mutação no nascimento de vários filhotes: ocorre uma vez por gestação, antes das cópias; as fórmulas de média continuam preservadas. As probabilidades de pesquisa autenticadas por bytecode permanecem inalteradas.
 - **Verificação:** testes de interface com API LÖVE simulada e os PNGs reais. **Não houve abertura de janela real nem validação em Android**; esses testes continuam pendentes.
 
 ## Verificar
@@ -43,6 +43,7 @@ texlua tests/v12_save_safety.lua
 texlua tests/v13_integrity.lua
 texlua tests/v14_render.lua
 texlua tests/v15_controls.lua
+texlua tests/v15_jar_genetics.lua
 texlua tests/view_smoke.lua
 ```
 
@@ -52,4 +53,4 @@ Ou execute `TESTAR_LUA.bat` no Windows para repetir todas as suítes. A v15 pres
 
 Uma parte das regras de criação e economia foi inferida do bytecode Java; outras seguem aproximadas. Sprites, músicas e nomes originais têm seus titulares de direitos. A extração para estudo não equivale a uma licença para distribuir ou comercializar esses recursos. Antes de publicar, substitua recursos sem permissão por assets próprios ou licenciados.
 
-Detalhes em [`docs/FASE_15.md`](docs/FASE_15.md) e [`docs/FASE_14.md`](docs/FASE_14.md) e [`docs/FASE_13.md`](docs/FASE_13.md).
+Detalhes em [`docs/FASE_15.md`](docs/FASE_15.md) e [`docs/FASE_15_JAR.md`](docs/FASE_15_JAR.md) e [`docs/FASE_14.md`](docs/FASE_14.md) e [`docs/FASE_13.md`](docs/FASE_13.md).

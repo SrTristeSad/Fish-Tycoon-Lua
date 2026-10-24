@@ -419,10 +419,14 @@ function Game:_hatch(parent)
    +(self.s.gear.fertility_plant and 1 or 0)
  local born=0
  local mate=parent.mate or {body_index=parent.body,tail_index=parent.tail}
+ -- JAR n.a(m,o,int): a mutacao do parceiro ocorre UMA unica vez
+ -- antes das chamadas repetidas de o.a(...). Logo todos os irmaos
+ -- desta gestacao compartilham a mesma variedade herdada.
+ local genes,body,tail=self:combineParents(parent.body,parent.tail,
+   mate.body_index or parent.body,mate.tail_index or parent.tail)
  for _=1,count do
-  local genes,body,tail=self:combineParents(parent.body,parent.tail,mate.body_index or parent.body,mate.tail_index or parent.tail)
   if self:hasSpace('main') then
-   local child=self:addFish('main',body,tail,0,genes)
+   local child=self:addFish('main',body,tail,0,copy(genes))
    if child then child.parent_ids={parent.id,mate.parent_id or 0}; born=born+1 end
   end
  end
