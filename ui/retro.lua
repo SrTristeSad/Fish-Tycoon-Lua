@@ -63,7 +63,7 @@ function Retro:init()
  local store=self.images.store
  if store and love.graphics.newQuad then
   local iw,ih=store:getDimensions()
-  local coords={food={97,52,15,20},ick={1,49,20,18},fungus={92,46,18,23},
+  local coords={food={97,52,15,20},ick={86,52,23,25},fungus={92,46,18,23},
    vitamin={23,73,22,25},hormone={23,46,24,29},mutagen={52,1,23,24},
    eggs={84,0,23,25},aerator={57,21,18,23},heater={94,83,17,23},
    snail={77,104,18,16},plant={61,53,21,29},
@@ -504,8 +504,122 @@ function Retro:research()
   local progress=math.floor(130*lvl/Config.RESEARCH_MAX)
   fill(23,y+21,progress,5,112,197,87)
   local preview=self.g:researchProjection(entry.id)
-  if preview then fontText(preview.current:sub(1,29),23,y+29,186,'left',
-    {201,219,190}) end
+  if preview then
+   -- Texto curto: nao invadir o botao START na tela 240x320.
+   local summary
+   if entry.id=='food' then
+    summary='FOOD USE '..(preview.current:match('(%d+)%%') or '?')..'%/CYCLE'
+   elseif entry.id=='environment' then
+    summary='HEALTH '..(preview.current:match('([%+%-]?%d+%.?%d*)/ciclo') or '?')..'/CYCLE'
+   else
+    summary='SHOP INTEREST '..(preview.current:match('(%d+)
+  local disabled=lvl>=Config.RESEARCH_MAX or (self.g.s.research_job~=false and self.g.s.research_job~=nil)
+  self:menuButton(lvl>=Config.RESEARCH_MAX and 'MAX' or 'START',157,y+42,57,16,function()
+   local ok,msg=self.g:startResearch(entry.id)
+   self:notify(ok and 'RESEARCH STARTED' or msg)
+  end,disabled)
+ end
+ fill(16,275,208,21,34,20,61,.96)
+ if active then
+  fontText('IN PROGRESS: '..math.ceil(active.remaining/60)..' MIN',18,281,204,'center',
+   {225,227,167})
+ else
+  fontText('CHOOSE A FIELD TO RESEARCH',18,281,204,'center',{211,204,189})
+ end
+ self:buttonHint(nil,{label='BACK',fn=function()self.screen='pause' end})
+end
+function Retro:collection()
+ self:panelTitle('MAGIC FISH')
+ centered(self.g:countMagic()..' / 7 DISCOVERED',71,{241,219,144})
+ for i,v in ipairs(Catalog.magic) do
+  local found=self.g.s.magic[tostring(i)]
+  fontText((found and v.name or '????  -  FISH '..i),20,95+(i-1)*25,200,'left',found and {233,229,158} or {172,147,186})
+ end
+ self:buttonHint(nil,{label='BACK',fn=function()self.screen='pause' end})
+end
+function Retro:draw()
+ local gw,gh=love.graphics.getDimensions()
+ self.scale=math.min(gw/W,gh/H)
+ -- manter pixels nitidos em 2x/3x sempre que possivel
+ if self.scale>=1 then self.scale=math.max(1,math.floor(self.scale)) end
+ self.ox=math.floor((gw-W*self.scale)/2);self.oy=math.floor((gh-H*self.scale)/2)
+ love.graphics.clear(.04,.03,.10,1)
+ self.buttons={};self.fishHits={}
+ love.graphics.push();love.graphics.translate(self.ox,self.oy);love.graphics.scale(self.scale)
+ love.graphics.setFont(self.font)
+ if self.screen=='title' then self:title()
+ elseif self.screen=='confirm' then self:confirm()
+ elseif self.screen=='tank' or self.screen=='detail' then self:drawTank()
+ elseif self.screen=='pause' then self:pause()
+ elseif self.screen=='settings' then self:settings()
+ elseif self.screen=='about' then self:about()
+ elseif self.screen=='actions' then self:drawActions()
+ elseif self.screen=='move' then self:drawMove()
+ elseif self.screen=='treat' then self:drawTreat()
+ elseif self.screen=='shop' then self:shop()
+ elseif self.screen=='research' then self:research()
+ elseif self.screen=='collection' then self:collection()
+ end
+ if self.toastTime>0 then
+  fill(10,263,220,23,46,23,71,.95)
+  fontText(self.toast:sub(1,52),14,268,212,'center',{251,229,153})
+ end
+ love.graphics.pop()
+end
+function Retro:press(px,py)
+ local x=(px-self.ox)/self.scale
+ local y=(py-self.oy)/self.scale
+ if x<0 or x>=W or y<0 or y>=H then return false end
+ -- Clicar em um peixe abre a mesma tela de selecao observada no J2ME.
+ if self.screen=='tank' then
+  local closest,best=nil,math.huge
+  for _,hit in ipairs(self.fishHits) do
+   local dx,dy=x-hit.x,y-hit.y
+   local distance=dx*dx+dy*dy
+   if math.abs(dx)<26 and math.abs(dy)<16 and distance<best then
+    closest,best=hit,distance
+   end
+  end
+  if closest then
+   self.selected=closest.id;self.screen='detail'
+   for i,f in ipairs(self.g.s.tanks[self.room]) do
+    if f.id==closest.id then self.browseIndex=i;break end
+   end
+   return true
+  end
+ end
+ for i=#self.buttons,1,-1 do
+  local b=self.buttons[i]
+  if x>=b.x and x<=b.x+b.w and y>=b.y and y<=b.y+b.h then
+   b.fn();return true
+  end
+ end
+ return false
+end
+function Retro:key(k)
+ -- Navegacao classica dos aparelhos Java: 4/6 (anterior/proximo),
+ -- 2/8 para percorrer e 5 para selecionar. Mouse e toque continuam.
+ if self.screen=='detail' and (k=='left' or k=='right' or k=='up' or k=='down' or k=='4' or k=='6' or k=='2' or k=='8' or k=='kp4' or k=='kp6') then
+  self:browseFish((k=='left' or k=='up' or k=='4' or k=='2' or k=='kp4') and -1 or 1)
+  return
+ end
+ if (k=='f' or k=='space') and self.screen=='tank' then self:beginBrowse();return end
+ if (k=='5' or k=='kp5') and self.screen=='detail' then self.screen='actions';return end
+ if k=='escape'  or k=='back' then
+  local back={title='title',confirm='title',tank='pause',detail='tank',pause='tank',
+   settings=self.from or 'title',actions='detail',move='actions',treat='actions',
+   shop='pause',research='pause',collection='pause',about='title'}
+  self.screen=back[self.screen] or 'title'
+  if self.screen=='tank' then self.selected=nil end
+ elseif k=='return' or k=='kpenter' then
+  if self.screen=='title' and self.hasSave then self.screen='tank'
+  elseif self.screen=='detail' then self.screen='actions' end
+ end
+end
+return Retro) or '?')
+   end
+   fontText(summary,23,y+29,186,'left',{201,219,190})
+  end
   local disabled=lvl>=Config.RESEARCH_MAX or (self.g.s.research_job~=false and self.g.s.research_job~=nil)
   self:menuButton(lvl>=Config.RESEARCH_MAX and 'MAX' or 'START',157,y+42,57,16,function()
    local ok,msg=self.g:startResearch(entry.id)
