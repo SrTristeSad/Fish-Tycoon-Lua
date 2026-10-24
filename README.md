@@ -1,6 +1,16 @@
-# Fish Tycoon Lua — v21: suprimentos e pesquisas no layout J2ME (240 × 320)
+# Fish Tycoon Lua — v22: controles Java e menus (240 × 320)
 
 Desde a v19, **a interface padrão é `ui/retro.lua`**, desenhada em 240 × 320 e ampliada sem perder proporção. A tela anterior (`ui/view.lua`) foi preservada para regressão, mas não é mais o menu principal. O motor Lua, sprites e estrutura de saves permanecem.
+
+## Novidades da v22 — controles Java e menus
+
+- **Teclado classico:** 2/4/6/8 ou setas movem o foco dos menus, com moldura amarela; 5/Enter/Espaço confirma. Esc continua voltando; em detalhes de peixes, 4/6 continuam percorrendo os exemplares.
+- **Novo jogo e configuracoes:** acessiveis sem mouse; com save, o foco inicial e CONTINUE; sem save, NEW GAME.
+- **Loja:** destacar produto nao desconta dinheiro; apenas BUY realiza a compra.
+- **Barra superior:** 11 botoes ocupam os 240 pixels; o dinheiro nao fica escrito sobre o ultimo icone. Recortes de alimentacao e remedio ajustados ao atlas extraido.
+- **Menus:** telas de opcoes, suprimentos e pesquisas usam menutank.png (ja incluso no projeto) como fundo.
+- **Validacao:** suite tests/v22_keypad.lua com oito cenarios e teste anterior atualizado para a nova largura da barra. Salvos e simulacao permanecem intactos.
+- **Limite:** fontes bitmap completas e telas nao fornecidas ainda precisam de mapeamento 1:1; nao alegar equivalencia pixel a pixel.
 
 ## Novidades da v21 — loja e pesquisas no layout compacto
 
@@ -21,7 +31,7 @@ Desde a v19, **a interface padrão é `ui/retro.lua`**, desenhada em 240 × 320 
 
 ## Jogar
 
-Abra `Aquario-de-Isola-v21.love` usando [LÖVE 2D 11.4](https://love2d.org/) ou execute `love .` no diretório. Inicialmente aparece um menu com **CONTINUE, NEW GAME, OPTIONS, ABOUT**. Para criar uma partida nova, clique em **NEW GAME**. Se já existir jogo salvo, há confirmação antes de substituí-lo; o save antigo é arquivado em `fish_tank_save_before_new_game.json` e permanece recuperável. Uma falha ao criar arquivo arquivado bloqueia a substituição.
+Abra `Aquario-de-Isola-v22.love` usando [LÖVE 2D 11.4](https://love2d.org/) ou execute `love .` no diretório. Inicialmente aparece um menu com **CONTINUE, NEW GAME, OPTIONS, ABOUT**. Para criar uma partida nova, clique em **NEW GAME**. Se já existir jogo salvo, há confirmação antes de substituí-lo; o save antigo é arquivado em `fish_tank_save_before_new_game.json` e permanece recuperável. Uma falha ao criar arquivo arquivado bloqueia a substituição.
 
 No aquário, toque em um peixe para abrir a seleção (informações e comandos **SELECT/BACK**). Na parte inferior, **FISH** seleciona um peixe e **MENU** abre o menu do jogo. A barra superior seleciona tanques e abre loja, pesquisa e coleção. O recipiente azul inferior dá acesso ao isolamento. Dentro do menu, os comandos **MOVE**, **FEED**, **TREAT**, compra de suprimentos, venda e pesquisa seguem ativos, usando o mesmo motor da v18.
 
@@ -45,6 +55,7 @@ Sem os três PNGs, o jogo continua jogável, com título desenhado pelo código 
 texlua tests/v19_retro.lua
 texlua tests/v20_visual_controls.lua
 texlua tests/v21_shop_research.lua
+texlua tests/v22_keypad.lua
 # regressão completa
 for file in tests/*.lua; do texlua "$file"; done
 ```
