@@ -43,8 +43,14 @@ check('nomes reais EN do JAR nas 441 combinacoes',function()
  end end
 end)
 check('atlas de icones e miniaturas usa apenas recortes validos',function()
- assert(v.quads.slot and v.quads.cart and v.quads.hourglass)
- assert(v.quads.fish and v.quads.food and v.quads.money)
+ if v.images.assets then
+  assert(v.quads.slot and v.quads.cart and v.quads.hourglass)
+  assert(v.quads.fish and v.quads.food and v.quads.money)
+ else
+  -- assets.png nao e distribuido no GitHub publico; botoes de reserva
+  -- devem continuar funcionando no CI sem o atlas comercial.
+  assert(next(v.quads)==nil)
+ end
  assert(#v.tankIcons==3)
 end)
 check('barra mostra icones e dinheiro mas nao letras provisórias',function()
@@ -54,7 +60,11 @@ check('barra mostra icones e dinheiro mas nao letras provisórias',function()
  for _,s in ipairs(printText) do
   if letters[s]~=nil then letters[s]=true end
  end
- assert(not letters.F and not letters.R and not letters.S)
+ if v.images.assets then
+  assert(not letters.F and not letters.R and not letters.S)
+ else
+  assert(letters.F and letters.R and letters.S)
+ end
 end)
 check('selecao via teclado, navegacao 4/6 e 5 para acao',function()
  v.screen='tank';v.room='main';v.selected=nil
