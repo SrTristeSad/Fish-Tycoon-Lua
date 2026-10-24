@@ -28,7 +28,7 @@ for name in expected:
         if kind == b'IEND':
             break
     assert width and height and payload, f'Invalid PNG image data: {file}'
-    assert (width, height) == ((960, 600) if name == '07-paisagem' else (468, 858)), \
+    assert (width, height) == ((960, 600) if name == '07-paisagem' else (480, 640)), \
         f'Unexpected size for {name}: {width}x{height}'
     pixels = zlib.decompress(payload)
     assert len(pixels) > width * height, f'Suspicious short image: {name}'
