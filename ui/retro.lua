@@ -8,7 +8,7 @@ local Config=require('core.config')
 local BitmapFont=require('ui.bitmap_font')
 local Retro={}; Retro.__index=Retro
 local W,H=240,320
-local bitmapFont -- initialized only for private JAR font assets
+local bitmapFont -- inicializada somente quando 1.dat foi importado localmente
 local function rgb(r,g,b,a) love.graphics.setColor(r/255,g/255,b/255,a or 1) end
 local function fill(x,y,w,h,r,g,b,a)
  rgb(r,g,b,a);love.graphics.rectangle('fill',x,y,w,h)
@@ -35,6 +35,7 @@ function Retro.new(game,hasSave)
  return setmetatable({g=game,hasSave=not not hasSave,screen='title',room='main',selected=nil,
   popup=nil,popupFrom=nil,buttons={},fishHits={},softkeys={},images={},assets=Assets.new(),
   speed=1,soundEnabled=true,shopPage=1,selectedShopIndex=1,toast='',toastTime=0,time=0,browseIndex=1,
+  confirmFrom='title',
   scale=1,ox=0,oy=0,focus=nil,focusScreen=nil,onSave=nil,onNewGame=nil,onSound=nil},Retro)
 end
 function Retro:init()
@@ -263,8 +264,9 @@ function Retro:fishDraw()
    stroke(sx-28,sy-15,56,32,242,208,28)
   end
   self.assets:drawFish(f,sx,sy,scale,face)
-  -- As duas placas de venda ja estao impressas no fundo tank3.png
-  -- nas margens do cascalho: nao desenhar copias sobre os peixes.
+  -- As placas 'For Sale!' ja estao impressas no tank3.png, fixas
+  -- no cascalho (esquerda/direita). Nao duplicar etiquetas flutuantes
+  -- que seguem cada peixe: a referencia do J2ME nao faz isso.
   -- O alvo acompanha a dimensao do sprite desenhado, nao uma caixa
   -- adulta fixa para todos os filhotes. Minimo de 10x8 para toque.
   local spriteHalf=(f.age>=20 and 25 or (f.age>=6 and 18 or 11))*scale
@@ -339,10 +341,10 @@ function Retro:title()
   self.screen='tank';self.room='main'
  end,not self.hasSave)
  self:menuButton('NEW GAME',38,214,164,24,function()
-  if self.hasSave then self.screen='confirm' else self:startNewGame() end
+  if self.hasSave then self.confirmFrom='title';self.screen='confirm' else self:startNewGame() end
  end)
  self:menuButton('OPTIONS',38,241,164,24,function()self.from='title';self.screen='settings' end)
- self:menuButton('ABOUT',38,268,164,24,function()self.screen='about' end)
+ self:menuButton('ABOUT',38,268,164,24,function()self.from='title';self.screen='about' end)
 end
 function Retro:startNewGame()
  if not self.onNewGame then return self:notify('NEW GAME NOT AVAILABLE') end
@@ -358,7 +360,7 @@ function Retro:confirm()
  centered('CURRENT GAME WILL BE',124)
  centered('ARCHIVED BEFORE RESET.',139)
  self:menuButton('YES, NEW GAME',34,173,173,23,function()self:startNewGame() end)
- self:menuButton('CANCEL',34,201,173,23,function()self.screen='title' end)
+ self:menuButton('CANCEL',34,201,173,23,function()self.screen=self.confirmFrom or 'title' end)
 end
 function Retro:panelTitle(title)
  -- menutank.png e um fundo de 240x256 usado nos menus J2ME.
@@ -371,20 +373,30 @@ function Retro:panelTitle(title)
  fill(9,37,222,242,37,22,70,.88);stroke(9,37,222,242,168,116,187)
  centered(title,49,{246,226,164})
 end
+-- A tabela inglesa do JAR (strings 1..9) confirma a nomenclatura
+-- RESUME, START NEW GAME, OPTIONS, TROPHY, STATS, HELP, ABOUT, EXIT.
+-- Organizacao visual compacta para 240x320: ainda nao foi validada
+-- pixel a pixel contra todas as telas originais do MIDlet.
 function Retro:pause()
  self:panelTitle('GAME MENU')
  local entries={
-  {'RETURN TO TANK',function()self.screen='tank' end},
-  {'FISH SUPPLIES',function()self.screen='shop';self.shopPage=1 end},
-  {'RESEARCH',function()self.screen='research' end},
-  {'DISCOVERIES',function()self.screen='collection' end},
-  {'SETTINGS',function()self.from='pause';self.screen='settings' end},
-  {'SAVE AND MAIN MENU',function()
+  {'RESUME',function()self.screen='tank' end},
+  {'START NEW GAME',function()
+   if self.hasSave then self.confirmFrom='pause';self.screen='confirm'
+   else self:startNewGame() end
+  end},
+  {'OPTIONS',function()self.from='pause';self.screen='settings' end},
+  {'TROPHY',function()self.screen='collection' end},
+  {'STATS',function()self.screen='stats' end},
+  {'HELP',function()self.screen='help' end},
+  {'ABOUT',function()self.from='pause';self.screen='about' end},
+  {'SAVE & EXIT',function()
    if self.onSave then local ok,err=self.onSave();if not ok then return self:notify(err) end end
+   -- Retorna ao menu inicial para permitir continuar ou abrir novo jogo.
    self.screen='title';self.selected=nil
   end}
  }
- for i,v in ipairs(entries) do self:menuButton(v[1],31,75+(i-1)*32,178,27,v[2]) end
+ for i,v in ipairs(entries) do self:menuButton(v[1],31,61+(i-1)*27,178,23,v[2]) end
  self:buttonHint(nil,{label='BACK',fn=function()self.screen='tank' end})
 end
 function Retro:settings()
@@ -404,12 +416,12 @@ function Retro:settings()
  self:buttonHint(nil,{label='BACK',fn=function()self.screen=self.from or 'title' end})
 end
 function Retro:about()
- self:panelTitle('FISH TYCOON - LUA')
+ self:panelTitle('FISH TYCOON')
  centered('J2ME 240x320 INTERFACE',110)
  centered('ENGINE: LUA + LOVE2D',130)
  centered('ORIGINAL ART: STUDY ONLY',153)
  centered('NOT AN OFFICIAL PORT',175)
- self:buttonHint(nil,{label='BACK',fn=function()self.screen='title' end})
+ self:buttonHint(nil,{label='BACK',fn=function()self.screen=self.from or 'title' end})
 end
 function Retro:drawActions()
  self:panelTitle('FISH MENU')
@@ -567,6 +579,48 @@ function Retro:research()
  end
  self:buttonHint(nil,{label='BACK',fn=function()self.screen='pause' end})
 end
+-- TROPHY usa a colecao das sete especies magicas ja existente.
+-- STATS e HELP exibem os dados e os controles do port sem fingir que
+-- seus painéis graficos foram extraidos do bytecode J2ME.
+function Retro:statistics()
+ self:panelTitle('STATS')
+ local stats=self.g.s.stats or {}
+ local total=0
+ for _,tank in pairs(self.g.s.tanks) do total=total+#tank end
+ local lines={
+  {'FISH ALIVE',total},
+  {'MAGIC BREEDS FOUND',self.g:countMagic()..' / 7'},
+  {'FISH BORN',stats.born or 0},
+  {'FISH SOLD',stats.sold or 0},
+  {'FISH LOST',stats.lost or 0},
+  {'TOTAL EARNED','$'..(stats.earned or 0)},
+  {'TOTAL SPENT','$'..(stats.spent or 0)},
+ }
+ for i,line in ipairs(lines) do
+  local y=78+(i-1)*27
+  fill(18,y,204,23,42,26,75,.9)
+  fontText(line[1],23,y+7,133,'left',{234,224,192})
+  fontText(tostring(line[2]),157,y+7,59,'right',{245,224,133})
+ end
+ self:buttonHint(nil,{label='BACK',fn=function()self.screen='pause' end})
+end
+function Retro:help()
+ self:panelTitle('HELP')
+ local lines={
+  '2 / 8 : UP / DOWN',
+  '4 / 6 : LEFT / RIGHT',
+  '5 : SELECT',
+  'F1 : LEFT SOFTKEY',
+  'F2 : RIGHT SOFTKEY',
+  'SELECT FISH TO VIEW INFO',
+  'USE FISH MENU TO MOVE',
+  'BUY FOOD IN SUPPLIES',
+ }
+ for i,line in ipairs(lines) do
+  fontText(line,24,79+(i-1)*23,193,'left',{229,226,194})
+ end
+ self:buttonHint(nil,{label='BACK',fn=function()self.screen='pause' end})
+end
 function Retro:collection()
  self:panelTitle('MAGIC FISH')
  centered(self.g:countMagic()..' / 7 DISCOVERED',71,{241,219,144})
@@ -669,6 +723,8 @@ function Retro:draw()
  elseif self.screen=='shop' then self:shop()
  elseif self.screen=='research' then self:research()
  elseif self.screen=='collection' then self:collection()
+ elseif self.screen=='stats' then self:statistics()
+ elseif self.screen=='help' then self:help()
  end
  self:drawFocus()
  if self.toastTime>0 then
@@ -741,7 +797,8 @@ function Retro:key(k)
  if k=='escape'  or k=='back' then
   local back={title='title',confirm='title',tank='pause',detail='tank',pause='tank',
    settings=self.from or 'title',actions='detail',move='actions',treat='actions',
-   shop='pause',research='pause',collection='pause',about='title'}
+   shop='pause',research='pause',collection='pause',about=self.from or 'title',
+   stats='pause',help='pause'}
   self.screen=back[self.screen] or 'title'
   if self.screen=='tank' then self.selected=nil end
  elseif k=='return' or k=='kpenter' then

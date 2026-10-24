@@ -1,13 +1,21 @@
-# Fish Tycoon Lua — v26: fontes bitmap do JAR (240 × 320)
+# Fish Tycoon Lua — v27: menu J2ME (240 × 320)
 
 Desde a v19, **a interface padrão é `ui/retro.lua`**, desenhada em 240 × 320 e ampliada sem perder proporção. A tela anterior (`ui/view.lua`) foi preservada para regressão, mas não é mais o menu principal. O motor Lua, sprites e estrutura de saves permanecem.
 
-## Novo na v26 — placas originais e duas telas novas de verificacao
+## Novo na v27 — menu e navegação derivados do JAR
 
-- A arte `tank3.png` ja inclui duas placas `For Sale!` fixas no solo. Removido o texto extra que seguia cada peixe no tanque de vendas, duplicando as placas. Precos, selecao, venda e demais comportamentos permanecem iguais.
-- Na ausencia do `splash.png` comercial, o titulo reserva usa `FISH TYCOON / MOBILE`, sem a palavra `LUA` que nao aparecia no original.
-- O smoke nativo do LÖVE captura **11 telas**, incluindo o tanque de vendas e a selecao de um peixe vendido. A nova suíte `v26_sale_art` verifica a arte do fundo, a ausencia de placas extras e o toque.
-- O save continua v9; a comparacao 1:1 completa dos menus e o teste Android seguem pendentes.
+- O menu de pausa agora usa a nomenclatura confirmada pela tabela inglesa do próprio JAR: **RESUME, START NEW GAME, OPTIONS, TROPHY, STATS, HELP, ABOUT** e **SAVE & EXIT**. A disposição gráfica compacta ainda precisa ser comparada pixel a pixel com uma captura desse menu Java.
+- **TROPHY** abre a coleção das sete espécies mágicas; **STATS** mostra peixes vivos, nascimentos, vendas, descobertas, mortes e balanço; **HELP** mostra os controles já implementados no port Lua. As duas páginas novas são funcionais, mas seu layout ainda não é apresentado como nativo comprovado.
+- **START NEW GAME** dentro do jogo usa confirmação e o arquivamento de salvamentos já existente. **CANCEL** retorna ao menu de origem, evitando jogar o usuário no menu errado.
+- Suprimentos e pesquisas continuam disponíveis na barra superior dos aquários e nos seus respectivos botões; o teste nativo cobre a navegação atualizada.
+- O motor e o formato de salvamento permanecem inalterados. A lógica **SAVE & EXIT** salva e retorna ao menu inicial da versão Lua (não fecha a aplicação), deixando **RESUME** acessível.
+
+## Novo na v26 — placas de venda nativas e menu sem marca provisoria
+
+- **Tanque de vendas fiel ao JAR:** duas placas de madeira com `For Sale!` ja fazem parte do proprio `tank3.png`, nas laterais do cascalho. Removidas as etiquetas desenhadas em cada peixe que duplicavam as placas e se moviam de forma errada. A selecao e os precos dos peixes continuam funcionando.
+- **Menu inicial sem splash:** corrigido texto de reserva para **FISH TYCOON / MOBILE**, sem o sufixo inventado `- LUA`; quando `splash.png` foi importado do JAR, o arquivo original continua sendo mostrado integralmente.
+- **Teste nativo ampliado:** captura adicional do tanque de vendas e de um peixe selecionado nesse tanque, totalizando 11 imagens verificadas pelo LÖVE real no GitHub Actions.
+- **Regressao:** atualizado o teste v25 para nao exigir sobreposicao duplicada, adicionado `tests/v26_sale_art.lua` cobrindo desenho do fundo e ausencia do rotulo flutuante. Sem mudancas no motor Lua ou nos salvamentos.
 
 ## Novo na v25 — controles 1:1 da barra e selecao
 
@@ -25,33 +33,32 @@ Desde a v19, **a interface padrão é `ui/retro.lua`**, desenhada em 240 × 320 
 - **Painel de saúde:** a barra normal usa verde, como na captura J2ME; quando a saúde cai abaixo de 35 a barra fica avermelhada.
 - **Testes:** `tests/v24_viewport.lua` verifica a área lógica, escala em tamanhos fracionários, alvo de seleção, ordem de desenho, bordas e preservação dos dados do jogo. **Não equivale a uma comparação pixel a pixel com o JAR.**
 
-## Novo na v23 — fontes bitmap recuperadas do JAR
+## Novo na v23 — tipografia bitmap original
 
-- Três atlas de fontes em `1.dat` (104 glifos por fonte) podem ser importados localmente com `python scripts/import_j2me_fonts.py Fish_Tycoon.jar`.
-- `ui/bitmap_font.lua` usa os deslocamentos reais por glifo encontrados na classe Java `i`: largura variável, alinhamento e recorte seguro de textos longos.
-- A versão local `.love` inclui as fontes extraídas do JAR enviado; o repositório público não inclui os PNGs comerciais, mas funciona com fonte reserva do LÖVE.
-- Nenhuma alteração na simulação, economia, genética ou estrutura dos salvamentos.
-- Testes: `tests/v23_bitmap_font.lua` valida largura, alinhamento, glifos, recorte, cache e comportamento sem fontes.
+- As três fontes de `1.dat` (104 glifos cada) são extraídas **localmente** pelo script `scripts/import_j2me_fonts.py` sem copiar fontes comerciais para o GitHub. O `.love` de teste local inclui os dados recuperados do JAR fornecido pelo usuário.
+- `ui/bitmap_font.lua` usa as posições exatas por glifo da classe `i` do Java, respeitando largura variável, alinhamento central/direita e corte de textos longos.
+- Os menus 240×320 usam fonte bitmap quando presente; o CI público usa a fonte LÖVE reserva, porque não inclui o JAR comercial.
+- Nenhuma alteração na lógica do jogo ou na estrutura dos salvamentos.
 
-**A interface ainda não está inteiramente 1:1.** A geometria de algumas telas precisa ser confrontada com screenshots do MIDlet.
+**Para usar seu JAR em uma cópia do código:** `python scripts/import_j2me_fonts.py Fish_Tycoon.jar`. Então inicie com LÖVE normalmente. As fontes são de uso privado para estudo.
 
-## Novidades da v22 — controles Java e menus
 
-- **Teclado classico:** 2/4/6/8 ou setas movem o foco dos menus, com moldura amarela; 5/Enter/Espaço confirma. Esc continua voltando; em detalhes de peixes, 4/6 continuam percorrendo os exemplares.
-- **Novo jogo e configuracoes:** acessiveis sem mouse; com save, o foco inicial e CONTINUE; sem save, NEW GAME.
-- **Loja:** destacar produto nao desconta dinheiro; apenas BUY realiza a compra.
-- **Barra superior:** 11 botoes ocupam os 240 pixels; o dinheiro nao fica escrito sobre o ultimo icone. Recortes de alimentacao e remedio ajustados ao atlas extraido.
-- **Menus:** telas de opcoes, suprimentos e pesquisas usam menutank.png (ja incluso no projeto) como fundo.
-- **Validacao:** suite tests/v22_keypad.lua com oito cenarios e teste anterior atualizado para a nova largura da barra. Salvos e simulacao permanecem intactos.
-- **Limite:** fontes bitmap completas e telas nao fornecidas ainda precisam de mapeamento 1:1; nao alegar equivalencia pixel a pixel.
+## Novidades da v22 — teclado J2ME e interface compacta
+
+- **Navegação por teclado:** teclas **2/4/6/8** ou setas movimentam o foco nos menus e **5/Enter/Espaço** ativam a opção. Um contorno amarelo indica qual botão está selecionado. `Esc` continua retornando. Na seleção de peixes, as teclas 4/6 ainda percorrem os exemplares.
+- **Novo jogo e opções:** menus acessíveis sem mouse; com um salvamento existente, CONTINUE é o padrão, e sem save o foco inicia em NEW GAME. Comprar um item ainda exige focar o botão **BUY**, sem compra acidental ao destacar uma linha da loja.
+- **Barra superior:** os 11 slots ocupam toda a largura do J2ME, e o valor do dinheiro não cobre o último ícone. Corrigidos os recortes de alimentação e tratamentos do atlas `assets.png` opcional; a quantia permanece visível na loja.
+- **Menus:** loja, pesquisas e comandos usam como base `menutank.png`, recurso do JAR que já estava no pacote, em vez de desenhar os corais do aquário principal atrás de todos os diálogos.
+- **Testes:** 8 novos cenários em `tests/v22_keypad.lua`. O teste anterior do atalho alimentar foi ajustado para as novas posições da barra. Não houve mudança no motor nem no formato dos saves.
+- **Limite da fidelidade:** ainda faltam mapear corretamente as **fontes bitmap** e comprovar a geometria dos menus com capturas diretas do MIDlet. Não confundir testes de renderização com verificação pixel a pixel do J2ME.
 
 ## Novidades da v21 — loja e pesquisas no layout compacto
 
-- **Suprimentos ilustrados:** o atlas `store.png` original é usado na lista de produtos; quatro itens por página, preços visíveis, descrição contextual e separação entre selecionar um item e efetivamente comprar.
-- **Pesquisa:** três painéis de nível com barras de progresso, botão START/MAX e indicação de pesquisa em andamento.
-- **Compatibilidade:** regras de genética, custos e tempos de pesquisa, músicas e formato dos saves não foram alterados.
-- **Testes:** oito casos novos em `tests/v21_shop_research.lua`; nove capturas nativas via GitHub Actions. Os 34 arquivos de testes locais foram executados sem falhas.
-- **Limitação:** nomes ingleses, apresentação e vínculo visual dos ícones são adaptações inspiradas no JAR; não há comprovação de equivalência 1:1 destas telas com o Midlet.
+- **Loja de suprimentos:** até quatro produtos por página com miniaturas reais do `store.png` do JAR, seleção de um produto separada do botão **BUY**, preço sempre visível, descrição contextual, navegação por páginas e botão **BACK**. Em cópias sem esse PNG, mantém um quadro de reserva, sem impedir compras.
+- **Pesquisas:** painéis compactos de três áreas com nível atual, barra de progresso, efeito atual, botão **START/MAX** e estado da pesquisa ativa. O motor de estudos e os valores continuam os da v20; **não** foram inventados novos custos ou tempos do JAR.
+- **Validação:** nova suíte `tests/v21_shop_research.lua` com oito verificações, incluindo compra, paginação, seleção, limite de pesquisas, compatibilidade com fallback e retorno ao menu. Total: 34 arquivos de testes Lua executados sem falha.
+- **Capturas nativas:** smoke do LÖVE agora cobre nove telas, acrescentando outra página da loja e a pesquisas. A execução real é comprovada apenas depois da aprovação do GitHub Actions, não pelos testes com mocks.
+- **Continuidade:** nenhuma alteração no motor de peixes, recursos comerciais existentes, formato de saves ou progresso de usuários. O projeto continua **parcialmente aproximado** ao Java: a correspondência pixel a pixel de menus e os nomes/preços de produtos não foram comprovados com screenshots do MIDlet.
 
 ## Novidades da v20 — referência visual J2ME
 
@@ -64,7 +71,7 @@ Desde a v19, **a interface padrão é `ui/retro.lua`**, desenhada em 240 × 320 
 
 ## Jogar
 
-Abra `Aquario-de-Isola-v26.love` usando [LÖVE 2D 11.4](https://love2d.org/) ou execute `love .` no diretório. Inicialmente aparece um menu com **CONTINUE, NEW GAME, OPTIONS, ABOUT**. Para criar uma partida nova, clique em **NEW GAME**. Se já existir jogo salvo, há confirmação antes de substituí-lo; o save antigo é arquivado em `fish_tank_save_before_new_game.json` e permanece recuperável. Uma falha ao criar arquivo arquivado bloqueia a substituição.
+Abra `Aquario-de-Isola-v27.love` usando [LÖVE 2D 11.4](https://love2d.org/) ou execute `love .` no diretório. Inicialmente aparece um menu com **CONTINUE, NEW GAME, OPTIONS, ABOUT**. Para criar uma partida nova, clique em **NEW GAME**. Se já existir jogo salvo, há confirmação antes de substituí-lo; o save antigo é arquivado em `fish_tank_save_before_new_game.json` e permanece recuperável. Uma falha ao criar arquivo arquivado bloqueia a substituição.
 
 No aquário, toque em um peixe para abrir a seleção (informações e comandos **SELECT/BACK**). Na parte inferior, **FISH** seleciona um peixe e **MENU** abre o menu do jogo. A barra superior seleciona tanques e abre loja, pesquisa e coleção. O recipiente azul inferior dá acesso ao isolamento. Dentro do menu, os comandos **MOVE**, **FEED**, **TREAT**, compra de suprimentos, venda e pesquisa seguem ativos, usando o mesmo motor da v18.
 
@@ -92,14 +99,14 @@ texlua tests/v22_keypad.lua
 texlua tests/v24_viewport.lua
 texlua tests/v25_controls.lua
 texlua tests/v26_sale_art.lua
+texlua tests/v27_menu.lua
 # regressão completa
 for file in tests/*.lua; do texlua "$file"; done
 ```
 
-GitHub Actions contém dois testes nativos no LÖVE/Xvfb: o anterior para a interface legada e o novo `FISH_RETRO_SMOKE=1`, que captura sete telas J2ME em 480 × 640. **Isso valida renderização e navegação, não comprova correspondência pixel a pixel com todo o jogo Java.**
+GitHub Actions contém dois testes nativos no LÖVE/Xvfb: o anterior para a interface legada e o novo `FISH_RETRO_SMOKE=1`, que captura onze telas J2ME em 480 × 640. **Isso valida renderização e navegação, não comprova correspondência pixel a pixel com todo o jogo Java.**
 
 A base canônica é a branch `main` de https://github.com/SrTristeSad/Fish-Tycoon-Lua. Toda alteração deve ter commit. Consulte também `AGENTS.md` e `RECURSOS_E_DIREITOS.md`.
-Veja [`docs/FASE_21.md`](docs/FASE_21.md) para o escopo e as limitações desta fase.
 
+Consulte [`docs/FASE_26.md`](docs/FASE_26.md) e [`docs/FASE_22.md`](docs/FASE_22.md) e [`docs/FASE_21.md`](docs/FASE_21.md) para os detalhes de construção e o que permanece diferente do JAR.
 
-Detalhes adicionais: [FASE_26](docs/FASE_26.md).
