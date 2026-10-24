@@ -59,16 +59,20 @@ local function focusedOutline()
 end
 check('selecionado adulto usa ancora e contorno amarelo da referencia',function()
  view.screen='detail';view.room='main';view.selected=first.id
+ view.screen='tank';view.selected=nil;view:draw()
+ local natural={}
+ for _,h in ipairs(view.fishHits) do natural[h.id]={x=h.x,y=h.y} end
+ view.screen='detail';view.selected=first.id
  rectangles={};hits={};view:draw()
  assert(focusedOutline(),'Moldura x=63..119 e y=34..71 nao encontrada')
  local last=hits[#hits]
  assert(last.id==first.id and last.x==91 and last.y==53 and last.scale==1)
- -- Outro peixe nao deve invadir a caixa amarela (x=63..119, y=34..71).
+ -- Na v34 o exemplar destacado e desenhado por ultimo, com o fundo
+ -- original restaurado na moldura. Os demais nao mudam de coordenada.
  for _,h in ipairs(view.fishHits) do
   if h.id~=first.id then
-   local intersects=(h.x+h.rx>63 and h.x-h.rx<119 and
-                     h.y+h.ry>34 and h.y-h.ry<71)
-   assert(not intersects,'Outro peixe encobriu a area de selecao')
+   local expected=assert(natural[h.id])
+   assert(math.abs(expected.x-h.x)<.001 and math.abs(expected.y-h.y)<.001)
   end
  end
 end)

@@ -332,13 +332,8 @@ function Retro:fishDraw()
    sx=math.max(half+2,math.min(W-half-2,sx))
    -- Reserva o HUD superior e a bandeja inferior em todos os tamanhos.
    if not selected then sy=math.max(35+halfY,math.min(270-halfY,sy)) end
-   -- Peixes comuns nao devem encobrir a moldura selecionada.
-   if self.room~='isolation' and self.screen=='detail' and selectedFish and not selected then
-    if math.abs(sx-91)<(28+half+5) and math.abs(sy-53)<(19+halfY+5) then
-     if sx<91 then sx=math.max(half+2,91-28-half-5)
-     else sx=math.min(W-half-2,91+28+half+5) end
-    end
-   end
+   -- A tela de detalhes nao altera a trajetoria dos outros peixes:
+   -- a moldura e tratada como um overlay, sem teletransportar ninguem.
   end
   if selected then
    stroke(sx-28,sy-19,56,37,242,208,28)
@@ -348,12 +343,36 @@ function Retro:fishDraw()
   self.fishHits[#self.fishHits+1]={id=f.id,x=sx,y=sy,
     rx=math.max(10,half),ry=math.max(8,halfY)}
  end
- -- Desenhar o selecionado POR ULTIMO garante que outros peixes nao
- -- cubram o corpo e o contorno amarelo da tela de detalhes.
+ -- Os peixes continuam nadando nas coordenadas normais. Para a
+ -- selecao ficar legivel, restauramos somente a agua atras da moldura
+ -- com o proprio tanktop.png (sem empurrar outras trajetorias).
  for i,f in ipairs(tank) do
   if i~=selectedIndex then renderFish(i,f,false) end
  end
- if selectedFish then renderFish(selectedIndex,selectedFish,true) end
+ if selectedFish then
+  if self.room~='isolation' then
+   local sky=self.assets.images.tanktop
+   local gfx=love.graphics
+   if sky and gfx.getScissor and gfx.setScissor then
+    local oldX,oldY,oldW,oldH=gfx.getScissor()
+    -- Scissor trabalha em pixels de janela, nao nas coordenadas
+    -- transformadas de 240x320 da tela do jogo.
+    local x=math.floor(self.ox+64*self.scale)
+    local y=math.floor(self.oy+35*self.scale)
+    local x2=math.ceil(self.ox+118*self.scale)
+    local y2=math.ceil(self.oy+70*self.scale)
+    gfx.setScissor(x,y,x2-x,y2-y)
+    rgb(255,255,255)
+    gfx.draw(sky,0,24)
+    if oldX then gfx.setScissor(oldX,oldY,oldW,oldH)
+    else gfx.setScissor() end
+   elseif not sky then
+    -- Fundo azul de reserva, apenas quando o recurso JAR nao existe.
+    fill(64,35,54,35,11,110,181)
+   end
+  end
+  renderFish(selectedIndex,selectedFish,true)
+ end
 end
 function Retro:statsBar(f)
  fill(13,1,214,34,62,33,96);stroke(13,1,214,34,176,118,198)
@@ -377,8 +396,13 @@ end
 function Retro:drawTank()
  self:background(self.room)
  if self.screen=='detail' then
-  local f=self.selected and self.g:find(self.selected)
-  if f then self:statsBar(f) else self.screen='tank';self:toolbar() end
+  local f,activeRoom=self.g:find(self.selected)
+  if f and activeRoom==self.room then self:statsBar(f)
+  else
+   -- Um peixe pode morrer ou ser transferido enquanto a tela esta aberta.
+   -- Nunca deixar selecionado um ID ausente ou de outro aquario.
+   self.selected=nil;self.screen='tank';self:toolbar()
+  end
  else self:toolbar() end
  self:tray() -- o peixe isolado deve ser desenhado SOBRE o recipiente
  self:fishDraw()

@@ -7,9 +7,14 @@ function Smoke.new(view)
   {'02-tanque',function(v)
    v:press(v.ox+120*v.scale,v.oy+198*v.scale); assert(v.screen=='tank') end},
   {'03-peixe',function(v)
-   local hit=v.fishHits[1];assert(hit)
+   -- Fixture da captura 240x320 enviada pelo usuario:
+   -- GREENFIN FRUITFISH, idade 21. So existe no save descartavel do CI.
+   local fish=v.g.s.tanks.main[1]
+   assert(fish)
+   fish.body=9;fish.tail=17;fish.age=21
+   local hit=v.fishHits[1];assert(hit and hit.id==fish.id)
    v:press(v.ox+hit.x*v.scale,v.oy+hit.y*v.scale)
-   assert(v.screen=='detail') end},
+   assert(v.screen=='detail' and v.selected==fish.id) end},
   {'04-acoes',function(v) v:press(v.ox+31*v.scale,v.oy+307*v.scale);assert(v.screen=='actions') end},
   {'05-menu-pausa',function(v)
    v:key('escape');v:key('escape');v:key('escape');assert(v.screen=='pause') end},
