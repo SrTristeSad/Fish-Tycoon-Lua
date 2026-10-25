@@ -3,6 +3,7 @@ local Catalog=require('core.catalog')
 local Market=require('core.market')
 local Clock=require('core.sim_clock')
 local SpawnRng=require('core.j2me_spawn_rng')
+local JavaRng=require('core.j2me_random')
 local Care=require('core.care')
 local Treatments=require('core.treatments')
 local Game={};Game.__index=Game
@@ -63,7 +64,10 @@ end
 -- possui estado inconsistente. Validar antes de entregar o save ao motor.
 local function validateSave(data)
  if not whole(data.cash,0) or not whole(data.next_id,1,9007199254740991)
-    or not finite(data.time) or data.time<0 or not whole(data.rng,1,2147483646) then
+    or not finite(data.time) or data.time<0
+     or (data.rng_kind~=nil and data.rng_kind~='j2me48')
+     or (data.rng_kind=='j2me48' and not whole(data.rng,0,JavaRng.MOD-1))
+     or (data.rng_kind==nil and not whole(data.rng,1,2147483646)) then
   return false,'Dados principais invalidos'
  end
  local ids={}
@@ -164,7 +168,7 @@ end
 
 local function initial(seed)
  return {
-   version=9,rng=math.max(1,math.floor(seed or os.time())%2147483647),
+   version=9,rng_kind='j2me48',rng=JavaRng.seed(math.floor(seed or os.time())),
    time=0,year_tick=0,growth_minutes=10,growth_elapsed=0,wall=os.time(),cash=200,next_id=1,
    tanks={main={},second={},isolation={},sale={}},
    unlocked={second=false},gear={},research={environment=0,food=0,advertising=0},
@@ -348,10 +352,34 @@ function Game.fromTable(data)
 end
 function Game:random()
  local s=self.s
+ if s.rng_kind=='j2me48' then
+  local bits
+  s.rng,bits=JavaRng.nextBits(s.rng,31)
+  return bits/JavaRng.BITS31
+ end
+ -- Legacy v2-v9 saves without rng_kind retain their exact old PRNG.
  s.rng=(s.rng*48271)%2147483647
  return s.rng/2147483647
 end
-function Game:int(a,b) return a+math.floor(self:random()*(b-a+1)) end
+function Game:int(a,b)
+ if self.s.rng_kind=='j2me48' then
+  assert(whole(a) and whole(b) and b>=a
+    and b-a+1<=2147483647,'Intervalo de RNG invalido')
+  local result
+  self.s.rng,result=JavaRng.nextInt(self.s.rng,b-a+1)
+  return a+result
+ end
+ return a+math.floor(self:random()*(b-a+1))
+end
+function Game:nextBits(bits)
+ if self.s.rng_kind=='j2me48' then
+  local result
+  self.s.rng,result=JavaRng.nextBits(self.s.rng,bits)
+  return result
+ end
+ -- The legacy Park-Miller implementation did not have next(bits).
+ return self:int(0,2^bits-1)
+end
 function Game:message(msg)
  local events=self.s.events
  events[#events+1]={text=msg,time=self.s.time}
