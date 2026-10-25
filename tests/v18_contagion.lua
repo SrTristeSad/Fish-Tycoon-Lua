@@ -31,8 +31,10 @@ end)
 test('filhotes nao contraem doenca por sorteio de adulto',function()
  local g=Game.new(1802)
  local f=g.s.tanks.main[1];f.age=18;f.disease=false
- g.int=function(_,lo,hi) return hi end
- g.random=function() return 0 end
+ g.int=function(_,lo,hi)
+  if lo==0 and hi==9999 then return 0 end
+  return hi
+ end
  local infections=g.s.stats.infections
  Care.step(g,f,'main',999)
  eq(f.disease,false)
@@ -54,11 +56,13 @@ test('infeccoes novas nao elevam a exposicao no mesmo ciclo',function()
  end
  source.disease='ick'
  g.s.research.food=2 -- base=1: exposição 1 => risco 7; exposição 2 => 13
- g.int=function(_,lo,hi) return hi end
  local rolls=0
- g.random=function()
-  rolls=rolls+1
-  return rolls==1 and .0006 or .0010
+ g.int=function(_,lo,hi)
+  if lo==0 and hi==9999 then
+   rolls=rolls+1
+   return rolls==1 and 6 or 10
+  end
+  return hi
  end
  eq(Care.diseaseExposure(g),1)
  g:_tick() -- ordem reversa: second infecta com 6 < 7; first resiste 10 >= 7
