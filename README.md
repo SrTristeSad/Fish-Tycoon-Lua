@@ -1,3 +1,36 @@
+# Fish Tycoon Lua — v61: auditoria de integridade do nucleo
+
+## Versao 61 — correcoes graves do estado de jogo e salvamentos
+
+Esta etapa priorizou bugs reproduziveis de perda de progresso, sem alterar a
+aparencia nem a tabela de valores do Fish Tycoon Java:
+
+- **Arrays com null no JSON:** `[peixe,null,peixe]` era compactado pelo
+  parser e podia carregar uma partida com peixes desaparecidos. Agora o
+  arquivo e rejeitado, permitindo o uso do backup anterior.
+- **Tanques e ovos com estrutura incorreta:** objetos JSON com chaves
+  `"1"`, `"2"` podiam passar por listas vazias. A verificacao do save
+  exige listas densas para peixes, ovos, eventos e historicos.
+- **Relogio invalido:** `Game:advance(math.huge)` antes simulava 24h
+  e no teste matou todos os peixes; NaN e infinitos agora sao ignorados.
+- **Contadores de saves v9 corrompidos:** idade acumulada negativa,
+  intervalo de crescimento invalido e contadores do mercado nao sao
+  mais silenciosamente normalizados. O loader tenta o backup.
+- **Entrada de peixes e precos:** idade infinita e ajuste NaN de valor
+  sao recusados antes de modificar RNG, peixes ou dinheiro.
+
+Os cenarios sao cobertos por `tests/v61_core_integrity.lua`, incluindo
+recuperacao do backup e comparacao do estado antes/depois de entradas
+invalidas. Os testes de genetica, crescimento, loja e reproduçao
+continuam na suite de regressao.
+
+**Importante:** o progresso recuperado de um backup pode ser anterior
+ao ultimo salvamento; arquivos ja perdidos antes desta correcao nao
+podem ser reconstruidos automaticamente. A versao 61 nao resolve
+todas as diferencas biologicas ou economicas entre o port Lua e o JAR.
+
+## Historico de interface
+
 # Fish Tycoon Lua — v60: menu WELCOME com rolagem J2ME (240 × 320)
 
 ## Versao 60 — janela de cinco itens extraida de d.class
