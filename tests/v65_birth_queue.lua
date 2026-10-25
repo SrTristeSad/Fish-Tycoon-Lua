@@ -60,4 +60,20 @@ for scenario=1,4 do
  assert(one.s.stats.born==2 and #one.s.eggs==0)
  archive(one)
 end
-print('OK v65: FIFO birth queue, limited capacity, backup roundtrip and combined events')
+-- An adult dies exactly when an egg becomes ready (growth tick 600).
+-- The egg first waits, then hatches as soon as the death opens a slot.
+local atDeath=seeded(6565,0)
+local doomed=atDeath.s.tanks.main[1]
+doomed.body=2;doomed.tail=2;doomed.health=1
+atDeath.s.eggs={{body=7,tail=7,at=600}}
+local single=archive(atDeath)
+local sliced=archive(atDeath)
+single:advance(600)
+for i=1,600 do sliced:advance(1) end
+assert(JSON.encode(single.s)==JSON.encode(sliced.s),
+ 'An egg and fish death at the same instant yielded different outcomes')
+assert(single.s.stats.lost==1 and single.s.stats.born==1)
+assert(#single.s.eggs==0 and #single.s.tanks.main==C.CAPACITY.main)
+assert(single.s.tanks.main[#single.s.tanks.main].body==7)
+archive(single)
+print('OK v65: FIFO hatch, death releasing capacity, persistence and combined events')
