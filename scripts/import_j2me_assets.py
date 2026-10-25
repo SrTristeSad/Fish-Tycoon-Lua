@@ -6,12 +6,51 @@ sem impedir a importação dos que estiverem presentes.
 Uso: python3 scripts/import_j2me_assets.py /caminho/Fish_Tycoon.jar
 """
 import sys
+import struct
+import zlib
 from pathlib import Path
 from zipfile import ZipFile, BadZipFile
 
 PNG_SIGNATURE = b'\x89PNG\r\n\x1a\n'
 REQUIRED = ('assets.png', 'splash.png', 'gameMenuTank.png')
 OPTIONAL = ('trhopy_ball.png', 'store.png', 'menutank.png')
+
+def png_dimensions(data, filename):
+    """Check chunk boundaries and CRCs before accepting a PNG from the JAR."""
+    if not data.startswith(PNG_SIGNATURE):
+        raise ValueError('PNG inválido: ' + filename)
+    pos = len(PNG_SIGNATURE)
+    dimensions = None
+    finished = False
+    while pos + 12 <= len(data):
+        length = struct.unpack_from('>I', data, pos)[0]
+        end = pos + 12 + length
+        if end > len(data):
+            raise ValueError('PNG truncado: ' + filename)
+        kind = data[pos + 4:pos + 8]
+        payload = data[pos + 8:pos + 8 + length]
+        expected = struct.unpack_from('>I', data, pos + 8 + length)[0]
+        if zlib.crc32(kind + payload) & 0xffffffff != expected:
+            raise ValueError('CRC PNG inválido: ' + filename)
+        if dimensions is None:
+            if kind != b'IHDR' or length != 13:
+                raise ValueError('IHDR PNG inválido: ' + filename)
+            width, height = struct.unpack_from('>II', payload)
+            if not width or not height:
+                raise ValueError('Dimensões PNG inválidas: ' + filename)
+            dimensions = width, height
+        elif kind == b'IHDR':
+            raise ValueError('IHDR duplicado: ' + filename)
+        pos = end
+        if kind == b'IEND':
+            if length or pos != len(data):
+                raise ValueError('Final PNG inválido: ' + filename)
+            finished = True
+            break
+    if not finished:
+        raise ValueError('PNG incompleto: ' + filename)
+    return dimensions
+
 
 def import_assets(jar: Path, root: Path):
     imported, missing = [], []
@@ -24,12 +63,7 @@ def import_assets(jar: Path, root: Path):
                 missing.append(filename)
                 continue
             data = archive.read(filename)
-            if len(data) < 24 or not data.startswith(PNG_SIGNATURE):
-                raise ValueError('PNG inválido: ' + filename)
-            width = int.from_bytes(data[16:20], 'big')
-            height = int.from_bytes(data[20:24], 'big')
-            if width == 0 or height == 0:
-                raise ValueError('Dimensões inválidas: ' + filename)
+            width, height = png_dimensions(data, filename)
             pending[filename] = (data, width, height)
         if not pending:
             raise ValueError('Nenhum dos recursos gráficos esperados foi encontrado no JAR')
