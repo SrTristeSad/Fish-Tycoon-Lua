@@ -172,7 +172,7 @@ function Smoke:afterDraw()
  if self.done or self.pending then return end
  local stage=self.steps[self.n]
  if not stage then
-  assert(love.filesystem.write('retro-smoke/ok.txt','Twenty-seven J2ME-style screens rendered\n'))
+  assert(love.filesystem.write('retro-smoke/ok.txt',tostring(#self.steps)..' J2ME-style screens rendered\n'))
   self.done=true;print('FISH_RETRO_SMOKE_OK '..#self.steps);love.event.quit(0);return
  end
  if not self.ready then
