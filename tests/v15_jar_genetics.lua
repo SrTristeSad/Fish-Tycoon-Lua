@@ -37,8 +37,7 @@ check('gestacao muta somente uma vez antes dos nascimentos extras',function()
  assert(#g.s.tanks.main==initial+2)
  -- j.c(100) is also called for the low-bound partner fin (index 0).
  -- The Java code forces +1 after that direction roll, but still spends it.
- assert(count==13,
-  'JAR: 3 rolagens de mutacao + 5 rolagens visuais por dois filhotes')
+ assert(count==11,'3 mutacoes + 4 j.c(n) por filhote; j.b(16) e separado')
  local p=g.s.tanks.main[initial+1]
  local q=g.s.tanks.main[initial+2]
  assert(p.body==q.body and p.tail==q.tail)
