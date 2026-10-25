@@ -1,4 +1,50 @@
-# Fish Tycoon Lua — v69: ordem dos sorteios na criacao de peixes
+# Fish Tycoon Lua — v70: RNG Java de 48 bits no núcleo
+
+## Versao 70 — gerador original, sem quebrar saves antigos
+
+O arquivo `j.class` do JAR fornecido confirma que o Fish Tycoon
+utiliza um gerador LCG de **48 bits**, com o algoritmo de
+`java.util.Random`:
+
+- Estado inicial: `(seed XOR 25214903917) mod 2^48`.
+- Atualizacao: `(estado * 25214903917 + 11) mod 2^48`.
+- `j.b(bits)`: devolve os bits mais altos do estado atualizado.
+- `j.c(n)`: em limites que sao potencias de dois, utiliza
+  multiplicacao por `next(31)`; nos demais, utiliza rejeicao
+  para impedir vieses decorrentes de overflow de inteiros Java.
+
+`core/j2me_random.lua` executa as contas com duas metades
+de 24 bits, em vez de multiplicar diretamente numeros de 48 bits.
+Isso preserva exatidao no Lua 5.1/LuaJIT e 5.4, sem requerer
+dependencias ou operacoes bitwise de 64 bits.
+
+**Compatibilidade:** novas partidas armazenam
+`rng_kind='j2me48'` e um estado de ate 48 bits em `rng`.
+Salvamentos anteriores ao v70, que nao possuem `rng_kind`,
+continuam usando o antigo Park–Miller e nao sao resemeados.
+O formato de save permanece na versao 9.
+
+`core/j2me_spawn_rng.lua` agora separa as quatro chamadas
+`j.c(n)` para movimento da ultima chamada `j.b(16)`
+do construtor de peixe. A v69 ainda confundia `j.b(16)`
+com `j.c(65536)`, produzindo valores diferentes.
+
+**Validacao:** `tests/v70_j2me_random.lua` compara vetores
+de quatro sementes contra uma execucao independente OpenJDK,
+verifica `nextBits(16)` inclusive com seed negativa,
+serializacao e continuacao apos recarregar, rejeicao
+de estado/algoritmo invalido e continuidade exata do RNG antigo.
+
+**Limites:** a sequencia do Java foi reproduzida para as
+chamadas conferidas. Isso nao significa que cada rotina do
+motor (doencas, mercado, graficos e pesquisas) ja tenha
+a mesma ordem de chamadas do MIDlet. O seed inicial e os
+demais eventos do Java ainda exigem auditoria 1:1.
+Nao prometer reproduzir retroativamente a sequencia Java
+em partidas criadas no gerador Lua anterior.
+
+## Historico de versoes anteriores
+
 
 ## Versao 69 — consumo de RNG do construtor J2ME
 
