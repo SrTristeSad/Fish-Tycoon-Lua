@@ -92,10 +92,14 @@ function json.decode(str)
       end
     end
     if c=='{' then
-      pos=pos+1;white();local t={}
+      pos=pos+1;white();local t,seen={},{}
       if str:sub(pos,pos)=='}' then pos=pos+1;return t end
       while true do
         white();local k=stringval();white()
+        -- Duas chaves iguais no mesmo objeto sobrescreviam uma a outra
+        -- silenciosamente (inclusive tanks.main, stats e cash).
+        if seen[k] then fail() end
+        seen[k]=true
         if str:sub(pos,pos)~=':' then fail() end
         pos=pos+1;t[k]=value(depth+1);white();c=str:sub(pos,pos);pos=pos+1
         if c=='}' then return t end
