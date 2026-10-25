@@ -47,4 +47,24 @@ local options=noSave.buttons[2]
 assert(noSave:press(noSave.ox+(options.x+10)*noSave.scale,
  noSave.oy+(options.y+8)*noSave.scale))
 assert(noSave.screen=='settings','OPTIONS must remain accessible without save')
-print('OK v59: centered measured list, touch, softkey separation')
+-- Imported 1.dat font: the title list must use face 1 (20px), not face 3.
+local fontStyles,drawStyles={},{}
+local face=Retro.new(Game.new(5905),true)
+face.font=love.graphics.newFont()
+face.bitmapFont={
+ measure=function(_,label,style)
+  fontStyles[#fontStyles+1]=style
+  return #label*8
+ end,
+ print=function(_,label,x,y,w,align,style)
+  drawStyles[#drawStyles+1]=style
+ end
+}
+local importedLayout=face:welcomeLayout(face:titleEntries())
+assert(importedLayout.w>=layout.w)
+face:draw()
+assert(#fontStyles>=8 and #drawStyles==8,'each menu label must use original font')
+for _,style in ipairs(fontStyles) do assert(style==1,'font width uses wrong face') end
+for _,style in ipairs(drawStyles) do assert(style==1,'label drawn with wrong face') end
+
+print('OK v59: centered measured list, 20px JAR font, touch, softkey separation')
