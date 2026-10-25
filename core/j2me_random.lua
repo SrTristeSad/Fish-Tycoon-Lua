@@ -11,8 +11,8 @@ M.MOD=281474976710656 -- 2^48, first invalid internal seed value
 M.B=16777216        -- 2^24
 M.MULT=25214903917
 M.ADD=11
-local MULT_LO=M.MULT%M.B
-local MULT_HI=math.floor(M.MULT/M.B)
+M.MULT_LO=M.MULT%M.B
+M.MULT_HI=math.floor(M.MULT/M.B)
 M.BITS31=2147483648
 local function xor24(a,b)
  local r,weight=0,1
