@@ -77,8 +77,8 @@ g.int=function(_,a,b)
 end
 local born=g.s.stats.born
 g:_hatch(mom)
-assert(consumed==13 and g.s.stats.born==born+2,
- 'One mutation (3 RNG) followed by two newborns (5 RNG each)')
+assert(consumed==11 and g.s.stats.born==born+2,
+ 'Mutation uses 3 nextInt calls; each fish uses 4 nextInt + 1 nextBits(16)')
 local babies=g.s.tanks.main
 local left,right=babies[#babies-1],babies[#babies]
 assert(left.genes.mutated and right.genes.mutated)
