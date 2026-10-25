@@ -53,7 +53,7 @@ assert(back.screen=='intro_splash' and back.soundEnabled==false)
 -- Sound already muted can be enabled using YES.
 local enable=fresh(false)
 enable.onSound=function() enable.soundEnabled=true;return true end
-enable:press(30,309) -- bottom-left softkey
+enable:press(enable.ox+30*enable.scale,enable.oy+309*enable.scale) -- bottom-left softkey
 assert(enable.screen=='intro_splash' and enable.soundEnabled)
 
 -- Missing Splash goes straight to title after the prompt.
