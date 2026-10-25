@@ -153,6 +153,27 @@ function Game.fromTable(data)
    return nil,'Salvamento ausente ou incompativel'
  end
  for _,id in ipairs(ORDER) do if type(data.tanks[id])~='table' then return nil,'Tanque invalido' end end
+ -- Um save da versao atual nao precisa de migracao. Rejeitar valores
+ -- inconsistentes ANTES de qualquer sanitizacao que ocultaria o dano
+ -- e impediria o fallback para o backup valido.
+ if data.version==9 then
+  if not (data.growth_minutes==5 or data.growth_minutes==10
+    or data.growth_minutes==15)
+    or not finite(data.growth_elapsed)
+    or data.growth_elapsed<0
+    or data.growth_elapsed>=growthSeconds(data)
+    or not whole(data.year_tick,0,9007199254740991)
+    or (data.game_speed~=1 and data.game_speed~=5 and data.game_speed~=20) then
+   return nil,'Contadores de tempo do save invalidos'
+  end
+  local market=data.market
+  if type(market)~='table' or not finite(market.elapsed)
+    or market.elapsed<0 or market.elapsed>=Market.VISIT_SECONDS
+    or not whole(market.visits,0,9007199254740991)
+    or not whole(market.rejected,0,9007199254740991) then
+   return nil,'Contadores do mercado invalidos'
+  end
+ end
  -- Mantemos as validacoes anteriores, mas a verificacao completa ocorre
  -- depois das migracoes e dos valores opcionais terem sido inicializados.
  -- Salvamentos anteriores usam 6 especies experimentais e outra tabela especial.
@@ -497,7 +518,9 @@ function Game:_tick()
  self:_events()
 end
 function Game:advance(seconds)
- if type(seconds)~='number' or seconds~=seconds or seconds<=0 then return end
+ -- Um delta NaN/infinito nao representa tempo transcorrido. A versao
+ -- anterior convertia +infinito em 24 horas e podia matar todos os peixes.
+ if not finite(seconds) or seconds<=0 then return end
  seconds=math.min(seconds,C.MAX_OFFLINE)
  local s=self.s
  local interval=growthSeconds(s)
