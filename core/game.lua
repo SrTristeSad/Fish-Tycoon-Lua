@@ -495,10 +495,15 @@ function Game:combineParents(bodyA,tailA,bodyB,tailB)
  -- indices herdados em +/-1 em ~16% dos nascimentos, antes da media.
  local mutated=false
  if self:hasMagic('mutation','isolation') and self:int(0,99)<=15 then
+  -- n.a(m,o,int), bytecode 1430+: o parceiro esta em m.g[5].
+  -- Na borda inferior (indice J2ME 0), o Java AINDA sorteia j.c(100)
+  -- antes de forcar +1; na borda superior (20) ele NAO sorteia e usa -1.
+  -- Para indices internos, <=49 aumenta e >49 diminui.
   local function alter(value)
    if value==21 then return 20 end
-   if value==1 then return 2 end
-   return clamp(value+(self:int(0,1)==0 and -1 or 1),1,21)
+   local roll=self:int(0,99)
+   if value==1 or roll<=49 then return value+1 end
+   return value-1
   end
   if self:int(0,99)<=49 then tailB=alter(tailB) else bodyB=alter(bodyB) end
   mutated=true
