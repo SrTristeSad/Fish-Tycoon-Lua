@@ -1,4 +1,32 @@
-# Fish Tycoon Lua — v66: RNG original e isolamento genetico do nucleo
+# Fish Tycoon Lua — v67: validacao da genetica e protecao de saves
+
+## Versao 67 — integridade dos descendentes
+
+Nesta etapa foi aprofundada a analise de `m.a(IIIII)` no JAR J2ME,
+que confirma os indices expressos da variedade de um filhote pela
+media inteira dos indices dos dois pais.
+
+- **Criacao com alelos invalidos:** `Game:addFish` rejeita tabelas de
+  genes malformadas, indices fora de 1..21, numeros fracionarios e
+  estruturas incompletas *antes* de consumir RNG, ID ou espaco do tanque.
+- **Leitura de salvamentos:** `Game.fromTable` rejeita metadados
+  geneticos incoerentes e permite recuperar o backup, em vez de
+  propagar um estado que poderia quebrar a reproducao.
+- **Genomas independentes:** cada peixe recebe somente os campos
+  geneticos esperados (`body`, `tail`, `mutated`), clonados.
+  Entradas ciclicas ou campos extras nao entram no estado do jogo.
+- **Regressao:** `tests/v67_genetics_schema.lua` verifica a
+  atomicidade dos erros, isolamento dos genes, preservacao do
+  salvamento, fallback de backup e media inteira dos pais.
+
+A matematica hereditaria (media inteira) foi mantida. O esquema
+`genes` e metadado de compatibilidade do port Lua: nao substitui
+uma recriacao completa dos atributos internos da classe Java.
+Nao se considera concluida a equivalencia integral de RNG,
+mutacoes ou outras mecanicas.
+
+## Historico — v66 e anteriores
+
 
 ## Versao 66 — dois problemas da criacao e reproducao
 
