@@ -554,7 +554,7 @@ function Retro:welcomeLayout(entries)
  local maxText=0
  for _,entry in ipairs(entries) do
   local width
-  if self.bitmapFont then width=self.bitmapFont:measure(entry[1])
+  if self.bitmapFont then width=self.bitmapFont:measure(entry[1],1)
   elseif self.font and self.font.getWidth then width=self.font:getWidth(entry[1])
   else width=#entry[1]*6 end
   maxText=math.max(maxText,width)
@@ -576,7 +576,14 @@ function Retro:title()
  local layout=self:welcomeLayout(entries)
  for i,entry in ipairs(entries) do
   local x,y=layout.x,layout.y+(i-1)*layout.step
-  fontText(entry[1],x+8,y+3,layout.w-16,'left',{239,237,222})
+  -- f(32) define Q.d=0: a primeira fonte do arquivo 1.dat (20px),
+  -- nao a terceira fonte pequena usada nos detalhes dos peixes.
+  if self.bitmapFont then
+   rgb(239,237,222)
+   self.bitmapFont:print(entry[1],x+8,y+1,layout.w-16,'left',1)
+  else
+   fontText(entry[1],x+8,y+3,layout.w-16,'left',{239,237,222})
+  end
   self:hit(x,y,layout.w,layout.h,entry[2],'welcome')
  end
  self:buttonHint({label='SELECT',fn=function()
