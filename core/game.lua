@@ -24,6 +24,21 @@ end
 local function whole(v,lo,hi)
  return finite(v) and v%1==0 and v>=(lo or 0) and (not hi or v<=hi)
 end
+-- Listas do save devem ser sequenciais. Um objeto {"1":{...}} carrega
+-- como tabela Lua com chave string; #tank=0 e ipairs() ignora os peixes.
+-- Sem esta checagem, o jogo considerava esses tanques vazios e aceitava
+-- a partida mutilada, sobrescrevendo o ultimo progresso recuperavel.
+local function denseArray(t)
+ if type(t)~='table' then return false end
+ local count,n=0,#t
+ for key in pairs(t) do
+  if type(key)~='number' or key%1~=0 or key<1 or key>n then
+   return false
+  end
+  count=count+1
+ end
+ return count==n
+end
 -- O backup precisa ser usado quando o JSON e sintaticamente valido, mas
 -- possui estado inconsistente. Validar antes de entregar o save ao motor.
 local function validateSave(data)
@@ -35,7 +50,7 @@ local function validateSave(data)
  local maxId=0
  for _,room in ipairs(ORDER) do
   local tank=data.tanks[room]
-  if type(tank)~='table' or #tank>C.CAPACITY[room] then
+  if not denseArray(tank) or #tank>C.CAPACITY[room] then
    return false,'Tanque invalido ou excede a capacidade'
   end
   for _,f in ipairs(tank) do
@@ -71,10 +86,10 @@ local function validateSave(data)
     type(data.market)~='table' or type(data.market.quotes)~='table' then
   return false,'Dados auxiliares invalidos'
  end
- if type(data.stats)~='table' or type(data.events)~='table'
+ if type(data.stats)~='table' or not denseArray(data.events)
     or type(data.seen)~='table' or type(data.magic)~='table'
     or type(data.gear)~='table' or type(data.unlocked)~='table'
-    or type(data.market.history)~='table' then
+    or not denseArray(data.market.history) then
   return false,'Estrutura de progresso invalida'
  end
  if data.wall~=nil and not finite(data.wall) then return false,'Relogio invalido' end
@@ -115,7 +130,7 @@ local function validateSave(data)
  for _,v in pairs(data.market.quotes) do
   if not whole(v,0) then return false,'Cotacao invalida' end
  end
- if type(data.eggs)~='table' then return false,'Lista de ovos invalida' end
+ if not denseArray(data.eggs) then return false,'Lista de ovos invalida' end
  for _,egg in ipairs(data.eggs) do
   if type(egg)~='table' or not whole(egg.body,1,21)
     or not whole(egg.tail,1,21) or not finite(egg.at) or egg.at<0
@@ -167,7 +182,8 @@ function Game.fromTable(data)
    return nil,'Contadores de tempo do save invalidos'
   end
   local market=data.market
-  if type(market)~='table' or not finite(market.elapsed)
+  if type(market)~='table' or not denseArray(market.history)
+    or not finite(market.elapsed)
     or market.elapsed<0 or market.elapsed>=Market.VISIT_SECONDS
     or not whole(market.visits,0,9007199254740991)
     or not whole(market.rejected,0,9007199254740991) then
