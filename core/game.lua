@@ -320,9 +320,13 @@ function Game:fishPrice(f)
  return Catalog.basePrice(f.body,f.tail) or 4
 end
 function Game:addFish(room,body,tail,age,genes,sex)
- if type(body)~='number' or type(tail)~='number' or body%1~=0 or tail%1~=0
-  or body<1 or body>21 or tail<1 or tail>21 then
+ if not whole(body,1,21) or not whole(tail,1,21) then
   return nil,'Forma ou barbatana invalida'
+ end
+ -- Uma idade NaN/infinita permanece no save e impede serializacao futura.
+ -- Rejeitar antes de consumir RNG ou ID da partida.
+ if age~=nil and (not finite(age) or age<0) then
+  return nil,'Idade do peixe invalida'
  end
  if not self:hasSpace(room) then return nil,'Tanque cheio ou bloqueado' end
  local s=self.s
@@ -716,6 +720,9 @@ end
 function Game:changePrice(id,delta)
  local f=self:find(id)
  if not f then return false,'Peixe nao encontrado' end
+ -- A funçao math.min/max do Lua converte NaN em um dos limites:
+ -- um ajuste invalido chegava a colocar o peixe em $9999.
+ if not finite(delta) then return false,'Ajuste de preco invalido' end
  f.price=clamp((f.price or self:fishPrice(f))+delta,5,9999)
  return true,f.price
 end
