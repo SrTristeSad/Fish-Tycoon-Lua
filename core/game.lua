@@ -181,6 +181,17 @@ function Game.fromTable(data)
     or (data.game_speed~=1 and data.game_speed~=5 and data.game_speed~=20) then
    return nil,'Contadores de tempo do save invalidos'
   end
+  -- Saves v9 ja possuem campos obrigatorios. Nao converter os dados
+  -- corrompidos em zero: isso apagava estatisticas, estoque e historico.
+  if type(data.stats)~='table' then return nil,'Estatisticas v9 invalidas' end
+  for key in pairs(newStats()) do
+   if not whole(data.stats[key],0,9007199254740991) then
+    return nil,'Estatistica v9 corrompida: '..key
+   end
+  end
+  if type(data.supplies)~='table' or not whole(data.supplies.mutagen,0) then
+   return nil,'Estoque v9 corrompido'
+  end
   local market=data.market
   if type(market)~='table' or not denseArray(market.history)
     or not finite(market.elapsed)
@@ -188,6 +199,21 @@ function Game.fromTable(data)
     or not whole(market.visits,0,9007199254740991)
     or not whole(market.rejected,0,9007199254740991) then
    return nil,'Contadores do mercado invalidos'
+  end
+  -- Nao filtrar entradas danificadas de um historico v9 valido.
+  local function marketEntry(entry)
+   return type(entry)=='table' and whole(entry.visit,1,9007199254740991)
+     and finite(entry.time) and entry.time>=0
+     and (entry.status=='sold' or entry.status=='passed' or entry.status=='empty')
+  end
+  for _,entry in ipairs(market.history) do
+   if not marketEntry(entry) then return nil,'Historico do mercado corrompido' end
+  end
+  if market.last_visit~=false and not marketEntry(market.last_visit) then
+   return nil,'Ultima visita do mercado corrompida'
+  end
+  if market.last_sale~=false and type(market.last_sale)~='table' then
+   return nil,'Ultima venda do mercado corrompida'
   end
  end
  -- Mantemos as validacoes anteriores, mas a verificacao completa ocorre
