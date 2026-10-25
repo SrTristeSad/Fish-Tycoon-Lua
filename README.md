@@ -1,4 +1,24 @@
-# Fish Tycoon Lua — v57: sequencia de inicializacao J2ME (240 × 320)
+# Fish Tycoon Lua — v58: menu WELCOME reconstruido (240 × 320)
+
+## Versao 58 — menu inicial com opcoes do JAR original
+
+O estado 32 de `d.class` usa a string `WELCOME` (indice 156 em `E`).
+A funcao Java `f(32)` usa as opcoes localizadas nos indices 1 a 9:
+`RESUME` (apenas com save), `START NEW GAME`, `OPTIONS`, `TROPHY`,
+`STATS`, `HELP`, `ABOUT`, `MORE GAMES` (apenas se habilitado nessa
+edicao) e `EXIT`. A interface Lua agora respeita os nomes e as opcoes
+condicionais, com navegacao de teclado, toque e softkeys `SELECT`/`EXIT`.
+Ao selecionar `EXIT`, um salvamento com erro impede que a aplicacao feche.
+
+**Limitacao atual:** posicoes, cores e composicao do menu ainda aguardam
+conferencia pixel a pixel com a tela Java executada em emulador. A arte da
+abertura continua separada do menu; os recursos extraidos do JAR sao locais.
+`tests/v58_welcome_menu.lua` e as verificacoes de interface cobrem o fluxo
+do menu, mas nao demonstram equivalencia visual integral.
+
+A compilacao automatica para Windows gera um pacote LÖVE portatil. Sem os
+recursos privados do JAR, a compilacao publica utiliza apenas os arquivos
+ja existentes em `assets/original`.
 
 ## Versão 57 — fluxo de abertura confirmado no bytecode
 
