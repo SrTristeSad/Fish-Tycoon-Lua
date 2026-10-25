@@ -205,12 +205,15 @@ function Retro:buttonHint(left,right)
 end
 function Retro:background(room)
  local sky=self.assets.images.tanktop
- local source=({main='tank1',second='tank2',sale='tank3',isolation='gameMenuTank'})[room] or 'tank1'
- local floor=self.assets.images[source] or self.images.gameMenuTank or self.assets.images.tank1
+ -- Nunca representar um tanque ausente usando a arte de outro tanque.
+ -- Um fundo neutro indica recurso ainda nao importado, sem falsear a referencia.
+ local source=({main='tank1',second='tank2',sale='tank3'})[room]
+ local floor=room=='isolation' and
+  (self.images.gameMenuTank or self.assets.images.menutank) or
+  (source and self.assets.images[source])
  rgb(255,255,255)
  if sky then love.graphics.draw(sky,0,24) else fill(0,24,240,110,12,100,160) end
  if floor then
-  if room=='isolation' and self.images.gameMenuTank then floor=self.images.gameMenuTank end
   love.graphics.draw(floor,0,122)
  else fill(0,122,240,154,12,76,130) end
 end
