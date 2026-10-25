@@ -1,4 +1,46 @@
-# Fish Tycoon Lua — v68: mutacao especial conferida com o JAR
+# Fish Tycoon Lua — v69: ordem dos sorteios na criacao de peixes
+
+## Versao 69 — consumo de RNG do construtor J2ME
+
+Foi verificado o bytecode `m.a(IIIII)` e o construtor auxiliar
+`m.a(IIIIIIIIIIIIIJ)` do JAR de 2007. Ao criar um peixe, o Java
+consome **cinco chamadas de RNG** para definir atributos visuais e
+de movimentacao, antes de quaisquer calculos seguintes do mercado:
+
+1. `j.c(190)` — posicao horizontal de entrada;
+2. `j.c(39)` — posicao vertical de entrada;
+3. `j.c(1)` — direcao horizontal (tambem avanca o RNG);
+4. `j.c(1)` — direcao vertical (tambem avanca o RNG);
+5. `j.b(16)` — deslocamento extra de movimento.
+
+O nucleo Lua anterior nao consumia esses sorteios e, portanto,
+alterava a ordem de futuras chances de venda, doença e mutacao.
+`core/j2me_spawn_rng.lua` registra a ordem recuperada, e
+`Game:addFish` a consome **apos** validar capacidade, corpo, cauda
+e genes e **antes** da primeira cotacao de mercado para adultos.
+
+- Sorteios cosmeticos de sexo continuam removidos, conforme a v66.
+- Uma criacao recusada nao consome RNG nem altera o proximo ID.
+- Filhotes extras de uma mesma gestacao consomem cinco chamadas
+  de geracao visual *por peixe*, mantendo uma unica rolagem de
+  mutacao genetica compartilhada pela gestacao.
+- `tests/v69_j2me_spawn_rng.lua` valida a ordem, a quantidade
+  e os limites das chamadas, as rejeicoes atomicas, as
+  cotacoes e os saves.
+- Os testes v15, v66, v67 e v68 foram adaptados para distinguir
+  RNG visual de RNG de mutacao.
+
+**Limitacao tecnica conhecida:** o Java utiliza um LCG de 48 bits
+(`j.b`/`j.c`); o nucleo atual Lua ainda utiliza Park–Miller.
+Esta etapa reproduz o **numero e a ordem das chamadas**, nao a
+mesma sequencia numerica de um seed Java nem as coordenadas
+visuais exatas dos peixes. Fazer a migracao do algoritmo exige
+um esquema de save compativel, sem destruir partidas existentes.
+Os resultados de partidas novas/continuadas podem mudar com
+esta correcao de RNG, embora os saves permaneçam legiveis.
+
+## Historico das versoes anteriores
+
 
 ## Versao 68 — sorteios de mutacao no nascimento
 
