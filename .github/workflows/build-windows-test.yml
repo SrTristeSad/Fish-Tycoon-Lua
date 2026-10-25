@@ -1,0 +1,50 @@
+name: Pacote de teste Windows x64
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Empacotar jogo LÖVE e runtime Windows 11.5
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from zipfile import ZipFile, ZIP_DEFLATED
+          from pathlib import Path
+          excluded={'.git','.github','tests','docs','scripts','__pycache__'}
+          with ZipFile('FishTycoonLua.love','w',ZIP_DEFLATED) as z:
+              for p in Path('.').rglob('*'):
+                  if (not p.is_file() or p.name=='FishTycoonLua.love'
+                     or any(part in excluded for part in p.parts)
+                     or p.suffix in {'.bat','.md'}): continue
+                  z.write(p,p.as_posix())
+          print('Game archive:',Path('FishTycoonLua.love').stat().st_size,'bytes')
+          PY
+          curl -fLsS --retry 3 -o love-11.5-win64.zip             https://github.com/love2d/love/releases/download/11.5/love-11.5-win64.zip
+          unzip -q love-11.5-win64.zip -d love-runtime
+          mkdir -p dist/FishTycoonLua-v57-Windows
+          cp -a love-runtime/love-11.5-win64/. dist/FishTycoonLua-v57-Windows/
+          cp FishTycoonLua.love dist/FishTycoonLua-v57-Windows/jogo.love
+          cat dist/FishTycoonLua-v57-Windows/love.exe FishTycoonLua.love > dist/FishTycoonLua-v57-Windows/FishTycoonLua.exe
+          cat > dist/FishTycoonLua-v57-Windows/LEIA_PRIMEIRO.txt <<'TXT'
+          FISH TYCOON LUA v57 - WINDOWS x64
+          Abra FishTycoonLua.exe para jogar, sem instalar LÖVE.
+          Este pacote automatico inclui os recursos versionados no repositorio.
+          O JAR original fornece recursos complementares (aberturas e fonte);
+          importe-os para o arquivo jogo.love antes de fundir novamente o EXE.
+          TXT
+          cd dist
+          zip -qr FishTycoonLua-v57-Windows-portatil.zip FishTycoonLua-v57-Windows
+          ls -lh FishTycoonLua-v57-Windows-portatil.zip
+      - name: Publicar pacote portatil de teste
+        uses: actions/upload-artifact@v4
+        with:
+          name: FishTycoonLua-v57-Windows-portatil
+          path: dist/FishTycoonLua-v57-Windows-portatil.zip
+          if-no-files-found: error
+          retention-days: 14
