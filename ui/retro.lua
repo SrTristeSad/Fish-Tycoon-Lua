@@ -56,7 +56,7 @@ function Retro.new(game,hasSave)
  return setmetatable({g=game,hasSave=not not hasSave,screen='title',room='main',selected=nil,
   popup=nil,popupFrom=nil,buttons={},fishHits={},softkeys={},images={},assets=Assets.new(),
   speed=1,soundEnabled=true,shopPage=1,selectedShopIndex=1,trophyIndex=1,toast='',toastTime=0,time=0,browseIndex=1,
-  confirmFrom='title',utilityReturn=nil,
+  confirmFrom='title',utilityReturn=nil,welcomeIndex=1,welcomeTop=1,
   scale=1,ox=0,oy=0,focus=nil,focusScreen=nil,onSave=nil,onNewGame=nil,onSound=nil},Retro)
 end
 function Retro:init()
@@ -565,10 +565,14 @@ function Retro:welcomeLayout(entries)
   maxText=math.max(maxText,width)
  end
  local width=math.min(220,math.max(90,math.ceil(maxText)+16))
- local rowHeight,gap=20,3
- local total=#entries*rowHeight+math.max(0,#entries-1)*gap
+-- d.class: menu mode=1 has W=5 (visible rows), V=5 (row spacing).
+ -- Its N coordinate is centered against a window of five rows, not
+ -- the full list of seven to nine choices.
+ local rowHeight,gap=20,5
+ local visible=math.min(5,#entries)
+ local total=visible*rowHeight+math.max(0,visible-1)*gap
  return {x=math.floor(120-width/2),y=math.floor(160-total/2),
-  w=width,h=rowHeight,step=rowHeight+gap}
+  w=width,h=rowHeight,step=rowHeight+gap,visible=visible}
 end
 function Retro:title()
  local art=self.images.menutank or self.assets.images.menutank
@@ -579,10 +583,15 @@ function Retro:title()
  centered('WELCOME',20,{246,226,164})
  local entries=self:titleEntries()
  local layout=self:welcomeLayout(entries)
- for i,entry in ipairs(entries) do
-  local x,y=layout.x,layout.y+(i-1)*layout.step
-  -- f(32) define Q.d=0: a primeira fonte do arquivo 1.dat (20px),
-  -- nao a terceira fonte pequena usada nos detalhes dos peixes.
+ self.welcomeIndex=math.max(1,math.min(#entries,self.welcomeIndex or 1))
+ local maxFirst=math.max(1,#entries-layout.visible+1)
+ local first=math.max(1,math.min(maxFirst,
+  self.welcomeIndex-math.floor((layout.visible-1)/2)))
+ self.welcomeTop=first
+ for i=first,math.min(#entries,first+layout.visible-1) do
+  local entry=entries[i]
+  local x,y=layout.x,layout.y+(i-first)*layout.step
+  -- Keep the 20px original font and a readable fallback without 1.dat.
   if self.bitmapFont then
    rgb(239,237,222)
    self.bitmapFont:print(entry[1],x+8,y+1,layout.w-16,'left',1)
@@ -591,12 +600,16 @@ function Retro:title()
    fontText(entry[1],x+8,y+2,layout.w-16,'left',{239,237,222})
    if self.welcomeFont then love.graphics.setFont(self.font) end
   end
-  self:hit(x,y,layout.w,layout.h,entry[2],'welcome')
+  self:hit(x,y,layout.w,layout.h,function()
+   self.welcomeIndex=i
+   entry[2]()
+  end,'welcome')
  end
+ self.focusScreen='title'
+ self.focus=self.welcomeIndex-first+1
  self:buttonHint({label='SELECT',fn=function()
-  self:ensureFocus()
-  local b=self.focus and self.buttons[self.focus]
-  if b and b.role=='welcome' then b.fn() end
+  local selected=self:titleEntries()[self.welcomeIndex]
+  if selected then selected[2]() end
  end},{label='EXIT',fn=entries[#entries][2]})
 end
 function Retro:startNewGame()
@@ -1174,6 +1187,19 @@ function Retro:press(px,py)
  return false
 end
 function Retro:key(k)
+ if self.screen=='title' then
+  local step=({up=-1,left=-1,['2']=-1,['4']=-1,kp2=-1,kp4=-1,
+   down=1,right=1,['8']=1,['6']=1,kp8=1,kp6=1})[k]
+  if step then
+   self.welcomeIndex=math.max(1,math.min(#self:titleEntries(),(self.welcomeIndex or 1)+step))
+   self.focus=nil;return
+  end
+  if k=='5' or k=='kp5' or k=='return' or k=='kpenter' or k=='space' then
+   local selected=self:titleEntries()[self.welcomeIndex or 1]
+   if selected then selected[2]() end
+   self.focus=nil;return
+  end
+ end
  if self.screen=='intro_oberon' or self.screen=='intro_splash' then return end
  -- A tecla de retorno equivale ao softkey direito (NO) no prompt Java.
  if self.screen=='intro_sound' and (k=='escape' or k=='back') then
