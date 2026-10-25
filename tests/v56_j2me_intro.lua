@@ -36,7 +36,7 @@ view:draw()
 for _,name in ipairs(calls) do
  assert(name~='splash' and name~='oberon','menu reused transient intro art')
 end
-assert(#view.buttons==3,'CONTINUE disabled + NEW GAME/OPTIONS/ABOUT should be active')
+assert(#view.buttons==4,'CONTINUE/NEW GAME/OPTIONS/ABOUT must be available with save')
 -- Missing resources: start directly at the menu, no synthetic art.
 local missing=Retro.new(game,false)
 missing:beginIntro()
