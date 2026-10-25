@@ -14,10 +14,12 @@ local function loadImage(name)
 end
 function Assets:init()
  if not love.graphics.newQuad then return false end
+ -- Fundos originais sao independentes dos sprites dos peixes:
+ -- carregar os cenarios mesmo quando fish.png/fins.png nao estao presentes.
+ for _,name in ipairs({'tank1','tank2','tank3','tanktop','isolation_tank','menutank'}) do self.images[name]=loadImage(name) end
  local fish,fin=loadImage('fish'),loadImage('fins')
  if not fish or not fin then return false end
  self.images.fish=fish;self.images.fins=fin
- for _,name in ipairs({'tank1','tank2','tank3','tanktop','isolation_tank','menutank'}) do self.images[name]=loadImage(name) end
  -- O sprite de alevino e fixo no atlas: m.m()=100, m.l()=296,
  -- dimensoes 21x8. Jovens tem tratamento de faixa etaria separado no JAR.
  self.baby=love.graphics.newQuad(100,296,21,8,fish:getDimensions())
