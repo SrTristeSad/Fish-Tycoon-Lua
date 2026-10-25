@@ -72,12 +72,17 @@ test('save v8 migra com cotacoes intactas e cria historico vazio',function()
  eq(#recovered.s.tanks.sale,1)
  eq(recovered.s.tanks.sale[1].id,f.id)
 end)
-test('historico malformado em save nao quebra interface',function()
+test('save v9 com historico malformado nao perde dados silenciosamente',function()
  local g=setup();local old=JSON.decode(JSON.encode(g.s))
  old.market.history={'erro',{}, {visit=2,time=10,status='passed'}}
  old.market.last_visit='erro'
- local restored=assert(Game.fromTable(old))
- eq(#restored.s.market.history,1);eq(restored.s.market.last_visit,false)
+ local restored,reason=Game.fromTable(old)
+ assert(not restored and type(reason)=='string')
+ -- Saves anteriores a v9 nunca tinham historico confiavel.
+ -- Eles podem migrar e reconstruir o historico vazio.
+ old.version=8
+ local migrated=assert(Game.fromTable(old))
+ eq(#migrated.s.market.history,1);eq(migrated.s.market.last_visit,false)
 end)
 test('bonus de riqueza vale quando o proprio ultimo magico e vendido',function()
  local g=Game.new(2)
