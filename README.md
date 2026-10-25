@@ -1,4 +1,37 @@
-# Fish Tycoon Lua — v63: protecao de listas JSON e estabilidade do nucleo
+# Fish Tycoon Lua — v64: correcoes do nucleo de nascimentos e relogio
+
+## Versao 64 — transicoes de gestacao, morte e eventos
+
+Auditoria baseada no bytecode `n.a(o)` do JAR Fish Tycoon J2ME
+original, preservando as regras de capacidade e os valores existentes.
+
+- **Nascimento na mesma atualizacao da morte:** no Java a gestacao
+  e resolvida antes da deterioracao da condicao do peixe. A versao
+  Lua anterior eliminava a mae antes da eclosao, perdendo os filhotes.
+  `core/game.lua` agora processa a eclosao apos o incremento de
+  idade e antes de `Care.step`.
+- **Capacidade preservada:** o tanque principal permanece limitado
+  a 18 peixes. Se estiver cheio, a incubacao natural nao produz
+  filhotes; os ovos comprados continuam aguardando vaga, como antes.
+- **Tempo fracionario:** chamadas repetidas com `dt=0.1` ou
+  `dt=1/60` acumulavam desvios que atrasavam uma eclosao para
+  depois de uma visita do mercado, alterando a sequencia de sorteios
+  e ate o sexo de um peixe. `core/sim_clock.lua` normaliza apenas
+  fronteiras proximas a segundos inteiros, sem arredondar cada frame.
+  `core/game.lua` e `core/market.lua` compartilham essa regra.
+- **Testes automatizados:** `tests/v64_birth_death_order.lua`
+  cobre morte da mae, nascimento, tanque cheio e ovos aguardando vaga.
+  `tests/v64_fractional_clock.lua` exige igualdade de estado entre
+  1.200 segundos simulados em um passo, atualizacoes de 0.1 segundo
+  e 72.000 frames de 1/60 de segundo em seis cenarios com mercado,
+  pesquisas e ovos.
+
+A fase nao modifica os precos, a genealogia dos peixes, os
+coeficientes biologicos ou a interface. O projeto ainda nao esta
+visualmente ou funcionalmente igual ao Java em todos os aspectos.
+
+## Historico de versoes anteriores
+
 
 ## Versao 63 — integridade dos recipientes e teste de longa duracao
 
