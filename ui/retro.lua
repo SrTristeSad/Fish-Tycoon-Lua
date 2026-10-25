@@ -66,6 +66,10 @@ function Retro:init()
  end
  self.font=love.graphics.newFont(9)
  self.font:setFilter('nearest','nearest')
+ -- Enquanto a fonte de 1.dat nao estiver importada, manter a lista
+ -- legivel no tamanho maior do menu em vez de reaproveitar os 9px do HUD.
+ self.welcomeFont=love.graphics.newFont(15)
+ self.welcomeFont:setFilter('nearest','nearest')
  self.bitmapFont=BitmapFont.new()
  bitmapFont=self.bitmapFont
  -- Partes do atlas PNG original; alternativas simples sao exibidas
@@ -555,6 +559,7 @@ function Retro:welcomeLayout(entries)
  for _,entry in ipairs(entries) do
   local width
   if self.bitmapFont then width=self.bitmapFont:measure(entry[1],1)
+  elseif self.welcomeFont and self.welcomeFont.getWidth then width=self.welcomeFont:getWidth(entry[1])
   elseif self.font and self.font.getWidth then width=self.font:getWidth(entry[1])
   else width=#entry[1]*6 end
   maxText=math.max(maxText,width)
@@ -582,7 +587,9 @@ function Retro:title()
    rgb(239,237,222)
    self.bitmapFont:print(entry[1],x+8,y+1,layout.w-16,'left',1)
   else
-   fontText(entry[1],x+8,y+3,layout.w-16,'left',{239,237,222})
+   if self.welcomeFont then love.graphics.setFont(self.welcomeFont) end
+   fontText(entry[1],x+8,y+2,layout.w-16,'left',{239,237,222})
+   if self.welcomeFont then love.graphics.setFont(self.font) end
   end
   self:hit(x,y,layout.w,layout.h,entry[2],'welcome')
  end
