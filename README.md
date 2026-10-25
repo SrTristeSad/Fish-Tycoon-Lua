@@ -1,4 +1,14 @@
-# Fish Tycoon Lua — v55: reconstrução J2ME (240 × 320)
+# Fish Tycoon Lua — v56: abertura J2ME derivada do JAR (240 × 320)
+
+## Versão 56 — duas telas de abertura confirmadas pelo bytecode
+
+- Os estados 30 e 31 de `d.class` exibem `oberon.png` e `splash.png`, respectivamente, durante cerca de **3000 ms cada**. Ambas as imagens originais têm 240×320 pixels.
+- Em um arranque normal, o LÖVE executa as duas telas antes de abrir o menu de título, **somente quando os recursos estão disponíveis**. Sem os PNGs, entra diretamente no menu e continua funcional.
+- O menu não desenha mais `splash.png` por trás dos botões. A geometria do menu propriamente dito continua provisória, à espera de comparação com o MIDlet real.
+- A abertura não inicia uma nova partida, não modifica salvamentos e não avança o tempo simulado. `tests/v56_j2me_intro.lua` cobre sequência, duração, renderização exclusiva e entradas bloqueadas durante a introdução.
+- Como `oberon.png` e `splash.png` podem não acompanhar um checkout público, importe os seus recursos com `python scripts/import_j2me_assets.py <seu-jar>.jar` para visualizar ambas as telas.
+
+
 
 ## Estado verificado da reconstrução (v55)
 
