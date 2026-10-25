@@ -3,6 +3,7 @@
 -- O numero de visitantes (decoracao, publicidade, quantidade de peixes)
 -- e o intervalo aproximado sao adaptacoes; ver docs/FASE_8.md.
 local Catalog=require('core.catalog')
+local Clock=require('core.sim_clock')
 local M={VISIT_SECONDS=5,HISTORY_LIMIT=12}
 function M.key(body,fin) return body..'-'..fin end
 function M.ensure(game,body,fin)
@@ -98,7 +99,7 @@ function M.advance(game,seconds)
   return 0
  end
  local interval=M.VISIT_SECONDS
- local elapsed=(s.market.elapsed or 0)+math.max(0,seconds or 0)
+ local elapsed=Clock.snap((s.market.elapsed or 0)+math.max(0,seconds or 0))
  local visits=math.floor((elapsed+0.0000001)/interval)
  s.market.elapsed=elapsed-visits*interval
  if s.market.elapsed<0 then s.market.elapsed=0 end
