@@ -64,6 +64,8 @@ test('aceita contador ausente em salvamento legado',function()
  local s=JSON.decode(JSON.encode(g.s))
  s.stats.failed_treatments=nil
  s.stats.mutations=nil
+ -- Contadores ausentes sao normais em saves LEGADOS; na v9 indicam dano.
+ s.version=8
  local loaded,err=Game.fromTable(s)
  assert(loaded,err)
  assert(loaded.s.stats.failed_treatments==0 and loaded.s.stats.mutations==0)
