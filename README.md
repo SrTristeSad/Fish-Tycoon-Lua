@@ -1,4 +1,46 @@
-# Fish Tycoon Lua — v71: ordem do RNG de doenças fiel ao Java
+# Fish Tycoon Lua — v72: ciclo biologico na ordem do JAR
+
+## Versao 72 — crescimento, condicao, doenca e alimentacao
+
+A auditoria do metodo Java `n.a(o)` confirmou que cada
+peixe passa pela rotina de condicao `n.c(m)`, pela de
+risco de doenca `n.a(m,int)` e, somente depois, pela de
+alimentacao `n.a(m,boolean)`.
+
+O Lua processava alimentacao primeiro. Uma queda de comida no
+ciclo atual podia reduzir precocemente a condicao de peixes
+que antes do ciclo ainda tinham cinco unidades de comida.
+
+- **Ordem corrigida:** calcula condicao/saude, verifica
+  infeccao e depois reduz a reserva alimentar, preservando as
+  penalidades de fome extras do port Lua calculadas com o estoque
+  existente **antes** da alimentacao.
+- **Comida no nivel inicial:** no Java a pesquisa de comida
+  nivel 1 decrementa a reserva **diretamente**, sem chamar RNG.
+  O port consumia desnecessariamente um `j.c(100)` para
+  todos os peixes, a cada ciclo. Agora o RNG alimentar somente
+  e consumido nos niveis seguintes, com limiares `<=60`
+  e `<=30`. O quarto nivel continua uma adaptacao Lua.
+- **RNG dos equipamentos:** no Java `n.c(m)` verifica
+  `b.d(10)` (aerador) antes de `b.d(9)`
+  (aquecedor); esta ordem foi respeitada.
+- **Testes:** `tests/v72_food_cycle_order.lua` cobre
+  ausencia de sorteio no nivel inicial, sequencia de sorteios
+  nas pesquisas, limite alimentar de cinco unidades,
+  planta nutritiva e 12 linhas do tempo deterministicas.
+  `tests/v71_disease_rng.lua` foi atualizado para a ordem
+  Java e continua cobrindo 144 cenarios de sementes.
+  
+**Limites:** as penalidades adicionais de fome e algumas
+bonificacoes por equipamento continuam adaptacoes declaradas do
+port Lua. A versao 72 corrige as chamadas e a sequencia
+biologica comprovadas, mas nao afirma que todos os valores
+de saude e fome sejam 1:1 com o MIDlet.
+O algoritmo de RNG de 48 bits da v70 e a leitura dos saves
+anteriores permanecem compativeis.
+
+## Historico anterior
+
 
 ## Versao 71 — risco de infeccao, planta de cura e caracol
 
