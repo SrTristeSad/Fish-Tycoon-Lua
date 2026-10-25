@@ -28,7 +28,7 @@ function Smoke.new(view)
    assert(v.screen=='research') end},
   {'09-configuracoes',function(v)
    v:key('escape');v:draw()
-   v:press(v.ox+114*v.scale,v.oy+160*v.scale)
+   v:press(v.ox+114*v.scale,v.oy+126*v.scale)
    assert(v.screen=='settings') end},
   {'10-vendas',function(v)
    v:key('escape');v:key('escape');v:draw()
