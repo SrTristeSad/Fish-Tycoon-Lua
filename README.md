@@ -1,4 +1,40 @@
-# Fish Tycoon Lua — v67: validacao da genetica e protecao de saves
+# Fish Tycoon Lua — v68: mutacao especial conferida com o JAR
+
+## Versao 68 — sorteios de mutacao no nascimento
+
+Analise direta do metodo Java `n.a(m,o,int)` no JAR
+`Fish_Tycoon_240x320-111845-mobiles24.jar`.
+
+- **Chance da mutacao:** o efeito do sexto peixe especial usa
+  `j.c(100)<=15` (16 em 100 resultados possiveis).
+- **Parte alterada:** `j.c(100)<=49` seleciona a barbatana
+  do parceiro armazenada em `m.g[5]`; caso contrario, o corpo.
+- **Direcao correta:** em indices internos (0..20 no Java), o
+  sorteio `j.c(100)<=49` aumenta o indice; caso contrario, diminui.
+  O Lua anterior usava um sorteio de duas possibilidades e aplicava
+  a direcao inversa para um dos resultados.
+- **Limites importantes:** no indice 0 (equivalente ao 1 do Lua),
+  o Java consome uma rolagem de direcao mesmo quando obriga +1.
+  No indice 20 (21 do Lua) nao consome essa rolagem e obriga -1.
+  Corrigir esse numero de chamadas preserva a ordem dos sorteios
+  que acontecem depois na simulacao.
+- **Irmaos:** o parceiro sofre a mutacao uma so vez antes da
+  criacao dos filhotes adicionais. Os irmaos compartilham a
+  mesma variedade resultante.
+- **Regressao:** `tests/v68_j2me_mutation_rng.lua` usa sorteios
+  controlados para verificar limiares, corpo, barbatana, limites,
+  numero de chamadas e gestacao com dois filhotes. O antigo
+  `tests/v15_jar_genetics.lua` foi atualizado para a quantidade
+  de sorteios comprovada pelo bytecode.
+
+Nao houve mudancas na interface, tabela de preços, formula de
+media inteira, tempo de gestacao ou capacidade dos tanques.
+Acorrecoes da sequencia de RNG podem alterar resultados futuros
+de partidas existentes, embora salvamentos validos continuem
+compativeis. O motor ainda nao e uma replica integral do Java.
+
+## Versoes anteriores
+
 
 ## Versao 67 — integridade dos descendentes
 
