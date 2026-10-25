@@ -81,7 +81,12 @@ function json.decode(str)
       pos=pos+1;white();local t={}
       if str:sub(pos,pos)==']' then pos=pos+1;return t end
       while true do
-        t[#t+1]=value(depth+1);white();c=str:sub(pos,pos);pos=pos+1
+        -- Nao comprimir silenciosamente [peixe,null,peixe]:
+        -- no save, isso apaga um indice e pode eliminar animais sem erro.
+        -- Objetos continuam permitindo null como chave ausente.
+        local item=value(depth+1)
+        if item==nil then fail() end
+        t[#t+1]=item;white();c=str:sub(pos,pos);pos=pos+1
         if c==']' then return t end
         if c~=',' then fail() end
       end
