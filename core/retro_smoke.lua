@@ -146,6 +146,24 @@ function Smoke.new(view)
    v.g.s.cash=120;v.g.s.research_job=false
    v.screen='research';v:draw()
    assert(v.screen=='research')
+  end},
+  {'28-titulo-com-save',function(v)
+   v.screen='title';v.selected=nil;v:draw()
+   assert(v.hasSave and v.screen=='title')
+  end},
+  {'29-confirmar-novo-jogo',function(v)
+   v:press(v.ox+120*v.scale,v.oy+225*v.scale)
+   assert(v.screen=='confirm' and v.confirmFrom=='title')
+  end},
+  {'30-opcoes-do-titulo',function(v)
+   v:key('escape');assert(v.screen=='title')
+   v:draw()
+   v:press(v.ox+120*v.scale,v.oy+253*v.scale)
+   assert(v.screen=='settings' and v.from=='title')
+  end},
+  {'31-voltar-ao-titulo',function(v)
+   v:key('escape')
+   assert(v.screen=='title')
   end}
  }
  return setmetatable({v=view,steps=actions,n=1,ready=false,pending=false,done=false},Smoke)
@@ -155,7 +173,7 @@ function Smoke:afterDraw()
  local stage=self.steps[self.n]
  if not stage then
   assert(love.filesystem.write('retro-smoke/ok.txt','Twenty-seven J2ME-style screens rendered\n'))
-  self.done=true;print('FISH_RETRO_SMOKE_OK 27');love.event.quit(0);return
+  self.done=true;print('FISH_RETRO_SMOKE_OK '..#self.steps);love.event.quit(0);return
  end
  if not self.ready then
   local ok,err=pcall(stage[2],self.v)
