@@ -70,7 +70,7 @@ check('F1 e F2 ativam somente os comandos inferiores visiveis',function()
  v:draw();v:key('f2');assert(v.screen=='detail')
  v:draw();v:key('f2');assert(v.screen=='tank')
  v:draw();v:key('f2');assert(v.screen=='pause')
- v.screen='title';v:draw();v:key('f1');assert(v.screen=='title')
+ v.screen='title';v:draw();v:key('f1');assert(v.screen=='tank') -- SELECT escolhe RESUME no menu WELCOME
 end)
 check('placas For Sale ja pertencem ao fundo tank3 sem texto flutuante',function()
  local f=assert(g:addFish('sale',4,3,20))
