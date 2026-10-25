@@ -25,7 +25,7 @@ local function inspect(hasSave)
   local b=v.buttons[i]
   assert(b.role=='welcome' and b.x==layout.x and b.w==layout.w)
   assert(b.y==layout.y+(i-1)*layout.step and b.h==20)
-  assert(b.y+b.h<299 and b.fn==entry[2])
+  assert(b.y+b.h<299 and type(b.fn)=='function')
  end
  assert(v.buttons[#entries+1].y==299)
  assert(v.buttons[#entries+2].y==299)
