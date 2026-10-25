@@ -30,6 +30,10 @@ end
 -- a partida mutilada, sobrescrevendo o ultimo progresso recuperavel.
 local function denseArray(t)
  if type(t)~='table' then return false end
+ -- JSON {} and [] used to be indistinguishable for an empty collection.
+ -- Keep untagged tables supported for direct Lua calls and older fixtures.
+ local meta=getmetatable(t)
+ if type(meta)=='table' and meta.__json_kind=='object' then return false end
  local count,n=0,#t
  for key in pairs(t) do
   if type(key)~='number' or key%1~=0 or key<1 or key>n then
