@@ -120,8 +120,12 @@ test('caracol e planta de cura diminuem risco de doenca',function()
  local g=Game.new(9);local f=g.s.tanks.main[1]
  f.age=20;f.health=100;f.fed=100;f.body=2;f.tail=1
  g.s.research.environment=2;g.s.research.food=0
- g.random=function() return .002 end -- 20/10000: risco original 30/10000
- dice(g,0)
+ -- Java first rolls j.c(10000)=20; for the snail j.c(100)=0.
+ -- The old floating-point game.random override no longer applies.
+ g.int=function(_,a,b)
+  if a==0 and b==9999 then return 20 end
+  return a
+ end
  Care.step(g,f,'main');eq(f.disease,'ick')
  f.disease=false;g.s.gear.curing_plant=true
  Care.step(g,f,'main');eq(f.disease,false)
@@ -132,7 +136,11 @@ test('idade acima de 600 aumenta risco base sem mudar demais regras',function()
  local g=Game.new(10);local f=g.s.tanks.main[1]
  f.body=1;f.tail=1;f.health=100;f.fed=100;f.age=601
  g.s.research.environment=2;g.s.research.food=0
- g.random=function() return .0017 end -- 17/10000 supera o risco 10, mas nao 25
+ -- j.c(10000)=17 exceeds base risk 10, but not risk 25 at age 601.
+ g.int=function(_,a,b)
+  if a==0 and b==9999 then return 17 end
+  return a
+ end
  Care.step(g,f,'main');assert(f.disease)
 end)
 test('planta de fertilidade permite um segundo nascimento sem peixe magico',function()
