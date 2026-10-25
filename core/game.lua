@@ -2,6 +2,7 @@ local C=require('core.config')
 local Catalog=require('core.catalog')
 local Market=require('core.market')
 local Clock=require('core.sim_clock')
+local SpawnRng=require('core.j2me_spawn_rng')
 local Care=require('core.care')
 local Treatments=require('core.treatments')
 local Game={};Game.__index=Game
@@ -395,6 +396,10 @@ function Game:addFish(room,body,tail,age,genes,sex)
  end
  if not self:hasSpace(room) then return nil,'Tanque cheio ou bloqueado' end
  local s=self.s
+ -- m.a(IIIII) consumes five RNG draws for fish appearance and motion,
+ -- even though motion is currently drawn separately by the Lua UI.
+ -- Consume them only AFTER validation/capacity checks and before quotes.
+ SpawnRng.roll(self)
  -- JAR m.class has no sex field. Lua sex is presentation-only metadata:
  -- choosing it must not consume gameplay RNG used by genetics and sales.
  -- Use the same deterministic fallback as Game.fromTable for legacy fish.
