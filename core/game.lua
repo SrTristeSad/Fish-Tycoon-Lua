@@ -556,6 +556,13 @@ function Game:_tick()
     Market.ensure(self,f.body,f.tail)
     self:_discoverMagic(f)
    end
+   -- No Java (n.a(o)), a(m,o,int) processa os nascimentos ANTES
+   -- da atualizacao de condicao. A implementacao Lua processava Care.step
+   -- primeiro: se a mae morresse ao completar a gestacao no mesmo ciclo,
+   -- todos os filhotes desapareciam sem nascimento.
+   if f.eggs_at and f.gestation_end_age and f.age>f.gestation_end_age then
+    self:_hatch(f)
+   end
    -- Resistencias, alimentacao e risco de doenca centralizados para
    -- isolar regras do JAR das aproximacoes de gameplay.
    Care.step(self,f,room,exposure)
