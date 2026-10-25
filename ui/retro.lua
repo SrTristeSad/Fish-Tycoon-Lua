@@ -61,7 +61,7 @@ function Retro.new(game,hasSave)
 end
 function Retro:init()
  self.assets:init()
- for _,name in ipairs({'splash','assets','gameMenuTank','menutank','store','trhopy_ball'}) do
+ for _,name in ipairs({'oberon','splash','assets','gameMenuTank','menutank','store','trhopy_ball'}) do
   self.images[name]=load(name)
  end
  self.font=love.graphics.newFont(9)
@@ -137,10 +137,35 @@ function Retro:leaveUtility()
  self.screen=dest
  self.focus=nil;self.focusScreen=nil
 end
-function Retro:isPlaying() return self.hasSave and self.screen~='title' and self.screen~='confirm' and self.screen~='settings' end
+-- O MIDlet (d.class, estados 30/31) exibe oberon.png e splash.png
+-- separadamente por aproximadamente 3000 ms cada, antes do menu.
+function Retro:beginIntro()
+ self.introElapsed=0
+ if self.images.oberon then self.screen='intro_oberon'
+ elseif self.images.splash then self.screen='intro_splash'
+ else self.screen='title' end
+ self.focus=nil;self.focusScreen=nil
+end
+function Retro:isPlaying()
+ return self.hasSave and self.screen~='title' and self.screen~='confirm'
+  and self.screen~='settings' and self.screen~='intro_oberon'
+  and self.screen~='intro_splash'
+end
 function Retro:notify(message) self.toast=tostring(message or '');self.toastTime=3.3 end
 function Retro:update(dt)
  self.time=self.time+dt;self.toastTime=math.max(0,self.toastTime-dt)
+ if self.screen=='intro_oberon' or self.screen=='intro_splash' then
+  self.introElapsed=(self.introElapsed or 0)+dt
+  while self.introElapsed>=3 and
+   (self.screen=='intro_oberon' or self.screen=='intro_splash') do
+   self.introElapsed=self.introElapsed-3
+   if self.screen=='intro_oberon' and self.images.splash then
+    self.screen='intro_splash'
+   else
+    self.screen='title'
+   end
+  end
+ end
 end
 function Retro:hit(x,y,w,h,fn,role)
  self.buttons[#self.buttons+1]={x=x,y=y,w=w,h=h,fn=fn,role=role}
@@ -471,15 +496,13 @@ function Retro:drawTank()
  end
 end
 function Retro:title()
- local splash=self.images.splash
- if splash then rgb(255,255,255);love.graphics.draw(splash,0,0)
- else
-  self:background('main')
-  fill(17,61,206,79,28,13,68,.85)
-  stroke(17,61,206,79,245,195,80)
-  centered('FISH TYCOON',79,{253,218,118})
-  centered('MOBILE',103,{240,238,213})
- end
+ -- A splash e' a segunda tela de abertura, nunca um fundo do menu.
+ -- O layout do menu permanece provisório ate a comparacao com o MIDlet.
+ self:background('main')
+ fill(17,61,206,79,28,13,68,.85)
+ stroke(17,61,206,79,245,195,80)
+ centered('FISH TYCOON',79,{253,218,118})
+ centered('MOBILE',103,{240,238,213})
  fill(12,180,216,124,34,18,66,.87);stroke(12,180,216,124,172,112,205)
  self:menuButton('CONTINUE',38,187,164,24,function()
   if not self.hasSave then return end
@@ -998,7 +1021,10 @@ function Retro:draw()
  love.graphics.push();love.graphics.translate(self.ox,self.oy);love.graphics.scale(self.scale)
  love.graphics.setFont(self.font)
  bitmapFont=self.bitmapFont
- if self.screen=='title' then self:title()
+ if self.screen=='intro_oberon' or self.screen=='intro_splash' then
+   local intro=self.images[self.screen=='intro_oberon' and 'oberon' or 'splash']
+   if intro then rgb(255,255,255);love.graphics.draw(intro,0,0) end
+  elseif self.screen=='title' then self:title()
  elseif self.screen=='confirm' then self:confirm()
  elseif self.screen=='tank' or self.screen=='detail' then self:drawTank()
  elseif self.screen=='pause' then self:pause()
@@ -1021,6 +1047,7 @@ function Retro:draw()
  love.graphics.pop()
 end
 function Retro:press(px,py)
+ if self.screen=='intro_oberon' or self.screen=='intro_splash' then return false end
  local x=(px-self.ox)/self.scale
  local y=(py-self.oy)/self.scale
  if x<0 or x>=W or y<0 or y>=H then return false end
@@ -1061,6 +1088,7 @@ function Retro:press(px,py)
  return false
 end
 function Retro:key(k)
+ if self.screen=='intro_oberon' or self.screen=='intro_splash' then return end
  -- Softkeys classicas esquerda/direita do celular, equivalentes a F1/F2
  -- no teclado de PC. So acionam comandos visiveis e habilitados.
  if k=='f1' or k=='f2' then
