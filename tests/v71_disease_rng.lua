@@ -38,42 +38,41 @@ local function scripted(name,gear,rolls,expected,expectedDisease,expectedRisk)
  end
  return game,fish
 end
--- No treatments: always draw food first, then j.c(10000).
-scripted('healthy',{},{{0,99,0},{0,9999,9999}},2,false,true)
-scripted('infection',{},{{0,99,0},{0,9999,0},{0,1,0}},3,'ick',true)
+-- Java calls disease before feeding. Level 1 food has NO RNG call.
+scripted('healthy',{},{{0,9999,9999}},2,false,true)
+scripted('infection',{},{{0,9999,0},{0,1,0}},3,'ick',true)
 -- Snail protection: illness draw already happened when j.c(100) runs.
 scripted('snail', {snail=true},
- {{0,99,0},{0,9999,4},{0,99,0},{0,1,1}},4,'fungus',true)
+ {{0,9999,4},{0,99,0},{0,1,1}},4,'fungus',true)
 -- The plant short-circuits the snail: only ONE halving and no j.c(100).
 scripted('plant and snail no illness',{snail=true,curing_plant=true},
- {{0,99,0},{0,9999,5}},2,false,true)
+ {{0,9999,5}},2,false,true)
 scripted('plant and snail illness',{snail=true,curing_plant=true},
- {{0,99,0},{0,9999,4},{0,1,1}},3,'fungus',true)
+ {{0,9999,4},{0,1,1}},3,'fungus',true)
 -- With only snail and failed 50% roll, base risk remains 10.
 scripted('snail does not protect',{snail=true},
- {{0,99,0},{0,9999,8},{0,99,99},{0,1,0}},4,'ick',true)
+ {{0,9999,8},{0,99,99},{0,1,0}},4,'ick',true)
 -- Juvenile/diseased fish never request j.c(10000).
 local young,youngFish=isolated(71002,{snail=true})
 youngFish.age=8
 local youngCalls=0
-young.int=function(_,a,b)youngCalls=youngCalls+1;assert(a==0 and b==99);return 99 end
+young.int=function(_,a,b)youngCalls=youngCalls+1;error('Juvenile drew unexpected RNG') end
 Care.step(young,youngFish,'main',0)
-assert(youngCalls==1 and not youngFish.disease)
+assert(youngCalls==0 and not youngFish.disease)
 local sick,sickFish=isolated(71003,{snail=true})
 sickFish.disease='ick'
 local sickCalls=0
-sick.int=function(_,a,b)sickCalls=sickCalls+1;assert(a==0 and b==99);return 99 end
+sick.int=function(_,a,b)sickCalls=sickCalls+1;error('Already ill adult drew unexpected RNG') end
 Care.step(sick,sickFish,'main',0)
-assert(sickCalls==1 and sickFish.disease=='ick')
+assert(sickCalls==0 and sickFish.disease=='ick')
 
 -- Cross-check the new 48-bit RNG's state with the exact expected
--- sequence of Java nextInt(100), nextInt(10000), [nextInt(100)].
+-- sequence: nextInt(10000), optional nextInt(100). No food RNG at level 1.
 for seed=1,48 do
  for _,gear in ipairs({{}, {snail=true}, {snail=true,curing_plant=true}}) do
   local g,fish=isolated(71200+seed,gear)
   local state=g.s.rng
-  local feed,risk,snail
-  state,feed=J2ME.nextInt(state,100)
+  local risk,snail
   state,risk=J2ME.nextInt(state,10000)
   local limit=10
   if gear.curing_plant then
