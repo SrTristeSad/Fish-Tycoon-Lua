@@ -1,4 +1,37 @@
-# Fish Tycoon Lua — v64: correcoes do nucleo de nascimentos e relogio
+# Fish Tycoon Lua — v65: auditoria de integridade de nascimentos e vendas
+
+## Versao 65 — fila de ovos e precos inteiros
+
+Auditoria do nucleo Lua sobre as operacoes que mudam simultaneamente
+o numero de peixes, o saldo em dinheiro e o estado persistido.
+
+- **Ovos comprados em espera:** quando havia varios ovos prontos e
+  poucas vagas no tanque 1, `Game:_events()` percorria a lista ao
+  contrario e fazia o ovo mais recente nascer primeiro. Agora a fila
+  respeita a ordem em que os ovos foram comprados; apenas os ovos
+  efetivamente nascidos sao removidos da lista, sem pular os seguintes.
+- **Lotacao e morte no mesmo ciclo:** se o tanque esta cheio, um ovo
+  aguarda vaga. Se um peixe morre no ciclo em que o ovo esta pronto,
+  o nascimento acontece uma unica vez depois da liberacao da vaga.
+- **Preco fracionario corrompia o save:** `Game:changePrice` aceitava
+  ajustes como +2.5 e `Game:sell` registrava receita decimal;
+  `stats.earned` exige inteiro na validacao e a partida nao podia
+  mais ser salva. Agora ajustadores de preco aceitam somente inteiros,
+  `sell` recusa valores invalidos antes de remover o peixe e o
+  carregador recusa valores de saldo/preco fracionarios em saves v9.
+- **Testes:** `tests/v65_birth_queue.lua` verifica a fila, a
+  recuperacao de ovos que aguardam vaga, a morte simultanea e
+  simulacao identica em um passo ou segundo a segundo.
+  `tests/v65_price_integrity.lua` verifica venda, renda, saldo
+  e integridade dos saves mesmo apos pedidos invalidos.
+
+Esta versao nao altera os preços originais dos peixes, probabilidades,
+genes, capacidade de 18 lugares nem o tempo dos ovos. A regra FIFO
+evita que ovos mais novos ganhem prioridade quando o tanque esta cheio.
+Os testes nao comprovam equivalencia integral com o JAR original.
+
+## Historico — v64 e anteriores
+
 
 ## Versao 64 — transicoes de gestacao, morte e eventos
 
