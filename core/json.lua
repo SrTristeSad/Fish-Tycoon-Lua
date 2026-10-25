@@ -1,5 +1,14 @@
 -- JSON puro, sem execucao arbitraria de codigo durante o carregamento.
 local json={}
+-- Preserve container types from serialized input. An empty JSON object {}
+-- must never be interchangeable with an empty JSON array [], especially
+-- for tanks, purchased eggs, event queues and market history.
+local arrayMeta={__json_kind='array'}
+local objectMeta={__json_kind='object'}
+function json.kind(value)
+ local meta=type(value)=='table' and getmetatable(value)
+ return type(meta)=='table' and meta.__json_kind or nil
+end
 local function escape(s)
   return '"' .. s:gsub('[%z\1-\31\\"]',function(c)
     local map={['\\']='\\\\',['"']='\\"',['\b']='\\b',['\f']='\\f',['\n']='\\n',['\r']='\\r',['\t']='\\t'}
@@ -7,6 +16,7 @@ local function escape(s)
   end) .. '"'
 end
 local function array(t)
+  if json.kind(t)=='object' then return false end
   local max, n=0,0
   for k in pairs(t) do
     if type(k)~='number' or k<1 or k%1~=0 then return false end
@@ -78,7 +88,7 @@ function json.decode(str)
     white();local c=str:sub(pos,pos)
     if c=='"' then return stringval() end
     if c=='[' then
-      pos=pos+1;white();local t={}
+      pos=pos+1;white();local t=setmetatable({},arrayMeta)
       if str:sub(pos,pos)==']' then pos=pos+1;return t end
       while true do
         -- Nao comprimir silenciosamente [peixe,null,peixe]:
@@ -92,7 +102,7 @@ function json.decode(str)
       end
     end
     if c=='{' then
-      pos=pos+1;white();local t,seen={},{}
+      pos=pos+1;white();local t,seen=setmetatable({},objectMeta),{}
       if str:sub(pos,pos)=='}' then pos=pos+1;return t end
       while true do
         white();local k=stringval();white()
