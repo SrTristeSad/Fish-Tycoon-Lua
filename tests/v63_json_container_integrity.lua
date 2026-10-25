@@ -19,6 +19,8 @@ assert(JSON.kind(JSON.decode('{"arr":[{},[]]}').arr[1])=='object')
 assert(JSON.kind(JSON.decode('{"arr":[{},[]]}').arr[2])=='array')
 
 local fresh=Game.new(6301)
+fresh.s.unlocked.second=true
+assert(fresh:addFish('second',2,2,20))
 local complete=JSON.encode(fresh.s)
 local parsed=JSON.decode(complete)
 assert(JSON.kind(parsed.tanks.second)=='array')
@@ -26,8 +28,8 @@ assert(JSON.kind(parsed.eggs)=='array')
 assert(JSON.kind(parsed.market.history)=='array')
 assert(Game.fromTable(JSON.decode(complete)))
 
-local function corrupt(field)
- local source,n=complete:gsub(field,'',1)
+local function corrupt(field,replacement)
+ local source,n=complete:gsub(field,replacement,1)
  assert(n==1,'Fixture missing '..field)
  local broken=JSON.decode(source)
  local loaded,reason=Game.fromTable(broken)
@@ -36,9 +38,9 @@ local function corrupt(field)
 end
 -- An empty object in a field intended to be an array previously passed
 -- validation, allowing a genuinely lost list of fish to appear legitimate.
-local malformedSale=corrupt('"second":%[%]')
-corrupt('"eggs":%[%]')
-corrupt('"history":%[%]')
+local malformedSale=corrupt('"second":%b[]','"second":{}')
+corrupt('"eggs":%[%]','"eggs":{}')
+corrupt('"history":%[%]','"history":{}')
 local events=complete:gsub('"events":%b[]','"events":{}',1)
 assert(events~=complete,'Could not replace events list')
 local badEvents,reason=Game.fromTable(JSON.decode(events))
