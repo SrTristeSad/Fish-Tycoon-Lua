@@ -1,14 +1,29 @@
-# Fish Tycoon Lua — v56: abertura J2ME derivada do JAR (240 × 320)
+# Fish Tycoon Lua — v57: sequencia de inicializacao J2ME (240 × 320)
 
-## Versão 56 — duas telas de abertura confirmadas pelo bytecode
+## Versão 57 — fluxo de abertura confirmado no bytecode
 
-- Os estados 30 e 31 de `d.class` exibem `oberon.png` e `splash.png`, respectivamente, durante cerca de **3000 ms cada**. Ambas as imagens originais têm 240×320 pixels.
-- Em um arranque normal, o LÖVE executa as duas telas antes de abrir o menu de título, **somente quando os recursos estão disponíveis**. Sem os PNGs, entra diretamente no menu e continua funcional.
-- O menu não desenha mais `splash.png` por trás dos botões. A geometria do menu propriamente dito continua provisória, à espera de comparação com o MIDlet real.
-- A abertura não inicia uma nova partida, não modifica salvamentos e não avança o tempo simulado. `tests/v56_j2me_intro.lua` cobre sequência, duração, renderização exclusiva e entradas bloqueadas durante a introdução.
-- Como `oberon.png` e `splash.png` podem não acompanhar um checkout público, importe os seus recursos com `python scripts/import_j2me_assets.py <seu-jar>.jar` para visualizar ambas as telas.
+A sequencia **correta** do JAR nao e simplesmente duas imagens consecutivas.
+O fluxo observado em `d.class`, `e.class` e na tabela inglesa `E` e:
 
+1. Estado **30**: `oberon.png` durante aproximadamente 3 segundos.
+2. Estado **34**: pergunta **DO YOU WANT SOUND?**, com softkeys **YES** e **NO**. A resposta controla o audio do cliente.
+3. Estado **31**: `splash.png` durante aproximadamente 3 segundos, apos a escolha de som.
+4. Estado **32**: tela principal com titulo **WELCOME** e opcoes do menu.
 
+O estado 33 seleciona idioma quando nao existe uma preferencia armazenada no MIDlet;
+essa tela ainda nao foi reconstruida. O layout do menu WELCOME e do prompt de
+som ainda precisa ser comparado visualmente com o Java em execucao.
+
+O LÖVE ja implementa o prompt de som entre as duas imagens e respeita a resposta,
+sem modificar a partida, nem avancar o tempo do jogo durante a abertura.
+`tests/v56_j2me_intro.lua` e `tests/v57_sound_prompt.lua` cobrem o fluxo.
+Sem as imagens importadas do JAR, o cliente preserva o acesso ao menu.
+
+## Versão 56 — introducao dos dois PNGs originais
+
+A versao 56 separou `oberon.png` e `splash.png` do menu, mas inicialmente as
+exibia em sequencia direta. A etapa 57 corrige a omissao da pergunta sobre som
+identificada no bytecode. Nao considerar a sequencia antiga como fiel ao JAR.
 
 ## Estado verificado da reconstrução (v55)
 
