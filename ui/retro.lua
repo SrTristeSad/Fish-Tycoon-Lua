@@ -518,24 +518,53 @@ function Retro:introSound()
   {label='YES',fn=function()self:chooseIntroSound(true) end},
   {label='NO',fn=function()self:chooseIntroSound(false) end})
 end
+-- d.class, estado 32, chama f(32): strings 1..9 do recurso E.
+-- RESUME depende de save, MORE GAMES so existe em determinadas edicoes.
+-- Os nomes sao exatos; a geometria segue provisoria ate captura do MIDlet.
+function Retro:titleEntries()
+ local entries={}
+ if self.hasSave then
+  entries[#entries+1]={'RESUME',function()self.screen='tank';self.room='main' end}
+ end
+ entries[#entries+1]={'START NEW GAME',function()
+  if self.hasSave then self.confirmFrom='title';self.screen='confirm'
+  else self:startNewGame() end
+ end}
+ entries[#entries+1]={'OPTIONS',function()self.from='title';self.screen='settings' end}
+ entries[#entries+1]={'TROPHY',function()self.screen='collection' end}
+ entries[#entries+1]={'STATS',function()self.screen='stats' end}
+ entries[#entries+1]={'HELP',function()self.screen='help' end}
+ entries[#entries+1]={'ABOUT',function()self.from='title';self.screen='about' end}
+ if self.onMoreGames then entries[#entries+1]={'MORE GAMES',self.onMoreGames} end
+ entries[#entries+1]={'EXIT',function()
+  if self.onSave and self.hasSave then
+   local ok,err=self.onSave()
+   if not ok then self:notify(err or 'SAVE ERROR');return end
+  end
+  if self.onExit then self.onExit()
+  elseif love and love.event and love.event.quit then love.event.quit() end
+ end}
+ return entries
+end
 function Retro:title()
- -- A splash e' a segunda tela de abertura, nunca um fundo do menu.
- -- O layout do menu permanece provisório ate a comparacao com o MIDlet.
- self:background('main')
- fill(17,61,206,79,28,13,68,.85)
- stroke(17,61,206,79,245,195,80)
- centered('FISH TYCOON',79,{253,218,118})
- centered('MOBILE',103,{240,238,213})
- fill(12,180,216,124,34,18,66,.87);stroke(12,180,216,124,172,112,205)
- self:menuButton('CONTINUE',38,187,164,24,function()
-  if not self.hasSave then return end
-  self.screen='tank';self.room='main'
- end,not self.hasSave)
- self:menuButton('NEW GAME',38,214,164,24,function()
-  if self.hasSave then self.confirmFrom='title';self.screen='confirm' else self:startNewGame() end
- end)
- self:menuButton('OPTIONS',38,241,164,24,function()self.from='title';self.screen='settings' end)
- self:menuButton('ABOUT',38,268,164,24,function()self.from='title';self.screen='about' end)
+ local art=self.images.menutank or self.assets.images.menutank
+ if art then
+  rgb(255,255,255);love.graphics.draw(art,0,24)
+ else self:background('main') end
+ fill(9,29,222,35,37,22,70,.9)
+ stroke(9,29,222,35,168,116,187)
+ centered('WELCOME',39,{246,226,164})
+ local entries=self:titleEntries()
+ -- Ate nove entradas cabem em 240x320, sem sobrepor os softkeys.
+ local startY=66
+ for i,entry in ipairs(entries) do
+  self:menuButton(entry[1],31,startY+(i-1)*27,178,23,entry[2])
+ end
+ self:buttonHint({label='SELECT',fn=function()
+  local index=self.focus
+  if not index or index>#entries then index=1 end
+  entries[index][2]()
+ end},{label='EXIT',fn=entries[#entries][2]})
 end
 function Retro:startNewGame()
  if not self.onNewGame then return self:notify('NEW GAME NOT AVAILABLE') end
