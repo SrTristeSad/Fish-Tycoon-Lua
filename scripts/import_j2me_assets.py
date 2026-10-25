@@ -13,7 +13,9 @@ from zipfile import ZipFile, BadZipFile
 
 PNG_SIGNATURE = b'\x89PNG\r\n\x1a\n'
 REQUIRED = ('assets.png', 'splash.png', 'gameMenuTank.png')
-OPTIONAL = ('trhopy_ball.png', 'store.png', 'menutank.png')
+OPTIONAL = ('fish.png', 'fins.png', 'tank1.png', 'tank2.png', 'tank3.png',
+            'tanktop.png', 'isolation_tank.png', 'trhopy_ball.png',
+            'store.png', 'menutank.png')
 
 def png_dimensions(data, filename):
     """Check chunk boundaries and CRCs before accepting a PNG from the JAR."""
