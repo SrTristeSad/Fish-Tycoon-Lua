@@ -8,7 +8,7 @@ love={graphics={
  newImage=function(path)
   local name=nameOf(path)
   assert(present[name],'missing test asset: '..tostring(name))
-  return {setFilter=function()end}
+  return {setFilter=function()end,getDimensions=function() return 256,512 end}
  end,
 }}
 local a=Assets.new()
