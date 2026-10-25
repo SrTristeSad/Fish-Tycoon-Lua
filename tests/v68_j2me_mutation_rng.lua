@@ -33,13 +33,13 @@ local function reproduce(label,rolls,expected,params,magicEnabled)
 end
 
 -- Without the sixth magic fish, there are no mutation RNG calls at all.
-reproduce('no special',{}, {11,11,10,10},{11,11,10,10},false)
+reproduce('no special',{}, {10,10,10,10},{11,11,10,10},false)
 -- Java uses <=15 on 0..99 (16%).
-reproduce('roll 16 no mutation',{16},{11,11,10,10},{11,11,10,10})
-reproduce('roll 15 triggers mutation',{15,49,49},{11,11,10,11},{11,11,10,10})
+reproduce('roll 16 no mutation',{16},{10,10,10,10},{11,11,10,10})
+reproduce('roll 15 triggers mutation',{15,49,49},{10,11,10,11},{11,11,10,10})
 -- 49 selects partner fin; 50 selects partner body.
-reproduce('fin increases',{0,49,0},{11,11,10,11},{11,11,10,10})
-reproduce('fin decreases',{0,49,50},{11,10,10,9},{11,11,10,10})
+reproduce('fin increases',{0,49,0},{10,11,10,11},{11,11,10,10})
+reproduce('fin decreases',{0,49,50},{10,10,10,9},{11,11,10,10})
 reproduce('body increases',{0,50,49},{11,10,11,10},{11,11,10,10})
 reproduce('body decreases',{0,50,50},{10,10,9,10},{11,11,10,10})
 -- Lower boundary (Java 0; Lua 1) consumes a third RNG roll,
