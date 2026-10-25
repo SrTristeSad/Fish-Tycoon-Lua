@@ -377,7 +377,10 @@ function Game:addFish(room,body,tail,age,genes,sex)
  end
  if not self:hasSpace(room) then return nil,'Tanque cheio ou bloqueado' end
  local s=self.s
- local f={id=s.next_id,body=body,tail=tail,age=age or 0,sex=sex or (self:random()<.5 and 'F' or 'M'),fed=100,
+ -- JAR m.class has no sex field. Lua sex is presentation-only metadata:
+ -- choosing it must not consume gameplay RNG used by genetics and sales.
+ -- Use the same deterministic fallback as Game.fromTable for legacy fish.
+ local f={id=s.next_id,body=body,tail=tail,age=age or 0,sex=sex or (s.next_id%2==1 and 'F' or 'M'),fed=100,
   health=100,disease=false,eggs_at=false,mate=false,
   genes=genes or {body={body,body},tail={tail,tail}},price=0}
  f.price=self:fishPrice(f)
