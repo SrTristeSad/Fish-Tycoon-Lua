@@ -35,7 +35,7 @@ check('2/8 move foco; 5 abre OPTIONS; Esc volta',function()
 end)
 check('5 inicia novo jogo quando nao havia save',function()
  v.onNewGame=function()return true,nil,Game.new(2201)end
- v:draw();v:key('5');assert(v.screen=='tank' and v.hasSave and v.g~=initial)
+ v:key('2');v:draw();v:key('5');assert(v.screen=='tank' and v.hasSave and v.g~=initial)
 end)
 check('com save Enter escolhe RESUME',function()
  v.screen='title';v.focus=nil;v.focusScreen=nil;v:draw()
