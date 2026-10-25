@@ -9,12 +9,14 @@ for seed=1,80 do
  local initialRng=g.s.rng
  local id=g.s.next_id
  local baby=assert(g:addFish('main',1,1,0))
- assert(g.s.rng==initialRng,
-  'Randomized cosmetic sex consumed simulation RNG for juvenile: '..seed)
+ -- Fish creation spends five RNG draws for Java motion. Cosmetic sex
+ -- must not spend a sixth roll (verified against explicit sex below).
+ assert(g.s.rng~=initialRng,
+  'Java fish constructor failed to advance motion RNG: '..seed)
  assert(baby.sex==(id%2==1 and 'F' or 'M'))
  local save=JSON.encode(g.s)
  local reopened=assert(Game.fromTable(JSON.decode(save)))
- assert(reopened.s.rng==initialRng and reopened:find(baby.id).sex==baby.sex)
+ assert(reopened.s.rng==g.s.rng and reopened:find(baby.id).sex==baby.sex)
 end
 
 -- The adult quote is allowed to consume RNG, but choosing a cosmetic
@@ -37,15 +39,14 @@ for seed=1,80 do
   'Cosmetic sex perturbed simulation after growth: '..seed)
 end
 
--- The child's ID defines only cosmetic metadata; two consecutive
--- births must keep the original RNG state when no random game event
--- other than insertion is involved.
+-- Child IDs determine cosmetic sex. Spawning consumes five Java
+-- motion draws per fish, independent of cosmetic metadata.
 local births=Game.new(66700)
 local before=births.s.rng
 local id1=births.s.next_id
 local child1=assert(births:addFish('main',3,4,0))
 local child2=assert(births:addFish('main',3,4,0))
-assert(births.s.rng==before)
+assert(births.s.rng~=before)
 assert(child1.sex==(id1%2==1 and 'F' or 'M'))
 assert(child2.sex==((id1+1)%2==1 and 'F' or 'M'))
 local valid,why=Game.fromTable(JSON.decode(JSON.encode(births.s)))
