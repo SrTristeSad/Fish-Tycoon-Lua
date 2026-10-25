@@ -74,7 +74,8 @@ function Assets:drawFish(f,x,y,scale,face)
  return true
 end
 function Assets:tankBackground(room,x,y,w,h)
- if not self.available then return false end
+ -- A disponibilidade dos fundos nao depende do atlas dos peixes.
+ if not (love and love.graphics and love.graphics.draw) then return false end
  local g=love.graphics
  g.setColor(1,1,1,1)
  -- O tanque de isolamento tem uma arte independente de 98x46 pixels
