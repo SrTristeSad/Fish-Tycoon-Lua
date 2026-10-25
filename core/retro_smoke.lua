@@ -5,7 +5,7 @@ function Smoke.new(view)
  local actions={
   {'01-menu',function(v) assert(v.screen=='title') end},
   {'02-tanque',function(v)
-   v:press(v.ox+120*v.scale,v.oy+80*v.scale); assert(v.screen=='tank') end},
+   v:press(v.ox+120*v.scale,v.oy+110*v.scale); assert(v.screen=='tank') end},
   {'03-peixe',function(v)
    -- Fixture da captura 240x320 enviada pelo usuario:
    -- GREENFIN FRUITFISH, idade 21. So existe no save descartavel do CI.
@@ -28,7 +28,7 @@ function Smoke.new(view)
    assert(v.screen=='research') end},
   {'09-configuracoes',function(v)
    v:key('escape');v:draw()
-   v:press(v.ox+114*v.scale,v.oy+126*v.scale)
+   v:press(v.ox+114*v.scale,v.oy+160*v.scale)
    assert(v.screen=='settings') end},
   {'10-vendas',function(v)
    v:key('escape');v:key('escape');v:draw()
@@ -152,7 +152,7 @@ function Smoke.new(view)
    assert(v.hasSave and v.screen=='title')
   end},
   {'29-confirmar-novo-jogo',function(v)
-   v:press(v.ox+120*v.scale,v.oy+104*v.scale)
+   v:press(v.ox+120*v.scale,v.oy+135*v.scale)
    assert(v.screen=='confirm' and v.confirmFrom=='title')
   end},
   {'30-opcoes-do-titulo',function(v)
