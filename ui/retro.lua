@@ -137,19 +137,31 @@ function Retro:leaveUtility()
  self.screen=dest
  self.focus=nil;self.focusScreen=nil
 end
--- O MIDlet (d.class, estados 30/31) exibe oberon.png e splash.png
--- separadamente por aproximadamente 3000 ms cada, antes do menu.
+-- Sequencia do MIDlet: 30 (Oberon) -> 34 (DO YOU WANT SOUND?)
+-- -> 31 (Splash) -> 32 (WELCOME/menu). Estado 33 pode preceder
+-- 34 quando o idioma nao estiver configurado (ainda nao portado).
 function Retro:beginIntro()
  self.introElapsed=0
  if self.images.oberon then self.screen='intro_oberon'
- elseif self.images.splash then self.screen='intro_splash'
+ elseif self.images.splash then self.screen='intro_sound'
  else self.screen='title' end
  self.focus=nil;self.focusScreen=nil
+end
+function Retro:chooseIntroSound(enabled)
+ if self.screen~='intro_sound' then return false end
+ if self.soundEnabled~=enabled then
+  if self.onSound then self.soundEnabled=self.onSound()
+  else self.soundEnabled=enabled end
+ end
+ self.introElapsed=0
+ self.screen=self.images.splash and 'intro_splash' or 'title'
+ self.focus=nil;self.focusScreen=nil
+ return true
 end
 function Retro:isPlaying()
  return self.hasSave and self.screen~='title' and self.screen~='confirm'
   and self.screen~='settings' and self.screen~='intro_oberon'
-  and self.screen~='intro_splash'
+  and self.screen~='intro_sound' and self.screen~='intro_splash'
 end
 function Retro:notify(message) self.toast=tostring(message or '');self.toastTime=3.3 end
 function Retro:update(dt)
@@ -159,8 +171,8 @@ function Retro:update(dt)
   while self.introElapsed>=3 and
    (self.screen=='intro_oberon' or self.screen=='intro_splash') do
    self.introElapsed=self.introElapsed-3
-   if self.screen=='intro_oberon' and self.images.splash then
-    self.screen='intro_splash'
+   if self.screen=='intro_oberon' then
+    self.screen='intro_sound'
    else
     self.screen='title'
    end
@@ -494,6 +506,17 @@ function Retro:drawTank()
   end
   self:buttonHint(left,{label='MENU',fn=function()self.screen='pause' end})
  end
+end
+function Retro:introSound()
+ -- Texto e softkeys confirmados em E (tabela inglesa) e d.class estado 34.
+ -- Geometria provisoria ate confrontar a renderizacao real do MIDlet.
+ self:background('main')
+ fill(15,104,210,110,35,20,72,.93)
+ stroke(15,104,210,110,169,113,194)
+ centered('DO YOU WANT SOUND?',148,{252,226,166})
+ self:buttonHint(
+  {label='YES',fn=function()self:chooseIntroSound(true) end},
+  {label='NO',fn=function()self:chooseIntroSound(false) end})
 end
 function Retro:title()
  -- A splash e' a segunda tela de abertura, nunca um fundo do menu.
@@ -1024,6 +1047,7 @@ function Retro:draw()
  if self.screen=='intro_oberon' or self.screen=='intro_splash' then
    local intro=self.images[self.screen=='intro_oberon' and 'oberon' or 'splash']
    if intro then rgb(255,255,255);love.graphics.draw(intro,0,0) end
+  elseif self.screen=='intro_sound' then self:introSound()
   elseif self.screen=='title' then self:title()
  elseif self.screen=='confirm' then self:confirm()
  elseif self.screen=='tank' or self.screen=='detail' then self:drawTank()
