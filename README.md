@@ -1,4 +1,37 @@
-# Fish Tycoon Lua — v65: auditoria de integridade de nascimentos e vendas
+# Fish Tycoon Lua — v66: RNG original e isolamento genetico do nucleo
+
+## Versao 66 — dois problemas da criacao e reproducao
+
+O JAR original guarda o peixe na classe `m.class`, sem um campo
+independente de sexo. O port Lua tem uma etiqueta de sexo para
+apresentacao, mas nao exige sexos diferentes para reproduzir.
+
+- **Sorteio cosmetico que alterava o gameplay:** `Game:addFish` usava
+  `self:random()` para escolher a etiqueta M/F. A chamada consumia
+  um numero do gerador de jogo e deslocava a ordem dos sorteios
+  de mercado, doencas e mutacoes. A etiqueta agora usa a paridade
+  do ID, como o carregador ja fazia para peixes antigos.
+  O RNG so muda quando uma operacao de gameplay exige sorteio.
+- **Tabelas geneticas compartilhadas:** ao adicionar peixes com uma
+  tabela de genes recebida como argumento, o motor podia manter a
+  referencia original. Modificacoes posteriores nessa tabela podiam
+  alterar genes de peixes ja criados. Cada peixe agora guarda
+  sua propria copia da estrutura genetica.
+- **Regressao:** `tests/v66_cosmetic_rng.lua` compara 160 cenarios
+  de sorteios e crescimento com etiquetas implicitas/explicitas,
+  verifica recarregamento dos saves e independencia de genes
+  entre criacoes sucessivas.
+
+Nao foram modificados os indices de corpo/barbatana, duracao de
+gestacao, probabilidades de mutacao, formulas de preco nem a interface.
+Como a sequencia de RNG foi corrigida, **partidas novas podem ter
+resultados aleatorios diferentes dos da versao 65**; saves antigos
+continuam sendo lidos e mantem o estado RNG que ja foi salvo.
+Ainda existem diferencas do port Lua em relacao ao JAR, portanto
+esta etapa nao comprova fidelidade funcional completa.
+
+## Historico de versoes anteriores
+
 
 ## Versao 65 — fila de ovos e precos inteiros
 
