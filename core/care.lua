@@ -76,20 +76,17 @@ function Care.step(game,f,room,exposure)
  local s=game.s
  local foodLevel=s.research.food or 0
  local environmentLevel=s.research.environment or 0
- local drain=Care.foodDrainChance(foodLevel)
- if game:int(0,99)<drain then f.fed=clamp((f.fed or 100)-1) end
- -- b.d(13): planta de nutricao aumenta reserva +5, com 21% de
- -- chance, quando o peixe esta quase sem alimento (g[7]<=2).
- if s.gear.plant and f.fed<=2 and game:int(0,99)<=20 then
-  f.fed=clamp(f.fed+5)
- end
+ -- Java n.a(o) calls c(m) for condition, then a(m,int) for disease,
+ -- and only afterwards a(m,boolean) for nutrition. Changing food first
+ -- could make a fish lose health a full biological cycle too early.
  -- O Java aplica os bonus de equipamentos ANTES de bloquear cura em
  -- peixes doentes ou com menos de 5 unidades de alimento.
  local bonus=0
  if environmentLevel>=3 then bonus=bonus+2 end -- extra Lua, nao JAR
  -- b.d(9/10): aerador e temperatura, +1 com chance de 41% cada.
- if s.gear.heater and game:int(0,99)<=40 then bonus=bonus+1 end
+ -- n.c(m) bytecode checks b.d(10) first (aerator), then b.d(9) (heater).
  if s.gear.aerator and game:int(0,99)<=40 then bonus=bonus+1 end
+ if s.gear.heater and game:int(0,99)<=40 then bonus=bonus+1 end
  if game:hasMagic('vitality',room) then bonus=bonus+1 end -- extra Lua
  local delta=Care.originalConditionDelta(f.body,f.tail,environmentLevel+1,
    f.fed,not not f.disease,bonus)
@@ -120,6 +117,18 @@ function Care.step(game,f,room,exposure)
    s.stats.infections=(s.stats.infections or 0)+1
    game:message('Sinais de '..(f.disease=='ick' and 'Ick' or 'fungos')..' em um peixe!')
   end
+ end
+ -- Java a(m,boolean), called LAST in the adult cycle: level 1
+ -- always decrements fed with no RNG draw. Only levels 2 and 3 call
+ -- j.c(100) to check thresholds 60 and 30 respectively.
+ -- Level 4 remains an explicitly Lua-only extension.
+ local drain=Care.foodDrainChance(foodLevel)
+ if foodLevel<=0 or game:int(0,99)<drain then
+  f.fed=clamp((f.fed or 100)-1)
+ end
+ -- b.d(13): nutrition plant increases reserve +5 when g[7]<=2.
+ if s.gear.plant and f.fed<=2 and game:int(0,99)<=20 then
+  f.fed=clamp(f.fed+5)
  end
  if f.disease and game:hasMagic('cure',room) and game:random()<.2 then
   f.disease=false
