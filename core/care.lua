@@ -107,11 +107,14 @@ function Care.step(game,f,room,exposure)
   local roll=game:int(0,9999)
   local risk=Care.originalDiseaseThreshold(f.body,foodLevel,
    exposure or Care.diseaseExposure(game),f.age)
-  -- b.d(15): planta de cura reduz o limiar pela metade.
-  if s.gear.curing_plant then risk=math.floor(risk/2) end
-  -- b.d(11): caracol de limpeza tem 50% de chance de reduzir o
-  -- limiar pela metade em cada avaliacao.
-  if s.gear.snail and game:int(0,99)<=49 then risk=math.floor(risk/2) end
+  -- Java n.a(m,int) offsets 205..247: curing plant and snail form
+  -- an OR. With the plant equipped, Java immediately halves the risk,
+  -- skipping both the snail draw AND a second halving.
+  if s.gear.curing_plant then
+   risk=math.floor(risk/2)
+  elseif s.gear.snail and game:int(0,99)<=49 then
+   risk=math.floor(risk/2)
+  end
   if roll<risk then
    f.disease=game:int(0,1)==0 and 'ick' or 'fungus'
    s.stats.infections=(s.stats.infections or 0)+1
