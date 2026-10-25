@@ -158,7 +158,7 @@ function Smoke.new(view)
   {'30-opcoes-do-titulo',function(v)
    v:key('escape');assert(v.screen=='title')
    v:draw()
-   v:press(v.ox+120*v.scale,v.oy+126*v.scale)
+   v:press(v.ox+120*v.scale,v.oy+160*v.scale)
    assert(v.screen=='settings' and v.from=='title')
   end},
   {'31-voltar-ao-titulo',function(v)
