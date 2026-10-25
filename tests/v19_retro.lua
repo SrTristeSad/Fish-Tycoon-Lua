@@ -50,7 +50,7 @@ check('novo jogo precisa ser salvo antes de entrar no aquario',function()
   if not ok then return false,e end
   return true,nil,newer
  end
- assert(press(120,225))
+ assert(press(120,78))
  assert(retro.screen=='tank' and retro.hasSave)
  assert(files[Storage.filename])
 end)
@@ -73,14 +73,14 @@ check('controles do JAR: menu, suprimentos, pesquisa e opcoes',function()
 end)
 check('volta ao titulo e pede confirmacao ao criar novo jogo',function()
  assert(press(115,261));assert(retro.screen=='title')
- assert(press(117,228));assert(retro.screen=='confirm')
+ assert(press(117,105));assert(retro.screen=='confirm')
  assert(press(100,210));assert(retro.screen=='title')
 end)
 check('novo jogo cria backup de arquivo anterior antes de reiniciar',function()
  retro.g.s.cash=retro.g.s.cash+123
  assert(Storage.save(retro.g))
  local previous=files[Storage.filename]
- assert(press(117,225));assert(retro.screen=='confirm')
+ assert(press(117,105));assert(retro.screen=='confirm')
  assert(press(113,186));assert(retro.screen=='tank')
  assert(files[Storage.archive] and #files[Storage.archive]>100)
  assert(files[Storage.filename]~=previous)
