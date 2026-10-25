@@ -44,6 +44,20 @@ local function denseArray(t)
  end
  return count==n
 end
+-- Lua genealogy metadata is not part of Java m.class, but optional
+-- allele tables in Lua saves must never carry malformed or cyclic input.
+local function validGenes(g)
+ return type(g)=='table'
+  and denseArray(g.body) and denseArray(g.tail)
+  and #g.body==2 and #g.tail==2
+  and whole(g.body[1],1,21) and whole(g.body[2],1,21)
+  and whole(g.tail[1],1,21) and whole(g.tail[2],1,21)
+  and (g.mutated==nil or type(g.mutated)=='boolean')
+end
+local function cloneGenes(g)
+ return {body={g.body[1],g.body[2]},tail={g.tail[1],g.tail[2]},
+  mutated=g.mutated}
+end
 -- O backup precisa ser usado quando o JSON e sintaticamente valido, mas
 -- possui estado inconsistente. Validar antes de entregar o save ao motor.
 local function validateSave(data)
@@ -67,7 +81,8 @@ local function validateSave(data)
       or (f.price~=nil and not whole(f.price,0))
       or (f.eggs_at and (not finite(f.eggs_at) or f.eggs_at<0))
       or (f.gestation_end_age~=nil and (not finite(f.gestation_end_age) or f.gestation_end_age<0))
-      or (f.disease and f.disease~='ick' and f.disease~='fungus') then
+      or (f.disease and f.disease~='ick' and f.disease~='fungus')
+      or (f.genes~=nil and not validGenes(f.genes)) then
     return false,'Peixe invalido ou ID duplicado'
    end
    if f.mate then
@@ -375,6 +390,9 @@ function Game:addFish(room,body,tail,age,genes,sex)
  if age~=nil and (not finite(age) or age<0) then
   return nil,'Idade do peixe invalida'
  end
+ if genes~=nil and not validGenes(genes) then
+  return nil,'Genetica do peixe invalida'
+ end
  if not self:hasSpace(room) then return nil,'Tanque cheio ou bloqueado' end
  local s=self.s
  -- JAR m.class has no sex field. Lua sex is presentation-only metadata:
@@ -384,7 +402,7 @@ function Game:addFish(room,body,tail,age,genes,sex)
   health=100,disease=false,eggs_at=false,mate=false,
   -- Make a private copy of inherited genes: external edits must not mutate
   -- another fish or silently change its inherited characteristics.
-  genes=genes and copy(genes) or {body={body,body},tail={tail,tail}},price=0}
+  genes=genes and cloneGenes(genes) or {body={body,body},tail={tail,tail}},price=0}
  f.price=self:fishPrice(f)
  s.next_id=s.next_id+1
  table.insert(s.tanks[room],f)
@@ -503,7 +521,7 @@ function Game:_hatch(parent)
    mate.body_index or parent.body,mate.tail_index or parent.tail)
  for _=1,count do
   if self:hasSpace('main') then
-   local child=self:addFish('main',body,tail,0,copy(genes))
+   local child=self:addFish('main',body,tail,0,genes)
    if child then child.parent_ids={parent.id,mate.parent_id or 0}; born=born+1 end
   end
  end
