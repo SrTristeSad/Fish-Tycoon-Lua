@@ -13,7 +13,9 @@ for case=1,8 do
   assert(baseline:breed())
  end
  if case%3==0 then
-  assert(baseline:move(baseline.s.tanks.main[1].id,'sale'))
+  -- Numa gestacao os dois adultos podem estar no isolamento.
+  -- Criar um adulto no tanque de vendas em vez de mover um filhote.
+  assert(baseline:addFish('sale',1,1,20))
   baseline.s.sale_open=true
  end
  if case%4==0 then
