@@ -1,6 +1,7 @@
 local C=require('core.config')
 local Catalog=require('core.catalog')
 local Market=require('core.market')
+local Clock=require('core.sim_clock')
 local Care=require('core.care')
 local Treatments=require('core.treatments')
 local Game={};Game.__index=Game
@@ -610,8 +611,10 @@ function Game:advance(seconds)
   -- Guard against corrupted/imprecise legacy accumulators. Never loop
   -- forever on a zero-length step.
   if step<=EPS then step=math.min(remaining,untilGrowth) end
-  s.time=s.time+step
-  s.growth_elapsed=s.growth_elapsed+step
+  -- Snap subsecond precision to make deadline/RNG ordering independent
+  -- of whether the game advances once or receives many fractional frames.
+  s.time=Clock.snap(s.time+step)
+  s.growth_elapsed=Clock.snap(s.growth_elapsed+step)
   remaining=math.max(0,remaining-step)
   -- Resolve deadline-based events BEFORE the next biological cycle;
   -- e.g. nutrition research completed at 04:00 affects growth at 10:00.
