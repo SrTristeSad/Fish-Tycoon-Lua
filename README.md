@@ -1,3 +1,39 @@
+# Fish Tycoon Lua — v62: auditoria de integridade profunda do nucleo
+
+## Versao 62 — corrupcao silenciosa e seguranca do save
+
+Uma auditoria da v61 reproduziu seis categorias de dados corrompidos
+que o carregador v9 ainda aceitava e corrigia silenciosamente.
+A versao 62 endurece o contrato de serializacao e recuperacao:
+
+- Estatisticas `treatments`, `failed_treatments`, `mutations`,
+  `infections` e demais contadores da v9: nenhum valor invalido sera
+  transformado automaticamente em zero.
+- Estoque `supplies.mutagen` invalido agora rejeita o salvamento.
+- Entradas malformadas de `market.history` e `market.last_visit`
+  nao sao apagadas silenciosamente; `Storage.load` tentara o backup.
+- O parser JSON agora rejeita chaves duplicadas em objetos, evitando
+  que um segundo campo `tanks`, `stats` ou `cash` substitua o anterior.
+- **Verificacao antes de gravar:** `Storage.save` serializa e reabre
+  uma copia do estado para validacao. Se a nova partida nao puder ser
+  carregada, a gravacao e interrompida ANTES de substituir o principal
+  ou o backup, e o relogio persistido e restaurado.
+- Migracoes v2-v8 continuam tolerando contadores introduzidos em
+  versoes recentes que nao existiam nos formatos legados.
+
+Os testes `tests/v62_save_contract.lua` verificam recusas de save
+corrompido, recuperacao via backup e gravações validas. A suite
+`tests/v62_timeline_equivalence.lua` compara avancos simulados em
+passo unico com avancos segundo a segundo, incluindo mercado,
+reproducao, ovos e pesquisas; os cenarios devem convergir.
+
+Estas correcoes focam **integridade e persistencia**, nao alteram
+genetica, preco base, sprites nem o menu. Um backup pode conter um
+progresso anterior; nao e possivel recuperar automaticamente dados ja
+apagados por versoes antigas.
+
+## Historico de versoes anteriores
+
 # Fish Tycoon Lua — v61: auditoria de integridade do nucleo
 
 ## Versao 61 — correcoes graves do estado de jogo e salvamentos
