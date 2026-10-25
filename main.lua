@@ -57,6 +57,9 @@ function love.load()
  if passed>=60 then view.offlineReport=report end
  if err and loaded then view:notify(err)
  elseif err and err~='Sem salvamento anterior' then view:notify(err) end
+ -- Somente o arranque normal exibe as telas originais.
+ -- Capturas e testes nativos continuam com estado inicial controlado.
+ view:beginIntro()
 end
 
 function love.update(dt)
