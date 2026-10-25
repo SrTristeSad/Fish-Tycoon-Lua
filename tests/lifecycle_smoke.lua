@@ -18,7 +18,7 @@ assert(loadfile('main.lua'))()
 love.load();love.update(1);love.draw()
 -- v19: o menu inicial exige NOVO JOGO antes de existir save.
 -- Menu WELCOME sem save: START NEW GAME em y=66..89, viewport escala 2.
-love.mousepressed(240,182,1);love.draw()
+love.mousepressed(240,216,1);love.draw()
 assert(files['fish_tank_save.json'])
 love.keypressed('2');love.draw()
 love.touchpressed(1,100,250);love.draw()
