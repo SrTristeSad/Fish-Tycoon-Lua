@@ -382,7 +382,9 @@ function Game:addFish(room,body,tail,age,genes,sex)
  -- Use the same deterministic fallback as Game.fromTable for legacy fish.
  local f={id=s.next_id,body=body,tail=tail,age=age or 0,sex=sex or (s.next_id%2==1 and 'F' or 'M'),fed=100,
   health=100,disease=false,eggs_at=false,mate=false,
-  genes=genes or {body={body,body},tail={tail,tail}},price=0}
+  -- Make a private copy of inherited genes: external edits must not mutate
+  -- another fish or silently change its inherited characteristics.
+  genes=genes and copy(genes) or {body={body,body},tail={tail,tail}},price=0}
  f.price=self:fishPrice(f)
  s.next_id=s.next_id+1
  table.insert(s.tanks[room],f)
