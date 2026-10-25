@@ -72,4 +72,25 @@ stable:advance(10)
 assert(stable.s.time==10 and stable:countFish()==4,
  'Delta finito valido deixou de ser processado')
 
-print('OK v61: corrupt save fallback, time integrity and invalid delta guard')
+-- Invalid API inputs must never poison a previously valid save.
+local safe=Game.new(61003)
+local previous=JSON.encode(safe.s)
+local fish,errorMessage=safe:addFish('main',2,2,math.huge)
+assert(not fish and errorMessage)
+fish,errorMessage=safe:addFish('main',2,2,-1)
+assert(not fish and errorMessage)
+fish,errorMessage=safe:addFish('main',2,2,0/0)
+assert(not fish and errorMessage)
+fish,errorMessage=safe:addFish('main',math.huge,2,10)
+assert(not fish and errorMessage)
+local id=safe.s.tanks.main[1].id
+for _,invalid in ipairs({math.huge,-math.huge,0/0}) do
+ local allowed,reason=safe:changePrice(id,invalid)
+ assert(not allowed and reason=='Ajuste de preco invalido')
+end
+assert(JSON.encode(safe.s)==previous,'Invalid command mutated game state')
+assert(safe:addFish('main',2,2,2),'Valid fish insertion was rejected')
+assert(safe:changePrice(id,1),'Valid price change was rejected')
+assert(JSON.encode(safe.s),'Valid commands must remain serializable')
+
+print('OK v61: corrupt backup fallback, non-finite time, age and price guard')
