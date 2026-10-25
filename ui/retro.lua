@@ -556,9 +556,9 @@ function Retro:title()
  centered('WELCOME',39,{246,226,164})
  local entries=self:titleEntries()
  -- Ate nove entradas cabem em 240x320, sem sobrepor os softkeys.
- local startY=66
+ local startY,spacing=66,(#entries>8 and 25 or 27)
  for i,entry in ipairs(entries) do
-  self:menuButton(entry[1],31,startY+(i-1)*27,178,23,entry[2])
+  self:menuButton(entry[1],31,startY+(i-1)*spacing,178,23,entry[2])
  end
  self:buttonHint({label='SELECT',fn=function()
   local index=self.focus
