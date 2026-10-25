@@ -35,7 +35,9 @@ check('gestacao muta somente uma vez antes dos nascimentos extras',function()
  local initial=#g.s.tanks.main
  g:_hatch(mother)
  assert(#g.s.tanks.main==initial+2)
- assert(count==2,'A mutacao deve consumir apenas 2 sorteios (chance e parte)')
+ -- j.c(100) is also called for the low-bound partner fin (index 0).
+ -- The Java code forces +1 after that direction roll, but still spends it.
+ assert(count==3,'Mutacao no limite inferior exige chance, parte e direcao')
  local p=g.s.tanks.main[initial+1]
  local q=g.s.tanks.main[initial+2]
  assert(p.body==q.body and p.tail==q.tail)
