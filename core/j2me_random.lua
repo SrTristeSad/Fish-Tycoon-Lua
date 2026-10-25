@@ -8,12 +8,12 @@
 -- bitwise extensions or 64-bit integer overflow.
 local M={}
 M.MOD=281474976710656 -- 2^48, first invalid internal seed value
-local B=16777216        -- 2^24
-local MULT=25214903917
-local ADD=11
+M.B=16777216        -- 2^24
+M.MULT=25214903917
+M.ADD=11
 local MULT_LO=M.MULT%M.B
 local MULT_HI=math.floor(M.MULT/M.B)
-local BITS31=2147483648
+M.BITS31=2147483648
 local function xor24(a,b)
  local r,weight=0,1
  for _=1,24 do
