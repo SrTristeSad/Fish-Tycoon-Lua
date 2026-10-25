@@ -1,11 +1,14 @@
--- Persistent simulated time with stable subsecond precision.
--- Floating additions such as 0.1 + ... otherwise miss egg and research
--- deadlines, changing the order of RNG calls relative to shop visitors.
--- Rounding only the fractional second avoids multiplying large game times.
+-- Avoid floating error at integer-second simulation boundaries.
+-- With repeated dt=0.1 or 1/60, a timestamp may land at
+-- 179.999999999 instead of 180, deferring eggs/research until after a
+-- market visitor and changing RNG outcomes. Only snap values very close
+-- to whole seconds: do not round every frame or accumulate artificial
+-- drift from repeated 1/60-second updates.
 local Clock={}
-local SCALE=1000000000
+local EPS=0.0000001
 function Clock.snap(value)
- local integral=math.floor(value)
- return integral+math.floor((value-integral)*SCALE+0.5)/SCALE
+ local nearest=math.floor(value+0.5)
+ if math.abs(value-nearest)<=EPS then return nearest end
+ return value
 end
 return Clock
