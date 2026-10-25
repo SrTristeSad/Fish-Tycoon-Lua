@@ -20,6 +20,14 @@ function M.save(game)
  game.s.wall=math.max(tonumber(previousWall) or 0,now)
  local ok,data=pcall(json.encode,game.s)
  if not ok then game.s.wall=previousWall;return false,tostring(data) end
+ -- Garantir que o novo arquivo possa ser reaberto ANTES de substituir
+ -- o principal e o backup. O encoder sozinho aceita valores finitos
+ -- estruturalmente invalidos, como estatisticas negativas e peixes sem ID.
+ local checked,why=decodeGame(data)
+ if not checked then
+  game.s.wall=previousWall
+  return false,'Estado nao pode ser salvo: '..tostring(why)
+ end
  -- Grava o backup somente se o principal anterior puder ser carregado.
  -- Nunca substitua a unica copia recuperavel por JSON malformado.
  if fs.getInfo(M.filename) then
