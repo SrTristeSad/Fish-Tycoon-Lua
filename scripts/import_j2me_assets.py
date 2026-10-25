@@ -15,7 +15,9 @@ PNG_SIGNATURE = b'\x89PNG\r\n\x1a\n'
 REQUIRED = ('assets.png', 'splash.png', 'gameMenuTank.png')
 OPTIONAL = ('fish.png', 'fins.png', 'tank1.png', 'tank2.png', 'tank3.png',
             'tanktop.png', 'isolation_tank.png', 'trhopy_ball.png',
-            'store.png', 'menutank.png')
+            'store.png', 'menutank.png', 'icon.png', 'isola.png',
+            'oberon.png', 'people.png', 'supllies_big.png',
+            'supply_animations.png')
 
 def png_dimensions(data, filename):
     """Check chunk boundaries and CRCs before accepting a PNG from the JAR."""
