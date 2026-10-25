@@ -1,4 +1,4 @@
--- V56: o Java exibe oberon.png por 3s, depois splash.png por 3s.
+-- V56/v57: o Java exibe Oberon, pergunta sobre som e depois Splash.
 -- O menu nao deve desenhar a splash atras dos botoes.
 package.path='./?.lua;./?/init.lua;'..package.path
 local Retro=require('ui.retro')
@@ -25,12 +25,20 @@ assert(view.screen=='intro_oberon','intro must not accept menu shortcuts')
 view:update(2.99)
 assert(view.screen=='intro_oberon')
 view:update(.02)
-assert(view.screen=='intro_splash' and not view:isPlaying())
+assert(view.screen=='intro_sound' and not view:isPlaying())
+calls={}
+view:draw()
+assert(#view.buttons==2,'sound prompt should expose YES and NO softkeys')
+assert(not view:press(120,150),'sound prompt should not accept center as answer')
+view:key('f2') -- NO no softkey direito
+assert(view.screen=='intro_splash' and view.soundEnabled==false)
 calls={}
 view:draw()
 assert(#calls==1 and calls[1]=='splash' and #view.buttons==0)
 view:update(2.99)
-assert(view.screen=='title','second 3s should conclude at six seconds')
+assert(view.screen=='intro_splash')
+view:update(.02)
+assert(view.screen=='title','splash should conclude after 3 seconds')
 calls={}
 view:draw()
 for _,name in ipairs(calls) do
@@ -44,7 +52,9 @@ assert(missing.screen=='title')
 local onlySplash=Retro.new(game,false)
 onlySplash.images.splash={name='splash'}
 onlySplash:beginIntro()
+assert(onlySplash.screen=='intro_sound')
+onlySplash:chooseIntroSound(true)
 assert(onlySplash.screen=='intro_splash')
 onlySplash:update(3)
 assert(onlySplash.screen=='title')
-print('OK v56: Java logos 3s+3s and separate title, no save mutation')
+print('OK v56/v57: Oberon -> sound -> splash -> title, no save mutation')
