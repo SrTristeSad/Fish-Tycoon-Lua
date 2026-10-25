@@ -60,6 +60,21 @@ rejectState(function(s)s.market.elapsed=-1 end)
 rejectState(function(s)s.market.elapsed=5 end)
 rejectState(function(s)s.market.visits=-1 end)
 rejectState(function(s)s.market.rejected=1.5 end)
+-- JSON lists must not silently become Lua maps with string-number keys.
+rejectState(function(s)s.tanks.main={['1']=s.tanks.main[1]} end)
+rejectState(function(s)s.tanks.second={['1']=s.tanks.main[1]} end)
+rejectState(function(s)s.eggs={['1']={body=1,tail=1,at=60}} end)
+rejectState(function(s)s.events={['1']={text='hello',time=1}} end)
+rejectState(function(s)s.market.history={['1']={visit=1,time=1,status='sold'}} end)
+
+-- Recover a structurally malformed primary from the untouched backup.
+local objectSave=JSON.decode(base)
+objectSave.tanks.main={['1']=objectSave.tanks.main[1]}
+files[Storage.filename]=JSON.encode(objectSave)
+files[Storage.backup]=base
+local recovered,recoveryNote=Storage.load()
+assert(recovered and #recovered.s.tanks.main==4)
+assert(recoveryNote and recoveryNote:find('Backup recuperado',1,true))
 
 -- A versao 60 convertia +infinito em 24h: todos os peixes morriam.
 local stable=Game.new(61002)
