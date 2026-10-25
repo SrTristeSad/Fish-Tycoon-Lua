@@ -1,4 +1,29 @@
-# Fish Tycoon Lua — v59: desenho da lista WELCOME (240 × 320)
+# Fish Tycoon Lua — v60: menu WELCOME com rolagem J2ME (240 × 320)
+
+## Versao 60 — janela de cinco itens extraida de d.class
+
+A tela inicial Java usa o estilo de lista `1`, com `W=5` entradas
+visiveis, espacamento vertical `V=5` e origem centrada em `(120,160)`.
+A versao 59 desenhava as sete a nove opcoes ao mesmo tempo, mesmo que
+o MIDlet original mostrasse apenas cinco.
+
+A versao 60 limita o desenho a cinco linhas, centraliza a janela, desloca
+o intervalo visivel com o cursor e preserva as acoes reais de `RESUME`,
+`START NEW GAME`, `OPTIONS`, `TROPHY`, `STATS`, `HELP`,
+`ABOUT` e `EXIT`. O teclado direcional/numerico, `5`, ENTER,
+os softkeys e o toque selecionam o mesmo indice global; navegar pelo
+menu nao ativa acidentalmente `EXIT`.
+
+O teste `tests/v60_welcome_scroll.lua` percorre as oito opcoes,
+verifica a janela e testa selecao por teclado e toque, incluindo a
+ultima linha. As capturas reais continuam cobrindo o menu e
+as configuracoes no LÖVE.
+
+**Pendente:** a composicao definitiva, o destaque selecionado e a
+comparacao visual pixel a pixel com o MIDlet original. Os testes
+funcionais aprovados nao equivalem a uma afirmacao de fidelidade 1:1.
+
+## Historico — versao 59
 
 ## Versao 59 — medidas extraidas do bytecode
 
