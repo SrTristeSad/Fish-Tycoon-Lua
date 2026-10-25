@@ -142,8 +142,8 @@ function Retro:notify(message) self.toast=tostring(message or '');self.toastTime
 function Retro:update(dt)
  self.time=self.time+dt;self.toastTime=math.max(0,self.toastTime-dt)
 end
-function Retro:hit(x,y,w,h,fn)
- self.buttons[#self.buttons+1]={x=x,y=y,w=w,h=h,fn=fn}
+function Retro:hit(x,y,w,h,fn,role)
+ self.buttons[#self.buttons+1]={x=x,y=y,w=w,h=h,fn=fn,role=role}
 end
 function Retro:menuButton(label,x,y,w,h,fn,disabled)
  fill(x,y,w,h,63,34,93)
@@ -223,7 +223,7 @@ function Retro:tray()
  self:hit(69,272,102,47,function()
   if self.room=='isolation' then self.room='main' else self.room='isolation' end
   self.selected=nil;self.screen='tank'
- end)
+ end,'tray')
 end
 -- Desenha os icones do atlas comercial, sem modificar nenhum sprite PNG.
 function Retro:atlasIcon(name,x,y,w,h)
@@ -1024,7 +1024,7 @@ function Retro:press(px,py)
  -- Otherwise a fish near a softkey can intercept a MENU or SELECT tap.
  for i=#self.buttons,1,-1 do
   local b=self.buttons[i]
-  if x>=b.x and x<=b.x+b.w and y>=b.y and y<=b.y+b.h then
+  if b.role~='tray' and x>=b.x and x<=b.x+b.w and y>=b.y and y<=b.y+b.h then
    self.focus=i;self.focusScreen=self.screen
    b.fn();return true
   end
@@ -1044,6 +1044,14 @@ function Retro:press(px,py)
     if f.id==closest.id then self.browseIndex=i;break end
    end
    return true
+  end
+ end
+ -- The isolation tray is a background target, not a HUD command.
+ -- Select a fish first; only empty tray space switches rooms.
+ for i=#self.buttons,1,-1 do
+  local b=self.buttons[i]
+  if b.role=='tray' and x>=b.x and x<=b.x+b.w and y>=b.y and y<=b.y+b.h then
+   b.fn();return true
   end
  end
  return false
