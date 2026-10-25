@@ -546,24 +546,43 @@ function Retro:titleEntries()
  end}
  return entries
 end
+-- d.class: f(32) monta a lista com a rotina a([[B,1,...,120,160,...,3,5).
+-- O modo 1 mede o texto mais largo e soma 16px de margem; a lista ocupa
+-- a regiao central, em vez de usar botoes de 178px inventados pelo port.
+-- O comprimento visual vem da fonte original quando importada.
+function Retro:welcomeLayout(entries)
+ local maxText=0
+ for _,entry in ipairs(entries) do
+  local width
+  if self.bitmapFont then width=self.bitmapFont:measure(entry[1])
+  elseif self.font and self.font.getWidth then width=self.font:getWidth(entry[1])
+  else width=#entry[1]*6 end
+  maxText=math.max(maxText,width)
+ end
+ local width=math.min(220,math.max(90,math.ceil(maxText)+16))
+ local rowHeight,gap=20,3
+ local total=#entries*rowHeight+math.max(0,#entries-1)*gap
+ return {x=math.floor(120-width/2),y=math.floor(160-total/2),
+  w=width,h=rowHeight,step=rowHeight+gap}
+end
 function Retro:title()
  local art=self.images.menutank or self.assets.images.menutank
  if art then
   rgb(255,255,255);love.graphics.draw(art,0,24)
  else self:background('main') end
- fill(9,29,222,35,37,22,70,.9)
- stroke(9,29,222,35,168,116,187)
- centered('WELCOME',39,{246,226,164})
+ -- Cabecalho do MIDlet acima do menu central; sem banner translucido artificial.
+ centered('WELCOME',20,{246,226,164})
  local entries=self:titleEntries()
- -- Ate nove entradas cabem em 240x320, sem sobrepor os softkeys.
- local startY,spacing=66,(#entries>8 and 25 or 27)
+ local layout=self:welcomeLayout(entries)
  for i,entry in ipairs(entries) do
-  self:menuButton(entry[1],31,startY+(i-1)*spacing,178,23,entry[2])
+  local x,y=layout.x,layout.y+(i-1)*layout.step
+  fontText(entry[1],x+8,y+3,layout.w-16,'left',{239,237,222})
+  self:hit(x,y,layout.w,layout.h,entry[2],'welcome')
  end
  self:buttonHint({label='SELECT',fn=function()
-  local index=self.focus
-  if not index or index>#entries then index=1 end
-  entries[index][2]()
+  self:ensureFocus()
+  local b=self.focus and self.buttons[self.focus]
+  if b and b.role=='welcome' then b.fn() end
  end},{label='EXIT',fn=entries[#entries][2]})
 end
 function Retro:startNewGame()
