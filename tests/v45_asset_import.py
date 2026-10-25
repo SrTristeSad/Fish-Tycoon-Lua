@@ -26,11 +26,22 @@ with tempfile.TemporaryDirectory() as temp:
         z.writestr('assets.png', fake_png())
         z.writestr('store.png', fake_png(113, 123))
         z.writestr('menutank.png', fake_png(240, 256))
+        z.writestr('fish.png', fake_png(100, 320))
+        z.writestr('fins.png', fake_png(64, 320))
+        z.writestr('tank1.png', fake_png(240, 154))
+        z.writestr('tank2.png', fake_png(240, 154))
+        z.writestr('tank3.png', fake_png(240, 154))
+        z.writestr('tanktop.png', fake_png(240, 110))
+        z.writestr('isolation_tank.png', fake_png(98, 46))
     imported, missing = module.import_assets(jar, root / 'out')
-    assert set(imported) == {'assets.png', 'store.png', 'menutank.png'}
+    assert set(imported) == {'assets.png', 'store.png', 'menutank.png', 'fish.png',
+                             'fins.png', 'tank1.png', 'tank2.png', 'tank3.png',
+                             'tanktop.png', 'isolation_tank.png'}
     assert 'trhopy_ball.png' in missing and 'splash.png' in missing
     assert (root / 'out' / 'store.png').read_bytes() == fake_png(113, 123)
     assert (root / 'out' / 'menutank.png').read_bytes() == fake_png(240, 256)
+    for name in ('fish', 'fins', 'tank1', 'tank2', 'tank3', 'tanktop', 'isolation_tank'):
+        assert (root / 'out' / (name + '.png')).is_file(), name
 
     for malformed in (b'not a png', module.PNG_SIGNATURE + b'\x00' * 16,
                       fake_png(2, 2)[:-6], fake_png(2, 2)[:-1] + b'X'):
