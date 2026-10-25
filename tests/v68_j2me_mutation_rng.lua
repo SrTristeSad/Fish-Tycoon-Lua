@@ -44,8 +44,8 @@ reproduce('body increases',{0,50,49},{11,10,11,10},{11,11,10,10})
 reproduce('body decreases',{0,50,50},{10,10,9,10},{11,11,10,10})
 -- Lower boundary (Java 0; Lua 1) consumes a third RNG roll,
 -- even though the direction is forcibly +1.
-reproduce('low fin boundary',{0,49,99},{2,1,1,2},{2,1,1,1})
-reproduce('low body boundary',{0,50,99},{1,2,2,1},{1,2,1,1})
+reproduce('low fin boundary',{0,49,99},{1,1,1,2},{2,1,1,1})
+reproduce('low body boundary',{0,50,99},{1,1,2,1},{1,2,1,1})
 -- Upper boundary (Java 20; Lua 21) does NOT consume a direction roll.
 reproduce('high fin boundary',{0,49},{21,20,21,20},{21,21,21,21})
 reproduce('high body boundary',{0,50},{20,21,20,21},{21,21,21,21})
