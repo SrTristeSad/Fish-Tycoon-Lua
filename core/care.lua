@@ -101,6 +101,10 @@ function Care.step(game,f,room,exposure)
  -- O risco e base + 6 por peixe doente no conjunto dos tres tanques
  -- + 15 quando idade>600. Sem multiplicador de lotacao do port antigo.
  if f.age>=20 and not f.disease then
+  -- Original n.a(m,int), Java offsets 8..18:
+  -- j.c(10000) is drawn BEFORE calculating risk and BEFORE the snail
+  -- draw j.c(100). A float*10000 is not equivalent to nextInt(10000).
+  local roll=game:int(0,9999)
   local risk=Care.originalDiseaseThreshold(f.body,foodLevel,
    exposure or Care.diseaseExposure(game),f.age)
   -- b.d(15): planta de cura reduz o limiar pela metade.
@@ -108,7 +112,7 @@ function Care.step(game,f,room,exposure)
   -- b.d(11): caracol de limpeza tem 50% de chance de reduzir o
   -- limiar pela metade em cada avaliacao.
   if s.gear.snail and game:int(0,99)<=49 then risk=math.floor(risk/2) end
-  if game:random()*10000<risk then
+  if roll<risk then
    f.disease=game:int(0,1)==0 and 'ick' or 'fungus'
    s.stats.infections=(s.stats.infections or 0)+1
    game:message('Sinais de '..(f.disease=='ick' and 'Ick' or 'fungos')..' em um peixe!')
