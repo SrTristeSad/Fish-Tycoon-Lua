@@ -1,4 +1,26 @@
-# Fish Tycoon Lua — v58: menu WELCOME reconstruido (240 × 320)
+# Fish Tycoon Lua — v59: desenho da lista WELCOME (240 × 320)
+
+## Versao 59 — medidas extraidas do bytecode
+
+O JAR original (`d.class`, `f(32)`, estilo de lista 1) centraliza
+as opcoes em **x=120 / y=160** e calcula a largura pela maior string
+mais uma margem de 16 pixels. O port anterior desenhava caixas roxas de
+178px para todas as opcoes; a v59 substitui-as por uma lista compacta
+com largura medida pela fonte, centralizacao vertical e uma area de
+selecao por linha.
+
+A fonte de menu utiliza a primeira face de `1.dat` (20px) quando foi
+importada legalmente pelo proprietario. Na ausencia do recurso, usa uma
+fonte LÖVE maior e legivel. A arte `menutank.png` e preservada sem
+alteracao. Os botões inferiores SELECT e EXIT permanecem funcionais;
+teclado, toque, confirmacao de novo jogo e salvamentos foram
+regredidos em `tests/v59_welcome_layout.lua` e na suite nativa.
+
+**Limite:** a tipografia/estrutura aproximam o mecanismo original, mas
+não substituem uma comparacao pixel a pixel com o MIDlet em execucao.
+Nao afirmar que o menu seja uma copia visual exata.
+
+## Histórico — versão 58
 
 ## Versao 58 — menu inicial com opcoes do JAR original
 
