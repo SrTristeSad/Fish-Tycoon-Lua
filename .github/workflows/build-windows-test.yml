@@ -27,24 +27,24 @@ jobs:
           PY
           curl -fLsS --retry 3 -o love-11.5-win64.zip             https://github.com/love2d/love/releases/download/11.5/love-11.5-win64.zip
           unzip -q love-11.5-win64.zip -d love-runtime
-          mkdir -p dist/FishTycoonLua-v64-Windows
-          cp -a love-runtime/love-11.5-win64/. dist/FishTycoonLua-v64-Windows/
-          cp FishTycoonLua.love dist/FishTycoonLua-v64-Windows/jogo.love
-          cat dist/FishTycoonLua-v64-Windows/love.exe FishTycoonLua.love > dist/FishTycoonLua-v64-Windows/FishTycoonLua.exe
-          cat > dist/FishTycoonLua-v64-Windows/LEIA_PRIMEIRO.txt <<'TXT'
-          FISH TYCOON LUA v64 - WINDOWS x64
+          mkdir -p dist/FishTycoonLua-v65-Windows
+          cp -a love-runtime/love-11.5-win64/. dist/FishTycoonLua-v65-Windows/
+          cp FishTycoonLua.love dist/FishTycoonLua-v65-Windows/jogo.love
+          cat dist/FishTycoonLua-v65-Windows/love.exe FishTycoonLua.love > dist/FishTycoonLua-v65-Windows/FishTycoonLua.exe
+          cat > dist/FishTycoonLua-v65-Windows/LEIA_PRIMEIRO.txt <<'TXT'
+          FISH TYCOON LUA v65 - WINDOWS x64
           Abra FishTycoonLua.exe para jogar, sem instalar LÖVE.
           Este pacote automatico inclui os recursos versionados no repositorio.
           O JAR original fornece recursos complementares (aberturas e fonte);
           importe-os para o arquivo jogo.love antes de fundir novamente o EXE.
           TXT
           cd dist
-          zip -qr FishTycoonLua-v64-Windows-portatil.zip FishTycoonLua-v64-Windows
-          ls -lh FishTycoonLua-v64-Windows-portatil.zip
+          zip -qr FishTycoonLua-v65-Windows-portatil.zip FishTycoonLua-v65-Windows
+          ls -lh FishTycoonLua-v65-Windows-portatil.zip
       - name: Publicar pacote portatil de teste
         uses: actions/upload-artifact@v4
         with:
-          name: FishTycoonLua-v64-Windows-portatil
-          path: dist/FishTycoonLua-v64-Windows-portatil.zip
+          name: FishTycoonLua-v65-Windows-portatil
+          path: dist/FishTycoonLua-v65-Windows-portatil.zip
           if-no-files-found: error
           retention-days: 14
