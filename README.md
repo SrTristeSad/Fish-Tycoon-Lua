@@ -1,4 +1,17 @@
-# Fish Tycoon Lua — v38: menu J2ME (240 × 320)
+# Fish Tycoon Lua — v55: reconstrução J2ME (240 × 320)
+
+## Estado verificado da reconstrução (v55)
+
+- O teste nativo do LÖVE agora gera e valida **31 telas**. O validador lê os nomes diretamente de `core/retro_smoke.lua` e rejeita capturas ausentes ou PNGs corrompidos; não compara ainda as telas pixel a pixel com o MIDlet Java.
+- `scripts/import_j2me_assets.py` reconhece os **19 PNGs do JAR Fish_Tycoon_240x320-111845-mobiles24.jar**, incluindo `isola.png`, `oberon.png`, `people.png`, `supllies_big.png` (grafia original) e `supply_animations.png`. A extração foi verificada localmente contra o JAR, com igualdade byte a byte.
+- O GitHub Actions executa testes Lua, importação/validação PNG e renderização real do LÖVE. No Windows, `TESTAR_LUA.bat` percorre todas as suítes Lua existentes.
+- **Não está concluído 1:1**: layouts de menus e várias regras provisórias continuam sem comparação integral com o Java em execução. Não confundir testes de funcionamento com fidelidade histórica comprovada.
+
+Para importar todas as imagens do seu JAR sem modificar o arquivo de origem: `python scripts/import_j2me_assets.py Fish_Tycoon_240x320-111845-mobiles24.jar`.
+
+## Histórico de versões
+
+### Versão 38 — estados de loja e pesquisa
 
 Desde a v19, **a interface padrão é `ui/retro.lua`**, desenhada em 240 × 320 e ampliada sem perder proporção. A tela anterior (`ui/view.lua`) foi preservada para regressão, mas não é mais o menu principal. O motor Lua, sprites e estrutura de saves permanecem.
 
