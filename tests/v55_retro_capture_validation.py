@@ -62,7 +62,7 @@ with tempfile.TemporaryDirectory() as temp:
     marker.write_text(f'{len(names)} J2ME-style screens rendered\n', encoding='utf-8')
 
     bad = bytearray(data)
-    bad[33] ^= 1  # Corrupt IHDR CRC without changing the PNG signature.
+    bad[29] ^= 1  # Corrupt IHDR CRC without changing the PNG signature.
     missing.write_bytes(bad)
     try:
         validator.validate_png(missing)
