@@ -1,4 +1,45 @@
-# Fish Tycoon Lua — v70: RNG Java de 48 bits no núcleo
+# Fish Tycoon Lua — v71: ordem do RNG de doenças fiel ao Java
+
+## Versao 71 — risco de infeccao, planta de cura e caracol
+
+A auditoria do metodo `n.a(m,int)` do JAR original identificou
+duas diferencas na rotina de infeccao do port Lua:
+
+- **Sorteio de doenca:** o Java utiliza `j.c(10000)`, e o numero
+  e sorteado **antes** de verificar o equipamento caracol.
+  A implementacao anterior sorteava o caracol antes e usava
+  `game:random()*10000` para o risco. Mesmo com o RNG de
+  48 bits da v70, essa formula gerava um valor diferente da
+  `nextInt(10000)` do Java, deslocando os resultados.
+- **Planta e caracol:** no bytecode, os efeitos sao alternativos.
+  Com planta de cura ativa, a chance de doenca e dividida por
+  dois imediatamente e a rolagem do caracol nem acontece.
+  Sem planta, o caracol pode reduzir o risco pela metade com
+  `j.c(100)<=49`. Anteriormente o port aplicava os dois
+  bonus em sequencia e reduzia o risco duas vezes.
+
+A nova ordem e `j.c(10000)` para doenca, depois
+`j.c(100)` do caracol somente quando a planta nao estiver
+ativa, e por fim `j.c(2)` para classificar a infeccao, se
+necessario. Peixes que ainda nao sao adultos, ou ja estao
+doentes, nao executam esse sorteio de risco.
+
+A suite `tests/v71_disease_rng.lua` compara limites,
+equipamentos, consumo de chamadas e 144 cenarios de seeds
+com a implementacao independente de `nextInt` da v70.
+Os antigos testes `v18_contagion` e `v7_regression`
+foram atualizados para a forma inteira original.
+
+**Compatibilidade:** novas partidas usam o RNG Java da v70.
+Salvamentos antigos continuam usando Park-Miller; esta
+correcao muda a ordem das chamadas da rotina de doenca
+tambem nesses saves, mas nao os converte de algoritmo.
+Nao houve alteracoes na UI, nos sprites ou na genetica.
+A compatibilidade 1:1 do restante da simulacao ainda
+precisa ser auditada.
+
+## Histórico anterior
+
 
 ## Versao 70 — gerador original, sem quebrar saves antigos
 
