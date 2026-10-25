@@ -1113,6 +1113,10 @@ function Retro:press(px,py)
 end
 function Retro:key(k)
  if self.screen=='intro_oberon' or self.screen=='intro_splash' then return end
+ -- A tecla de retorno equivale ao softkey direito (NO) no prompt Java.
+ if self.screen=='intro_sound' and (k=='escape' or k=='back') then
+  self:chooseIntroSound(false);return
+ end
  -- Softkeys classicas esquerda/direita do celular, equivalentes a F1/F2
  -- no teclado de PC. So acionam comandos visiveis e habilitados.
  if k=='f1' or k=='f2' then
