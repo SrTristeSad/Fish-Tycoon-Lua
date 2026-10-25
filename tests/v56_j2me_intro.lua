@@ -44,7 +44,7 @@ view:draw()
 for _,name in ipairs(calls) do
  assert(name~='splash' and name~='oberon','menu reused transient intro art')
 end
-assert(#view.buttons==10,'WELCOME must expose eight menu choices and two softkeys with save')
+assert(#view.buttons==7,'WELCOME displays five choices and two softkeys at once')
 -- Missing resources: start directly at the menu, no synthetic art.
 local missing=Retro.new(game,false)
 missing:beginIntro()
