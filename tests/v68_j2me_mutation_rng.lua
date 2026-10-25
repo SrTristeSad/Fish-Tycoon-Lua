@@ -69,7 +69,7 @@ g.int=function(_,a,b)
   assert(a==0 and b==99,'Mutation rolls must come before spawning')
   return sequence[consumed]
  end
- local spawnIndex=(consumed-#sequence-1)%5+1
+ local spawnIndex=(consumed-#sequence-1)%4+1
  local spec=spawns[spawnIndex]
  assert(spec and a==spec[1] and b==spec[2],
   'Unexpected child motion draw at '..consumed)
