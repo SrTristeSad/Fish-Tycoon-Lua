@@ -1,4 +1,34 @@
-# Fish Tycoon Lua — v62: auditoria de integridade profunda do nucleo
+# Fish Tycoon Lua — v63: protecao de listas JSON e estabilidade do nucleo
+
+## Versao 63 — integridade dos recipientes e teste de longa duracao
+
+Na revisao do carregador foi confirmado um caso ainda sem protecao:
+um array JSON vazio `[]` podia ser substituido por um objeto vazio
+`{}` e ser interpretado como lista vazia em Lua. Em um tanque,
+isso poderia esconder a perda de peixes e impedir a recuperacao do backup.
+
+- `core/json.lua` preserva o tipo de recipiente (`array` ou `object`)
+  vindo de JSON, inclusive quando vazio. Uma serializacao seguinte
+  mantem `{}` como objeto e `[]` como lista.
+- `core/game.lua` rejeita objetos JSON em campos que sao listas de
+  peixes, ovos, eventos e historico do mercado. Tabelas Lua criadas
+  normalmente pelo proprio jogo continuam aceitas.
+- `tests/v63_json_container_integrity.lua` comprova que a alteracao
+  de um tanque com peixes para `{}` provoca rejeicao do save e
+  recuperacao da copia de seguranca.
+- `tests/v63_core_stress.lua` realiza 1.700 operacoes variadas em
+  20 partidas deterministicas, verificando reabertura dos saves
+  durante as partidas, integridade de dinheiro e peixes e equivalencia
+  entre simulacao em um unico passo e incrementos de um segundo.
+
+Esta etapa **nao altera** mecanicas biologicas, economia, artes nem
+menus. Os testes de integridade impedem alguns modos de perda
+silenciosa, mas nao garantem fidelidade 1:1 ao JAR Java ou ausência
+de outros bugs. Antes de instalar esta versao, preserve uma copia de
+seus arquivos de salvamento.
+
+## Histórico anterior
+
 
 ## Versao 62 — corrupcao silenciosa e seguranca do save
 
