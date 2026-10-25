@@ -220,10 +220,14 @@ end
 function Retro:tray()
  local im=self.assets.images.isolation_tank
  if im then rgb(255,255,255);love.graphics.draw(im,70,274) end
- self:hit(69,272,102,47,function()
-  if self.room=='isolation' then self.room='main' else self.room='isolation' end
-  self.selected=nil;self.screen='tank'
- end,'tray')
+ -- O recipiente funciona como atalho apenas no aquario normal.
+ -- Nos detalhes, ele permanece visivel mas nao troca a sala selecionada.
+ if self.screen=='tank' then
+  self:hit(69,272,102,47,function()
+   if self.room=='isolation' then self.room='main' else self.room='isolation' end
+   self.selected=nil;self.screen='tank'
+  end,'tray')
+ end
 end
 -- Desenha os icones do atlas comercial, sem modificar nenhum sprite PNG.
 function Retro:atlasIcon(name,x,y,w,h)
