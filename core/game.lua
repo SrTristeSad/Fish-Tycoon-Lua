@@ -47,7 +47,7 @@ end
 -- O backup precisa ser usado quando o JSON e sintaticamente valido, mas
 -- possui estado inconsistente. Validar antes de entregar o save ao motor.
 local function validateSave(data)
- if not finite(data.cash) or data.cash<0 or not whole(data.next_id,1,9007199254740991)
+ if not whole(data.cash,0) or not whole(data.next_id,1,9007199254740991)
     or not finite(data.time) or data.time<0 or not whole(data.rng,1,2147483646) then
   return false,'Dados principais invalidos'
  end
@@ -64,7 +64,7 @@ local function validateSave(data)
       or not finite(f.age) or f.age<0
       or (f.fed~=nil and (not finite(f.fed) or f.fed<0 or f.fed>100))
       or (f.health~=nil and (not finite(f.health) or f.health<0 or f.health>100))
-      or (f.price~=nil and (not finite(f.price) or f.price<0))
+      or (f.price~=nil and not whole(f.price,0))
       or (f.eggs_at and (not finite(f.eggs_at) or f.eggs_at<0))
       or (f.gestation_end_age~=nil and (not finite(f.gestation_end_age) or f.gestation_end_age<0))
       or (f.disease and f.disease~='ick' and f.disease~='fungus') then
@@ -775,6 +775,7 @@ function Game:sell(id,auto)
  local f,room,i=self:find(id)
  if not f or room~='sale' or not self:isAdult(f) then return false,'Apenas adultos na area de venda' end
  local price=f.price or self:fishPrice(f)
+ if not whole(price,0) then return false,'Preco invalido' end
  -- O bonus depende do estado ANTES da remocao; se o ultimo peixe
  -- magico for vendido, a presenca ainda vale para esta venda.
  local wealthActive=self:hasMagic('wealth','sale')
@@ -794,7 +795,7 @@ function Game:changePrice(id,delta)
  if not f then return false,'Peixe nao encontrado' end
  -- A funçao math.min/max do Lua converte NaN em um dos limites:
  -- um ajuste invalido chegava a colocar o peixe em $9999.
- if not finite(delta) then return false,'Ajuste de preco invalido' end
+ if not finite(delta) or delta%1~=0 then return false,'Ajuste de preco invalido' end
  f.price=clamp((f.price or self:fishPrice(f))+delta,5,9999)
  return true,f.price
 end
