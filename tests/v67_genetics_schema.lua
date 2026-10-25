@@ -69,7 +69,8 @@ assert(shape.s.stats.born==prev+1)
 assert(child.body==5 and child.tail==11)
 assert(child.genes.body[1]==3 and child.genes.body[2]==8)
 assert(child.genes.tail[1]==9 and child.genes.tail[2]==14)
-assert(shape.s.rng==globalBefore,'No mutation should spend random numbers')
+assert(shape.s.rng~=globalBefore,
+ 'Newborn motion should spend five RNG rolls, even without mutation')
 p1.genes.body[1]=17
 assert(child.genes.body[1]==3,'Changing a parent affected offspring genes')
 local round=JSON.encode(shape.s)
