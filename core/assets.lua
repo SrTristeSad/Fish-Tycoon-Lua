@@ -83,13 +83,12 @@ function Assets:tankBackground(room,x,y,w,h)
  -- Mantemos a proporcao original e posicionamos os peixes dentro dele.
  if room=='isolation' then
   local isolated=self.images.isolation_tank
-  if isolated then
-   local iw,ih=isolated:getDimensions()
-   local targetW=w-16
-   local targetH=targetW*ih/iw
-   g.draw(isolated,x+8,y+h*.50-targetH*.50,0,targetW/iw,targetH/ih)
-   return true
-  end
+  if not isolated then return false end
+  local iw,ih=isolated:getDimensions()
+  local targetW=w-16
+  local targetH=targetW*ih/iw
+  g.draw(isolated,x+8,y+h*.50-targetH*.50,0,targetW/iw,targetH/ih)
+  return true
  end
  local source=(room=='second' and 'tank2') or (room=='sale' and 'tank3') or 'tank1'
  local img=self.images[source]
