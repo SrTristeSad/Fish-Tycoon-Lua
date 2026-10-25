@@ -521,18 +521,34 @@ function Game:_events()
    end
   end
  end
+ -- Purchased eggs are queued in purchase order. The reverse scan
+ -- hatched the most recently acquired egg first when tank 1 had only
+ -- one free slot, silently starving the oldest eggs of capacity.
+ -- Iterate forward, removing a successfully hatched egg in place.
  local eggs=s.eggs
- for i=#eggs,1,-1 do
-  if s.time>=eggs[i].at then
+ local i=1
+ while i<=#eggs do
+  local egg=eggs[i]
+  if s.time>=egg.at then
    if self:hasSpace('main') then
-    self:addFish('main',eggs[i].body,eggs[i].tail,0)
-    s.stats.born=s.stats.born+1
-    self:message('Um ovo comprado acaba de eclodir!')
-    table.remove(eggs,i)
-   elseif not eggs[i].waiting then
-    eggs[i].waiting=true
-    self:message('Ovo pronto: aguardando vaga no tanque 1.')
+    local child=self:addFish('main',egg.body,egg.tail,0)
+    if child then
+     s.stats.born=s.stats.born+1
+     self:message('Um ovo comprado acaba de eclodir!')
+     table.remove(eggs,i)
+    else
+     -- A failed insertion must never consume or erase a purchased egg.
+     i=i+1
+    end
+   else
+    if not egg.waiting then
+     egg.waiting=true
+     self:message('Ovo pronto: aguardando vaga no tanque 1.')
+    end
+    i=i+1
    end
+  else
+   i=i+1
   end
  end
  local job=s.research_job
