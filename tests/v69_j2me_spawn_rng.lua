@@ -28,16 +28,18 @@ game.int=function(self,a,b)
  return oldInt(self,a,b)
 end
 local juvenile=assert(game:addFish('main',1,1,0))
-assert(#observed==5,'Juvenile spawn must spend five random draws')
+assert(#observed==4,'Juvenile spawn uses four nextInt draws plus nextBits(16)')
 assert(game.s.rng~=rng)
-for i,entry in ipairs(expected) do
+for i=1,4 do
+ local entry=expected[i]
  assert(observed[i][1]==entry[1] and observed[i][2]==entry[2])
 end
 local afterJuvenile=game.s.rng
 local adult=assert(game:addFish('main',2,3,20))
-assert(#observed>10,'Adults must roll spawn movement before market quote')
-for i,entry in ipairs(expected) do
- assert(observed[5+i][1]==entry[1] and observed[5+i][2]==entry[2],
+assert(#observed>8,'Adults must roll spawn movement before market quote')
+for i=1,4 do
+ local entry=expected[i]
+ assert(observed[4+i][1]==entry[1] and observed[4+i][2]==entry[2],
   'Adult quote occurred before fish movement roll')
 end
 assert(game.s.rng~=afterJuvenile)
