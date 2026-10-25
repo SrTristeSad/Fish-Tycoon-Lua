@@ -50,4 +50,19 @@ assert(child1.sex==(id1%2==1 and 'F' or 'M'))
 assert(child2.sex==((id1+1)%2==1 and 'F' or 'M'))
 local valid,why=Game.fromTable(JSON.decode(JSON.encode(births.s)))
 assert(valid,why)
-print('OK v66: 160 RNG scenarios, cosmetic sex parity, saves and birth metadata')
+-- A passed-in genotype is only an input to create a fish. Every fish
+-- owns an independent copy, including when two siblings share input genes.
+local siblings=Game.new(66800)
+local supplied={body={2,4},tail={6,8}}
+local left=assert(siblings:addFish('main',2,6,0,supplied))
+local right=assert(siblings:addFish('main',2,6,0,supplied))
+supplied.body[1]=21
+supplied.tail[2]=21
+assert(left.genes.body[1]==2 and right.genes.body[1]==2)
+assert(left.genes.tail[2]==8 and right.genes.tail[2]==8)
+left.genes.body[2]=11
+assert(right.genes.body[2]==4 and supplied.body[2]==4,
+ 'Fish genotypes unexpectedly share mutable tables')
+assert(Game.fromTable(JSON.decode(JSON.encode(siblings.s))))
+
+print('OK v66: 160 RNG scenarios, cosmetic metadata, independent genotypes and saves')
