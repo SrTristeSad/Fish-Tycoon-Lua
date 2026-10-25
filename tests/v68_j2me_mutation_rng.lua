@@ -62,15 +62,23 @@ g.hasMagic=function(_,effect,room)
 end
 local sequence={0,49,49}
 local consumed=0
+local spawns={{0,189},{0,38},{0,0},{0,0},{0,65535}}
 g.int=function(_,a,b)
  consumed=consumed+1
- assert(consumed<=#sequence,'Mutation rolled again for sibling')
- assert(a==0 and b==99)
- return sequence[consumed]
+ if consumed<=#sequence then
+  assert(a==0 and b==99,'Mutation rolls must come before spawning')
+  return sequence[consumed]
+ end
+ local spawnIndex=(consumed-#sequence-1)%5+1
+ local spec=spawns[spawnIndex]
+ assert(spec and a==spec[1] and b==spec[2],
+  'Unexpected child motion draw at '..consumed)
+ return a
 end
 local born=g.s.stats.born
 g:_hatch(mom)
-assert(consumed==3 and g.s.stats.born==born+2)
+assert(consumed==13 and g.s.stats.born==born+2,
+ 'One mutation (3 RNG) followed by two newborns (5 RNG each)')
 local babies=g.s.tanks.main
 local left,right=babies[#babies-1],babies[#babies]
 assert(left.genes.mutated and right.genes.mutated)
